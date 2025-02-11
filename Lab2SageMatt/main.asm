@@ -1,6 +1,6 @@
-; main.asm (Lab2)
+; ---- main.asm (Embedded Systems Lab 2 - Spring 2025)
 ; 
-; purpose:
+; Purpose:
 ;   This Assembly file contains functionality for a 7-Segment display controlled by a 74hc595 shift register IC. 
 ;   Additional functionality is implemented via an active-low push button. The 7-Segment displays a sequence of hexidecimal numbers.
 ;
@@ -9,27 +9,35 @@
 ;       2. decrement count (f,e,..,1,0)
 ;       3. reset count (show 0)
 ;
-; authors:
+; Authors:
 ;   - Sage Marks
 ;   - Matt Krueger
 
-; Assign i/o from Arduino Uno 
-sbi DDRB, 0         ;		SER <- PB0 (output)
-sbi DDRB, 1         ;		RCLK <- PB1 (output)
-sbi DDRB, 2         ;		SRCLK <- PB2 (output)
-cbi DDRB, 3         ;		PBTN -> PB3 (input)
-sbi PORTB, 3        ;		PBTN pull-up resistor <- PB3 (output)
+; ---- I/O Configuration
+;
+;   port assignments:
+;       SER <- PB0 (output)
+;       RCLK <- PB1 (output)
+;       SRCLK <- PB2 (output)
+;       PBTN -> PB3 (input)
+;       PBTN pull-up resistor <- PB3 (output)
+sbi DDRB, 0         
+sbi DDRB, 1         
+sbi DDRB, 2         
+cbi DDRB, 3         
+sbi PORTB, 3        
 
-; increment loop
-;   cycle through hexidecimal digits in ascending order 
+; ---- Increment loop
+;
+;   Cycle through hexidecimal digits in ascending order 
 ; 
-;   for each value:
-;       load the digit
-;       delay before showing digit
-;       display the digit
+;   For each value:
+;       1. load the digit
+;       2. delay before showing digit
+;       3. display the digit
 ;
 ;   rcall is used to track progress of sequence on stack
-incrementloop:
+increment_loop:
   ; 0
   ldi R16, 0x3f		
   rcall delay		
@@ -109,59 +117,58 @@ incrementloop:
   ldi R16, 0x71
   rcall delay
   rcall display
-rjmp incrementloop;
+rjmp increment_loop;
 
-; display
-;   output hexidecimal bit representation to 7-Segment display
+; ---- Display
+;
+;   Output hexidecimal bit representation to 7-Segment display utilizing stack and 74hc595 shift register for storage
 display:
   push R16
   push R17
   in R17, SREG
   push R17
-  ldi R17, 8;			loop --> test all 8 bits
+  ldi R17, 8
   
-  ; loop 
-  ; 
+  ; Loop
   loop:
-    rol R16;			rotate left through Carry (checks the value of the carry)
-    BRCS set_ser_in_1;	branch if Carry is set (carry is a 1)
-    cbi PORTB, 0;		sets the SER data pin low
+    rol R16
+    BRCS set_ser_in_1
+    cbi PORTB, 0
   rjmp end
 
-  ; set_ser_in_1
-  ;
+  ; Set SER Input High
   set_ser_in_1:
-    sbi PORTB, 0;		sets the SER data pin high
+    sbi PORTB, 0
 
-  ; end
-  ;
+  ; End
   end:
-    sbi PORTB, 2;		pulses the shift register clock high
-    cbi PORTB, 2;		pulses the shift register clock low
-    dec R17;			decrements the register with a value of 8 to iterate through all bits
-    brne loop;			branches back to loop unless R17 value is 0
-    sbi PORTB, 1;		pulses the register storage clock high
-    cbi PORTB, 1;		register storage clock is now low
-;					restore registers from stack
-  pop R17;			last in first out (stack)
+    sbi PORTB, 2
+    cbi PORTB, 2
+    dec R17
+    brne loop
+    sbi PORTB, 1
+    cbi PORTB, 1
+
+  pop R17
   out SREG, R17
   pop R17
   pop R16
 ret
 
-; delay
-;   execute a brief pause to give 7-Segment display time before switching hexidecimal output
+; ---- Delay
+;
+;   Execute a brief pause to give 7-Segment display time before switching hexidecimal output
 ;   
-;   approx. 24,675,000 cycles | 1.5 seconds
+;   Approx. 24,675,000 cycles | 1.5 seconds
 delay:
 	ldi r30, 0x20       ; 32  (00100000)
 	ldi r31, 0xd0       ; 208 (11010000)
 
-  ; delay_outer
+  ; Delay Outer
   delay_outer:
     ldi r29, 0x73     ; 115 (01110011)
 
-  ; delay_inner
+  ; Delay Inner
   delay_inner: 
       nop
       dec r29
