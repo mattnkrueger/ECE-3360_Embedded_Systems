@@ -13,7 +13,6 @@
 ;   - Sage Marks
 ;   - Matt Krueger
 
-
 ; ---- I/O Configuration
 ;
 ;   port assignments:
@@ -21,104 +20,74 @@
 ;       RCLK <- PB1 (output)
 ;       SRCLK <- PB2 (output)
 ;       PBTN -> PB3 (input)
-;       PBTN pull-up resistor <- PB3 (output)
 sbi DDRB, 0         
 sbi DDRB, 1         
 sbi DDRB, 2         
 cbi DDRB, 3         
-sbi PORTB, 3        
 
-; ---- Increment loop
-;
-;   Cycle through hexidecimal digits in ascending order 
-; 
-;   For each value:
-;       1. load the digit
-;       2. delay before showing digit
-;       3. display the digit
-;
-;   rcall is used to track progress of sequence on stack
-increment_loop:
-  ; 0
-  ldi R16, 0x3f		
-  rcall delay		
-  rcall display		
+ldi R20, 0; this register is going to be used to track the state that the button is in (been pressed or not)
 
-  ; 1
-  ldi R16, 0x06
-  rcall delay
-  rcall display
+numberloop:
+  cpi R20, 0; compare register R20 with 0 to see if it has been pressed
+  brne increment; branch to increment loop if the button has been pressed
 
-  ; 2
-  ldi R16, 0x5b
-  rcall delay
-  rcall display
+display0:
+  ldi R16, 0x3f; display 0		
+  rjmp displaydigit; relative jump to display and digit check
 
-  ; 3
-  ldi R16, 0x4f
-  rcall delay
-  rcall display
+ButtonCheck:
+  sbic PINB, 3; skip if button is pressed (if line is low skip) (a button press makes the line low)
+  ret;(button not pressed jump back to display loop for 0)
+WaitForRelease:
+  sbis PINB, 3; skip if the button has been released (line is back to high)
+  rjmp WaitForRelease;
+  ldi R20, 1; set the register that keeps track of if the button was pressed to 1
+  rjmp numberloop; when button is pressed we move into the increment mode
 
-  ; 4
-  ldi R16, 0x66
-  rcall delay
-  rcall display
+displaydigit:
+  rcall display; display number loaded into the register
+  rcall ButtonCheck; check if the button has been pressed
+  rjmp numberloop; jump back to number loop, the ButtonCheck subroutine has routed back to here if button is not pressed
 
-  ; 5
-  ldi R16, 0x6d
-  rcall delay
-  rcall display
+increment:
+	ldi R16, 0x06; 1
+	rcall displaydigitincrement;
+	ldi R16, 0x5b; 2
+	rcall displaydigitincrement;
+	ldi R16, 0x4f; 3
+	rcall displaydigitincrement;
+	ldi R16, 0x66; 4
+	rcall displaydigitincrement;
+	ldi R16, 0x6d; 5
+	rcall displaydigitincrement;
+	ldi R16, 0x7d; 6
+	rcall displaydigitincrement;
+	ldi R16, 0x07; 7
+	rcall displaydigitincrement;
+	ldi R16, 0x7f; 8
+	rcall displaydigitincrement;
+	ldi R16, 0x6f; 9
+	rcall displaydigitincrement;
+	ldi R16, 0x77; A
+	rcall displaydigitincrement;
+	ldi R16, 0x7c; b
+	rcall displaydigitincrement;
+	ldi R16, 0x39; C
+	rcall displaydigitincrement;
+	ldi R16, 0x5e; d
+	rcall displaydigitincrement;
+	ldi R16, 0x79; E
+	rcall displaydigitincrement;
+	ldi R16, 0x71; f
+	rcall displaydigitincrement;
+	ldi R16, 0x3f; 0
+	rcall displaydigitincrement;
+	rjmp increment; jump back to the top to continue the increment mode
 
-  ; 6
-  ldi R16, 0x7d
-  rcall delay
-  rcall display
-
-  ; 7
-  ldi R16, 0x07
-  rcall delay
-  rcall display
-
-  ; 8
-  ldi R16, 0x7f
-  rcall delay
-  rcall display
-
-  ; 9
-  ldi R16, 0x6f
-  rcall delay
-  rcall display
-
-  ; A
-  ldi R16, 0x77
-  rcall delay
-  rcall display
-
-  ; B
-  ldi R16, 0x7c
-  rcall delay
-  rcall display
-
-  ; C
-  ldi R16, 0x39
-  rcall delay
-  rcall display
-
-  ; D
-  ldi R16, 0x5e
-  rcall delay
-  rcall display
-
-  ; E
-  ldi R16, 0x79
-  rcall delay
-  rcall display
-
-  ; F
-  ldi R16, 0x71
-  rcall delay
-  rcall display
-rjmp increment_loop;
+displaydigitincrement:
+	rcall display; display number
+	rcall delay; delay to see the number
+	ret; return to where subroutine was called	
 
 ; ---- Display
 ;
@@ -156,18 +125,13 @@ display:
   pop R16
 ret
 
-; ---- Delay
-;
-;   Execute a brief pause to give 7-Segment display time before switching hexidecimal output
-;   
-;   Approx. 24,675,000 cycles | 1.5 seconds
 delay:
-	ldi r30, 0x20       ; 32  (00100000)
+	ldi r30, 0x10       ; 
 	ldi r31, 0xd0       ; 208 (11010000)
 
   ; Delay Outer
   delay_outer:
-    ldi r29, 0x73     ; 115 (01110011)
+    ldi r29, 0x57     
 
   ; Delay Inner
   delay_inner: 
