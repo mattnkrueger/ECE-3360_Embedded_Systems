@@ -5,21 +5,27 @@
 - [lt_spice](https://github.com/mattnkrueger/embedded_systems_marks_krueger/tree/main/lt_spice): directory holding LT Spice symbols and diagrams.
 
 ## Authors
-<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+<div style="display: flex; flex-direction: row; justify-content: center; gap: 20px; align-items: center;">
   
   <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
     <img src="img/smarks.jpeg" alt="Sage Marks" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      Sage Marks
+    </div>
     <div style="display: flex; flex-direction: column; gap: 5px;">
-      <a href="mailto:sage-marks@uiowa.edu">Email</a>
-      <a href="https://www.linkedin.com/in/sage-marks-71a044293/">LinkedIn</a>
+      <a href="mailto:sage-marks@uiowa.edu" style="color: yellow;">Email</a>
+      <a href="https://www.linkedin.com/in/sage-marks-71a044293/" style="color: yellow;">LinkedIn</a>
     </div>
   </div>
 
   <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
     <img src="img/mkrueger.jpeg" alt="Matt Krueger" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      Matt Krueger
+    </div>
     <div style="display: flex; flex-direction: column; gap: 5px;">
-      <a href="mailto:matthew-krueger@uiowa.edu">Email</a>
-      <a href="https://www.linkedin.com/in/mattnkrueger/">LinkedIn</a>
+      <a href="mailto:matthew-krueger@uiowa.edu" style="color: yellow;">Email</a>
+      <a href="https://www.linkedin.com/in/mattnkrueger/" style="color: yellow;">LinkedIn</a>
     </div>
   </div>                  
 
