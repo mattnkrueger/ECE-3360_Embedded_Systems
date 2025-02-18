@@ -5,7 +5,7 @@
 - [lt_spice](https://github.com/mattnkrueger/embedded_systems_marks_krueger/tree/main/lt_spice): directory holding LT Spice symbols and diagrams.
 
 ## Authors
-<div style="display: flex; flex-direction: row; justify-content: center; gap: 20px; align-items: center;">
+<div align="center" style="display: flex">
   
   <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
     <img src="img/smarks.jpeg" alt="Sage Marks" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
@@ -19,7 +19,7 @@
   </div>
 
   <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-    <img src="img/mkrueger.jpeg" alt="Matt Krueger" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
+    <img src="img/mkrueger.png" alt="Matt Krueger" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
     <div style="display: flex; align-items: center; justify-content: center;">
       Matt Krueger
     </div>
