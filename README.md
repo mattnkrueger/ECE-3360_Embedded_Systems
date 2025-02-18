@@ -8,7 +8,7 @@
 <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
   
   <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-    <img src="smarks.jpeg" alt="Sage Marks" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
+    <img src="img/smarks.jpeg" alt="Sage Marks" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
     <div style="display: flex; flex-direction: column; gap: 5px;">
       <a href="mailto:sage-marks@uiowa.edu">Email</a>
       <a href="https://www.linkedin.com/in/sage-marks-71a044293/">LinkedIn</a>
