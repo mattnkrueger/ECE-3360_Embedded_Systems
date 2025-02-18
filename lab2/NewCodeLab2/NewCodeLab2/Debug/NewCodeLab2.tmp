@@ -1,0 +1,80 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.7</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.3.300\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.3.300\avrasm\inc\m328pdef.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\Debug\NewCodeLab2.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>NewCodeLab2.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>NewCodeLab2.map</FILE>
+  <FILE>NewCodeLab2.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <Delay><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>318</LINE></Delay>
+  <IncNumberCheck><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>37</LINE></IncNumberCheck>
+  <ButtonCheck><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>136</LINE></ButtonCheck>
+  <DecNumberCheck><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>190</LINE></DecNumberCheck>
+  <disp0><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>83</LINE></disp0>
+  <disp1><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>86</LINE></disp1>
+  <disp2><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>89</LINE></disp2>
+  <disp3><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>92</LINE></disp3>
+  <disp4><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>95</LINE></disp4>
+  <disp5><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>98</LINE></disp5>
+  <disp6><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>101</LINE></disp6>
+  <disp7><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>104</LINE></disp7>
+  <disp8><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>107</LINE></disp8>
+  <disp9><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>110</LINE></disp9>
+  <dispA><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>113</LINE></dispA>
+  <dispb><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>116</LINE></dispb>
+  <dispC><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>119</LINE></dispC>
+  <dispd><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>122</LINE></dispd>
+  <dispE><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>125</LINE></dispE>
+  <dispf><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>128</LINE></dispf>
+  <IncDisp><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>132</LINE></IncDisp>
+  <display><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>284</LINE></display>
+  <ButtonPressLoop><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>139</LINE></ButtonPressLoop>
+  <OneToTwo><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>163</LINE></OneToTwo>
+  <DecButtonCheck><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>155</LINE></DecButtonCheck>
+  <IncButtonCheck><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>147</LINE></IncButtonCheck>
+  <rolloverInc><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>152</LINE></rolloverInc>
+  <WaitForRelease><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>183</LINE></WaitForRelease>
+  <rolloverDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>160</LINE></rolloverDec>
+  <OneToTwoLoop><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>167</LINE></OneToTwoLoop>
+  <TwoToThree><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>177</LINE></TwoToThree>
+  <IncMode><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>181</LINE></IncMode>
+  <disp0Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>228</LINE></disp0Dec>
+  <disp1Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>231</LINE></disp1Dec>
+  <disp2Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>234</LINE></disp2Dec>
+  <disp3Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>237</LINE></disp3Dec>
+  <disp4Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>240</LINE></disp4Dec>
+  <disp5Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>243</LINE></disp5Dec>
+  <disp6Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>246</LINE></disp6Dec>
+  <disp7Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>249</LINE></disp7Dec>
+  <disp8Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>252</LINE></disp8Dec>
+  <disp9Dec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>255</LINE></disp9Dec>
+  <dispADec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>258</LINE></dispADec>
+  <dispbDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>261</LINE></dispbDec>
+  <dispCDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>264</LINE></dispCDec>
+  <dispdDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>267</LINE></dispdDec>
+  <dispEDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>270</LINE></dispEDec>
+  <dispfDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>273</LINE></dispfDec>
+  <DispDec><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>277</LINE></DispDec>
+  <loop><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>292</LINE></loop>
+  <set_ser_in_1><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>299</LINE></set_ser_in_1>
+  <end><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>303</LINE></end>
+  <d1><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>321</LINE></d1>
+  <d2><FILE>c:\users\wired\Documents\Atmel Studio\7.0\NewCodeLab2\NewCodeLab2\main.asm</FILE><LINE>323</LINE></d2>
+ </LABELS>
+</ASSEMBLER_INFO>
