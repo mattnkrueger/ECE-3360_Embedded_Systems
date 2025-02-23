@@ -1,4 +1,5 @@
-# Embedded Systems - Junior Semester 2025
+# Embedded Systems 
+University of Iowa - Junior Year Second Semester
 
 ## Contents
 - [labs](https://github.com/mattnkrueger/embedded_systems_marks_krueger/tree/main/labs): directory holding lab content for the course. Included in each lab are directories _src/_ and _doc/_ holding assembly/arduino code and lab documentation.
@@ -6,8 +7,8 @@
 
 ## Authors  
 
-<section data-markdown>
-    <div align="center">
+<div style="display: flex; justify-content: center; gap: 60px;">
+  <div align="center">
     <img src="img/smarks.jpeg" alt="Sage Marks" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
     <div style="display: flex; align-items: center; justify-content: center;">
       Sage Marks
@@ -27,6 +28,5 @@
       <a href="mailto:matthew-krueger@uiowa.edu" style="color: yellow;">Email</a>
       <a href="https://www.linkedin.com/in/mattnkrueger/" style="color: yellow;">LinkedIn</a>
     </div>
-  </div>              
-</section>
+</div>              
     
