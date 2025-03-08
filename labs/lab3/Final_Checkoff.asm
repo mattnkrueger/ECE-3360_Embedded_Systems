@@ -137,6 +137,8 @@ NumberDisplay:; loop that continuously displays values updated from the RPG
         
     ; else continue
     reset_code:
+		ldi tmp1, 1;
+		MOV r0, tmp1;
 		ldi r19, 0x00
 		rjmp PowerOn;
         
