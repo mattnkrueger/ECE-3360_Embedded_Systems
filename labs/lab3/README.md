@@ -1,4 +1,4 @@
-# Lab 3: 7-Segment Display Controlled by Push Button
+# Lab 3: Simple Electronic Lock
 
 [Home](../../README.md)
 
