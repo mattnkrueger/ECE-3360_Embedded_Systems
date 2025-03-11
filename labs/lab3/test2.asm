@@ -35,11 +35,9 @@ password_codes:
 .def rpg_current_state = r21                     	; register to hold current state of RPG
 .def rpg_previous_state = r20            		    ; register to hold previous state of RPG
 
-
 ; power_on:
 ;   - ENTRY POINT
-; 	- call setup timer subroutine
-;   - jump to reset program
+;   - initializes the timer and rpg before jumping to reset_program
 power_on:
 	rcall setup_timer								
 	rcall setup_rpg
@@ -87,9 +85,9 @@ reset_program:
 ;   - update the value to be displayed on the 7-segment display via rpg interaction
 ;   - display the current value of the count
 program_loop:
-	rcall findvalue
-	rcall rpg_interaction
-    
+	rcall compute_current_seven_segment_hex
+	rcall rpg_check 
+
 	; button_check:
 	; 	- if the pushbutton is pressed for <1 second, add current value stored in r17 to password value
 	;   - if the pushbutton is pressed for 1<t<2 seconds, do nothing
@@ -162,7 +160,7 @@ program_loop:
 		incorrect_digit:
 			inc r19                                  
 			ldi tmp1, 0                              
-			MOV r0, tmp1                             
+			mov r0, tmp1                             
 			cpi r19, 0x05                            
 			breq incorrect_code_display              
 			rjmp program_loop                      
@@ -193,7 +191,7 @@ program_loop:
 		breq incorrect_digit                         
     	inc r19                                      
         ldi tmp1, 1                                  
-        MOV r0, tmp1                                 
+        mov r0, tmp1                                 
         cpi r19, 0x05                                
         breq correct_code_check                      
 		rjmp program_loop                          
@@ -202,7 +200,7 @@ program_loop:
 	; 	- set r0 to 1 (this functions as a flag to indicate that the user's code is correct)
 	;   - if r0 = 1, jump to LED_ON
     correct_code_check:
-    	MOV tmp1, r0                                 
+    	mov tmp1, r0                                 
         cpi tmp1, 0x01                               
         breq correct_password                        
         
@@ -212,7 +210,7 @@ program_loop:
 	;   - jump to power_on to restart the program
     reset_code:
 		ldi tmp1, 1                                  
-		MOV r0, tmp1                                 
+		mov r0, tmp1                                 
 		ldi r19, 0x00                                
 		rjmp power_on                                
         
@@ -292,14 +290,14 @@ program_loop:
 
 	; counter_clockwise:
 	; 	- check the state of the RPG
-	;   - if the state is 0x40, jump to save_state
+	;   - if the state is 0x40, jump to save_rpg_state
 	;   - otherwise, jump to ret
 	;   - note - if the current value displayed is '0', and the user continues to rotate clockwise, remain at 0
 	counter_clockwise:
 		cpi r16, 0x40                                 
-		breq save_state                               
+		breq save_rpg_state                               
 		dec r17                                       
-		cpi r17, 0xff                                ; checks underflow (00-1) if this is the case, keep at 0 
+		cpi r17, 0xff                               
 		breq display_min_bound                        
 		rjmp save_rpg_state                           
 
@@ -312,7 +310,7 @@ program_loop:
 		cpi r16, 0x40                                 
 		breq first_movement                           
 		inc r17                                       
-		cpi r17, 0x10                                ; checks upper bound of rpg ; if this is the case, keep at f       
+		cpi r17, 0x10                               
 		breq display_max_bound                        
 		rjmp save_rpg_state                               
 
@@ -358,7 +356,7 @@ compute_current_seven_segment_hex:
 	add ZL, r17                                      
 
 ; display_call:
-; 	- display the current value on the 7-segment display
+; 	- calls the function display after loading z into r16 (current hex code)
 display_call:
 	lpm r16, Z                                      
 	rcall display                                   
@@ -394,7 +392,8 @@ display:
 
   ; shift_register_out:
   ;   - subroutine for 74hc595 shift register to shift in the value of the hex code to be displayed on the 7-segment display
-  ;   - pulse srclk and rclk to shift in the value of the hex code to be displayed on the 7-segment display
+  ;   - pulse srclk and rclk to shift in the value of the hex code to be displayed on the 7-segment display. 
+  ;   - first shifts all digits in from r16 using rotate_bit loop, then stores them (upon storage, because OE active, there is output from shift register... electrical circuit handles the rest).
   ;   - restore the values in registers pushed onto stack
   shift_register_out:
     sbi PORTB, 2                                    
@@ -410,7 +409,12 @@ display:
 	ret                                             
 
 ;timer_delay_500us:
-;   - delay for 500 microseconds
+;   - delay for 500 microseconds using timer0 of the atmega328p
+;   
+;	relevant registers:
+;		- TCCR0: timer counter control register - setting modes of timer/counter
+;       - TIFR0: timer counter interrupt flag register - if TOV0 set (1), then the timer is overflown
+; 		- TCNT0: timer counter register - counts up with each pulse to the value loaded into it
 timer_delay_500us:
 	in tmp1,TCCR0B                                  
 	ldi tmp2,0x00                                   
@@ -422,7 +426,7 @@ timer_delay_500us:
 	out TCCR0B,tmp1                                 
 
 	; wait:
-	;   - wait for the value of TOV0 to be set
+	;   - wait for the value of TOV0 to be set (overflown)
 	wait:
 		in tmp2,TIFR0                               
 		sbrs tmp2,TOV0                              
