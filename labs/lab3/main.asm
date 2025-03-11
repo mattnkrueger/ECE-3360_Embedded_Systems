@@ -447,19 +447,19 @@ display:
 ;       - TIFR0: timer counter interrupt flag register - if TOV0 set (1), then the timer is overflown
 ; 		- TCNT0: timer counter register - counts up with each pulse to the value loaded into it
 timer_delay_500us:
-	in tmp1,TCCR0B                                  
-	ldi tmp2,0x00                                   
-	out TCCR0B,tmp2                                 
-	in tmp2,TIFR0                                   
-	sbr tmp2,1<<TOV0                                
-	out TIFR0,tmp2                                  
-	out TCNT0,count                                 
-	out TCCR0B,tmp1                                 
+	in tmp1, TCCR0B                                  
+	ldi tmp2, 0x00                                   
+	out TCCR0B, tmp2                                 
+	in tmp2, TIFR0                                   
+	sbr tmp2, 1<<TOV0                                
+	out TIFR0, tmp2                                  
+	out TCNT0, count                                 
+	out TCCR0B, tmp1                                 
 
 	; wait_for_overflow:
 	;   - wait for the value of TOV0 to be set (overflown)
 	wait_for_overflow:
-		in tmp2,TIFR0                               
-		sbrs tmp2,TOV0                              
+		in tmp2, TIFR0                               
+		sbrs tmp2, TOV0                              
 		rjmp wait_for_overflow                                   
 		ret                                         

@@ -266,5 +266,3 @@ delay:
 		sbrs tmp2,TOV0 ; Check overflow flag
 		rjmp wait
 		ret
-
-
