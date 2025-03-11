@@ -1,5 +1,7 @@
 # Lab 1: Blinky
 
+[Home](../../README.md)
+
 ## Directions
 This lab introduces basic microcontroller programming using the ATmega328P. The program alternates between two LEDs connected to Port B pins (PB1 and PB2), creating a blinking pattern. This serves as a foundation for understanding basic I/O operations, timing, and assembly programming on the ATmega328P platform.
 

@@ -1,4 +1,6 @@
-# Lab 2: 7-Segment Display Controlled by Push Button
+# Lab 3: 7-Segment Display Controlled by Push Button
+
+[Home](../../README.md)
 
 ## Directions
 The lab builds a simple electrongic lock. It uses an ATmega328P microcontroller, an 8-bit shift register, a 7-segment LED display, and a pushbutton switch. It builds upon [Lab 2](../lab2/lab_report/es_lab_report_2.pdf) by adding a rotary pulse generator to cycle through numbers, and the button to either submit or reset the current password attempt of the user.

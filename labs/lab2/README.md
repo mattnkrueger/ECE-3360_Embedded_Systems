@@ -1,5 +1,7 @@
 # Lab 2: 7-Segment Display Controlled by Push Button
 
+[Home](../../README.md)
+
 ## Directions
 The lab builds a hexadecimal up/down counter. It uses an ATmega328P microcontroller, an 8-bit shift register, a 7-segment LED display, and a pushbutton switch. The 7-segment display shows "0" at power on, and the counter increments by default. The pushbutton controls mode selection, increment/decrement, and reset.
 
