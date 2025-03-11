@@ -1,4 +1,4 @@
-# Lab 2: 7-Segment Display Controlled by Push Button
+# Lab 2: Counter with 7-Segment Display
 
 [Home](../../README.md)
 
