@@ -41,6 +41,7 @@ password_codes:
 ; power_on:
 ;   ENTRY POINT OF THE PROGRAM
 ;   - initializes the timer and rpg before jumping to reset_program
+;   - additionally initializes the password index to 0 and the password correctness flag to 1 (this fixes bug where the first program loop never works)
 power_on:
 	rcall setup_timer								
 	rcall setup_rpg
