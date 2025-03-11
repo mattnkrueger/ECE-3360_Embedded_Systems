@@ -44,6 +44,8 @@ password_codes:
 power_on:
 	rcall setup_timer								
 	rcall setup_rpg
+	ldi tmp1, 1                                  
+	mov r0, tmp1                                 
 	rjmp start_program
 
 ; setup_rpg:
