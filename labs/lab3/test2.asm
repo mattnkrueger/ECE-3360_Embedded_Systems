@@ -29,22 +29,26 @@ password_codes:
 .db 0x0a, 0x0a, 0x05, 0x0c, 0x04, 0x00
 
 ; Register Aliases
-.def tmp1 = r23  	 	 	 	 	 	 	 	 	; use r23 for temporary variables 
-.def tmp2 = r24  	 	 	 	 	 	 	 	    ; use r24 for temporary values
-.def count = r22	 	 	 	 	 	 	 	 	; use r22 for the count
-.def rpg_current_state = r21                     	; register to hold current state of RPG
+.def tmp1 = r23  	 	 	 	 	 	 	 	 	; temporary variables 1 
+.def tmp2 = r24  	 	 	 	 	 	 	 	    ; temporary variablues 2
+.def count = r22	 	 	 	 	 	 	 	 	; count of loops for timer delay
+.def rpg_current_state = r21                     	; current state of RPG
 .def rpg_previous_state = r20            		    ; register to hold previous state of RPG
 
+; register aliases 16..19 were redacted for clarity as they are not as consistently throughout the program.
+; these registers are used to track the two LUTs, however during some subroutines their function is more ambiguous.
+
 ; power_on:
-;   - ENTRY POINT
+;   ENTRY POINT OF THE PROGRAM
 ;   - initializes the timer and rpg before jumping to reset_program
 power_on:
 	rcall setup_timer								
 	rcall setup_rpg
-	rjmp reset_program								
+	rjmp start_program
 
 ; setup_rpg:
-;   - load PIND into rpg_previous_state (11xxxxxx)
+;   INITIALIZE THE ROTARY PULSE GENERATOR
+;   - load PIND into rpg_previous_state (76......)
 ;   - mask all other bits beside wanted RPG bits 6 and 7 
 setup_rpg:
 	in rpg_previous_state, PIND 	              	    
@@ -52,6 +56,7 @@ setup_rpg:
 	ret
 
 ; setup_timer:
+;    INITIALIZE TIMER0 
 ; 	- Timer/Counter setup for 500 μs delay
 ;   - 8-bit timer, so we need to set the prescalar to 64
 ;   - atmega328p has a CPU clock speed of 16 MHz, so 
@@ -70,25 +75,28 @@ setup_timer:
 	out TCCR0B, tmp1 	 	 	 	 	 
 	ret
 
-; reset_program:
+; start_program:
+;   INITIAL DISPLAY 
 ;   - initialize the 7-segment display, call rpg check, and display number
 ;   - dislpay a dash on the 7-segment display "-" (0x40)
-reset_program:
+start_program:
 	ldi r16, 0x40            	 	 	 	 	 	
 	rcall display 	 	 	 	 	 	 	 	 	
 	rcall rpg_check									
 	cpi r17, 0x00									
 	breq program_loop 						    
-	rjmp reset_program								
+	rjmp start_program
 
 ; program_loop:
+;   MAIN PROGRAM LOOP
 ;   - update the value to be displayed on the 7-segment display via rpg interaction
-;   - display the current value of the count
+;   - checks for button press & duration, and compares with password or resets program (after 5 button clicks, code is either correct & LED shines or incorrect and program resets after 7 seconds)
 program_loop:
 	rcall compute_current_seven_segment_hex
 	rcall rpg_check 
 
 	; button_check:
+	;   BUTTON LISTENER
 	; 	- if the pushbutton is pressed for <1 second, add current value stored in r17 to password value
 	;   - if the pushbutton is pressed for 1<t<2 seconds, do nothing
 	; 	- if the pushbutton is pressed for >2 second, reset the password value
@@ -103,7 +111,7 @@ program_loop:
 		ldi R26, 0xd0		                         
 		ldi R27, 0x07								 
 
-        ; less than one loop:
+        ; less_than_one_loop:
 		;   - loop contained in less_than_one subroutine
 		less_than_one_loop:                          
 			rcall timer_delay_500us                  
@@ -111,7 +119,7 @@ program_loop:
 			breq one_to_two                          
 			sbis PINB, 3                             
 			rjmp less_than_one_loop		             
-			rjmp find_code                           
+			rjmp compute_hex_at_password_index                           
 
 	; one_to_two:
 	; 	- pressed 1<t<2 seconds, do nothing
@@ -138,83 +146,98 @@ program_loop:
 	greater_than_two:
 		sbis PINB, 3 							     
 		rjmp greater_than_two                        
-		rjmp reset_code                              
+		rjmp reset_program                              
 
-    ; find_code:
+    ; compute_hex_at_password_index:
+	;   TRAVERSE THE PASSWORD LOOKUP TABLE
 	;   - load the value of the password at the current index
 	;   - compare with the user's selected digit
-	;   - if the values are equal, jump to correct_digit
-	;   - otherwise, continue to incorrect_digit
-    find_code:
+	;   - if the values are equal, jump to correct_value_at_index
+	;   - otherwise, continue to incorrect_value_at_index
+    compute_hex_at_password_index:
 		ldi ZL, low(password_codes << 1)             
 		add ZL, r19                                  
 		lpm r18, Z                                   
         cp r17, r18                                  
-		breq correct_digit                           
+		breq correct_value_at_index                           
  
-		; incorrect_digit:
+		; incorrect_value_at_index:
+		;   USER PASSWORD IS INCORRECT
 		; 	- increment the index of the password lookup table
 		;   - set r0 to 0 (this functions as a flag to indicate that the user's	code is incorrect)
 		;   - if the index of the password lookup table is 5, jump to incorrect_code_display
 		;   - else, jump to program_loop to continue current attempt
-		incorrect_digit:
+		incorrect_value_at_index:
 			inc r19                                  
 			ldi tmp1, 0                              
 			mov r0, tmp1                             
 			cpi r19, 0x05                            
-			breq incorrect_code_display              
+			breq incorrect_password_display              
 			rjmp program_loop                      
         
-	; incorrect_code_display:
+	; incorrect_password_display:
+	;    DISPLAY IF USER ENTERS INCORRECT CODE
 	; 	- display the incorrect code pattern "_"
-	incorrect_code_display:
+	incorrect_password_display:
 		ldi R26, 0xb0                                
 		ldi R27, 0x36                                
 		ldi r16, 0x08                                
 		rcall display                                
 
-		; incorrect_code_display_loop:
-		; 	- display "_" for 7 seconds
-		incorrect_code_display_loop:
+		; incorrect_password_display_loop:
+		; 	- display "_" for 7 seconds and then reset
+		incorrect_password_display_loop:
 			rcall timer_delay_500us                  
 			sbiw R27:R26, 1                          
-			breq reset_code                          
-			rjmp incorrect_code_display_loop         
+			breq reset_program                          
+			rjmp incorrect_password_display_loop         
 		
-	; correct_digit:
+	; correct_value_at_index:
+	;   USER VALUE AT INDEX IS CORRECT
 	; 	- set r0 to 1 (this functions as a flag to indicate that the user's code is correct)
-	;   - if r0 = 0, jump to incorrect_digit 
+	;   - if r0 = 0, jump to incorrect_value_at_index 
 	;   - else, continue to program_loop
-    correct_digit: 
+    correct_value_at_index: 
 		Mov tmp1, r0                                 
 		cpi tmp1, 0                                  
-		breq incorrect_digit                         
+		breq incorrect_value_at_index                         
     	inc r19                                      
         ldi tmp1, 1                                  
         mov r0, tmp1                                 
         cpi r19, 0x05                                
-        breq correct_code_check                      
+        breq check_password_correctness
 		rjmp program_loop                          
         
-    ; correct_code_check:
+    ; check_password_correctness:
+	;   CHECK IF THE USER PASSWORD IS CORRECT 
 	; 	- set r0 to 1 (this functions as a flag to indicate that the user's code is correct)
-	;   - if r0 = 1, jump to LED_ON
-    correct_code_check:
+	;   - if r0 = 1, jump to LED_ON, else continue to reset_program
+	;   - triggered after 5 button presses regardless of correctness
+    check_password_correctness:
     	mov tmp1, r0                                 
         cpi tmp1, 0x01                               
         breq correct_password                        
         
-    ; reset_code:
+    ; reset_program:
+	;   RESET THE PROGRAM
 	; 	- set r0 to 1 (true initially... user hasnt entered the wrong code yet)
 	;   - reset the index of the password lookup table to 0
 	;   - jump to power_on to restart the program
-    reset_code:
+	;
+	;   'ldi r17, 0x01'
+	;   - no significance of 0x01 other than it isnt 0x00... needed to fix error when
+	;	  restarting resetting at 0. Because r17 would be set to 0x00, it would branch 
+	;     after the cpi in start_program, skipping the display of the "-". 
+	;	  This fixes the issue; the user can now stay at "-" until rotary is moved cw.
+    reset_program:
 		ldi tmp1, 1                                  
 		mov r0, tmp1                                 
-		ldi r19, 0x00                                
+		ldi r19, 0x00               
+		ldi r17, 0x01                 
 		rjmp power_on                                
         
     ; correct_password:
+	;   
 	; 	- display the LED on the arduino board
 	;   - display a "." on the 7-segment display
 	;   - only displayed if the user's code is correct
@@ -238,7 +261,7 @@ program_loop:
 		; 	- turn off the LED on the arduino board
 		LED_off:
 			cbi PORTB, 5                              
-			rjmp reset_code                           
+			rjmp reset_program                           
 
     ; rpg_check:
 	; 	- check the state of the RPG
@@ -343,11 +366,13 @@ program_loop:
 		mov rpg_previous_state, rpg_current_state               
 
 	; no_change:
-	; 	- if the state has not changed, simply ret
+	;   RPG STATE HAS NOT CHANGED
+	; 	- if this code block is reached, simply return
 	no_change:
 		ret                                          
 
 ; compute_current_seven_segment_hex:
+;   TRAVERSE THE SEVEN SEGMENT DISPLAY LOOKUP TABLE
 ; 	- find the value to be displayed on the 7-segment display
 ;   - lookup the value in the seven_segment_codes table
 ;   - load the value into r16
@@ -356,13 +381,15 @@ compute_current_seven_segment_hex:
 	add ZL, r17                                      
 
 ; display_call:
-; 	- calls the function display after loading z into r16 (current hex code)
+;   DISPLAY THE VALUE ON THE 7-SEGMENT DISPLAY (driver)
+; 	- calls the function display after loading z into r16 (current hex code) before returning to loop
 display_call:
 	lpm r16, Z                                      
 	rcall display                                   
 	ret                                             
 
 ; display:
+;   DISPLAY THE VALUE ON THE 7-SEGMENT DISPLAY
 ; 	- display the current value on the 7-segment display
 ;   - utilizes the stack to save the value of r16 and r17 and the status register
 display:
@@ -373,6 +400,7 @@ display:
 	ldi r17, 8                                      
   
   ; rotate_bits:
+  ;   SERIAL INPUT OF DATA TO 74HC595 SHIFT REGISTER
   ;   - subroutine for 74hc595 shift register to shift in the value of the hex code to be displayed on the 7-segment display
   ;   - shift the value of r16 to the left
   ;   - if the carry flag is set, set the value of PORTB.0
@@ -385,12 +413,14 @@ display:
   	rjmp shift_register_out                         
 
   ; set_ser_in_1:
+  ;   PULSE 1 TO SERIAL INPUT OF 74HC595 SHIFT REGISTER
   ;   - subroutine for 74hc595 shift register to shift in the value of the hex code to be displayed on the 7-segment display
   ;   - set the value of PORTB 0
   set_ser_in_1:
     sbi PORTB, 0
 
   ; shift_register_out:
+  ;   OUTPUT DATA TO 74HC595 SHIFT REGISTER
   ;   - subroutine for 74hc595 shift register to shift in the value of the hex code to be displayed on the 7-segment display
   ;   - pulse srclk and rclk to shift in the value of the hex code to be displayed on the 7-segment display. 
   ;   - first shifts all digits in from r16 using rotate_bit loop, then stores them (upon storage, because OE active, there is output from shift register... electrical circuit handles the rest).
@@ -409,6 +439,7 @@ display:
 	ret                                             
 
 ;timer_delay_500us:
+;   DELAY FOR 500 MICROSECONDS 
 ;   - delay for 500 microseconds using timer0 of the atmega328p
 ;   
 ;	relevant registers:
@@ -425,10 +456,10 @@ timer_delay_500us:
 	out TCNT0,count                                 
 	out TCCR0B,tmp1                                 
 
-	; wait:
+	; wait_for_overflow:
 	;   - wait for the value of TOV0 to be set (overflown)
-	wait:
+	wait_for_overflow:
 		in tmp2,TIFR0                               
 		sbrs tmp2,TOV0                              
-		rjmp wait                                   
+		rjmp wait_for_overflow                                   
 		ret                                         
