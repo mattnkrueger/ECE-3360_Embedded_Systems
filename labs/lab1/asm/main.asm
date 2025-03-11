@@ -1,13 +1,9 @@
 ;
-; es_lab_1_matt_krueger.asm
+; main.asm
 ;
-; Created: 2/4/2025 11:09:33 AM
-; Author : mnkrueger
+; Created: 2/4/2025
+; Author : Matt Krueger
 ;
-
-; I have erased all comments on starting code, replacing them with comments for my own learning.
-; Research done on web & datasheets provided on ICON.
-; - matt krueger
 
 ; ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; INITIAL SETUP 

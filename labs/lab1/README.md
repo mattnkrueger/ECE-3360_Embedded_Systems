@@ -1,0 +1,43 @@
+# Lab 1: Blinky
+
+## Directions
+This lab introduces basic microcontroller programming using the ATmega328P. The program alternates between two LEDs connected to Port B pins (PB1 and PB2), creating a blinking pattern. This serves as a foundation for understanding basic I/O operations, timing, and assembly programming on the ATmega328P platform.
+
+## Circuit
+<div align="center">
+    <img width="100%" src="./lab_report/schematic_lab_1.png">
+</div>
+<div align="center">
+    KiCAD Schematic of Lab 1
+</div>
+
+## Components List
+<div align="center">
+
+| Component | Quantity |
+|:-----------:|:----------:|
+| Atmega 328P µC | 1 |
+| LED | 2 |
+| 220Ω Resistor | 2 |
+
+</div>
+
+## Functionality
+#### LED Blinking Pattern
+- Two LEDs connected to PB1 and PB2
+- LEDs alternate in a continuous pattern
+- Pattern sequence: PB2 → delay → PB1 → delay → repeat
+- Each cycle takes 16 machine cycles to complete
+
+#### Timing Control
+- Program uses precise cycle counting for timing
+- Each LED state change includes a delay for visible blinking
+- Timing is achieved through software delays
+
+#### Port Configuration
+- PB1 and PB2 configured as outputs using DDRB
+- Uses direct port manipulation for LED control
+- Implements efficient bit-setting instructions (sbi/cbi)
+
+## Source Code 
+- [main.asm](../lab1/asm/main.asm): assembly code for lab
