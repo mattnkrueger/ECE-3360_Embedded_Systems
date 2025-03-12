@@ -12,7 +12,7 @@ This repository contains the lab work and final project for the Embedded Systems
 
 #### Lab 2: Counter with 7-Segment Display
 - [README](labs/lab2/README.md)
-- [Lab Report](labs/lab2/lab_report.pdf)
+- [Lab Report](labs/lab2/lab_report/es_lab_report_2.pdf)
 
 #### Lab 3: Simple Electronic Lock
 - [README](labs/lab3/README.md)
