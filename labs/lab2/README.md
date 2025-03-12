@@ -7,7 +7,7 @@ The lab builds a hexadecimal up/down counter. It uses an ATmega328P microcontrol
 
 ## Circuit
 <div align="center">
-    <img width="100%" src="../../img/lab2.png">
+    <img width="100%" src="./KiCAD/lab2_schematic.png">
 </div>
 <div align="center">
     KiCAD Schematic of Lab 2 

@@ -7,7 +7,7 @@ The lab builds a simple electrongic lock. It uses an ATmega328P microcontroller,
 
 ## Circuit
 <div align="center">
-    <img width="100%" src="./lab_report/schematic_lab_3.png">
+    <img width="100%" src="./KiCAD/lab3_schematic.png">
 </div>
 <div align="center">
     KiCAD Schematic of Lab 2 

@@ -7,7 +7,7 @@ This lab introduces basic microcontroller programming using the ATmega328P. The 
 
 ## Circuit
 <div align="center">
-    <img width="100%" src="./lab_report/schematic_lab_1.png">
+    <img width="100%" src="./KiCAD/lab1_schematic.png">
 </div>
 <div align="center">
     KiCAD Schematic of Lab 1
