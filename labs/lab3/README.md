@@ -66,5 +66,6 @@ The lab builds a simple electrongic lock. It uses an ATmega328P microcontroller,
 #### Reset
 - Press and hold button ≥ 2 seconds: Reset to "0" and enter increment mode
 
-## Source Code 
+## References 
 - [main.asm](../lab3/asm/main.asm): assembly code for lab
+- [Lab Report](../lab3/lab_report/es_lab_report_3.pdf): detailed lab report

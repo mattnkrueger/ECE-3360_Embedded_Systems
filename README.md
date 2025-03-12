@@ -16,7 +16,7 @@ This repository contains the lab work and final project for the Embedded Systems
 
 #### Lab 3: Simple Electronic Lock
 - [README](labs/lab3/README.md)
-- [Lab Report](labs/lab3/lab_report.pdf)
+- [Lab Report](labs/lab3/lab_report/es_lab_report_3.pdf)
 
 #### Lab 4: LCD display with PWM Fan
 - [README](labs/lab4/README.md)

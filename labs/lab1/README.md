@@ -35,5 +35,5 @@ This lab introduces basic microcontroller programming using the ATmega328P. The 
 - Each LED state change includes a delay for visible blinking
 - Timing is achieved through software delays
 
-## Source Code 
+## References
 - [main.asm](../lab1/asm/main.asm): assembly code for lab
