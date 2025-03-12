@@ -4,7 +4,17 @@
 ; 
 ; Description: 
 ; 	This programs a simple lock with a 7-segment display, pushbutton, and a rotary pulse generator.
+; Lookup table for 7-segment display
+rjmp start
+seven_segment_codes:
+.db 0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07 	; 0-7
+.db 0x7f, 0x6f, 0x77, 0x7c, 0x39, 0x5e, 0x79, 0x71 	; 8-f
 
+; Lookup table for password (AA5C4)
+password_codes:
+.db 0x0a, 0x0a, 0x05, 0x0c, 0x04, 0x00
+
+start:
 .cseg
 .org 0x0000
 
@@ -18,15 +28,6 @@ sbi DDRB, 5											; LED on arduino board
 ; Port D Data Direction Configuration
 cbi DDRD, 6											; A signal from RPG
 cbi DDRD, 7 										; B signal from RPG  
-
-; Lookup table for 7-segment display
-seven_segment_codes:
-.db 0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07 	; 0-7
-.db 0x7f, 0x6f, 0x77, 0x7c, 0x39, 0x5e, 0x79, 0x71 	; 8-f
-
-; Lookup table for password (AA5C4)
-password_codes:
-.db 0x0a, 0x0a, 0x05, 0x0c, 0x04, 0x00
 
 ; Register Aliases
 .def tmp1 = r23  	 	 	 	 	 	 	 	 	; temporary variables 1 
