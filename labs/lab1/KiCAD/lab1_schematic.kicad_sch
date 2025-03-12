@@ -5,520 +5,9 @@
 	(uuid "5a9f816b-81f3-4b3b-b305-817caf4bd656")
 	(paper "User" 203.2 203.2)
 	(title_block
-		(title "7-Segment Display Controlled by Push Button")
-		(date "2/22/2025")
+		(title "Blinky")
 	)
 	(lib_symbols
-		(symbol "74xx:74HC595"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at -7.62 13.97 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "74HC595"
-				(at -7.62 -16.51 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "http://www.ti.com/lit/ds/symlink/sn74hc595.pdf"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "8-bit serial in/out Shift Register 3-State Outputs"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "HCMOS SR 3State"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "DIP*W7.62mm* SOIC*3.9x9.9mm*P1.27mm* TSSOP*4.4x5mm*P0.65mm* SOIC*5.3x10.2mm*P1.27mm* SOIC*7.5x10.3mm*P1.27mm*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "74HC595_1_0"
-				(pin input line
-					(at -10.16 10.16 0)
-					(length 2.54)
-					(name "SER"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 5.08 0)
-					(length 2.54)
-					(name "SRCLK"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 2.54 0)
-					(length 2.54)
-					(name "~{SRCLR}"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -2.54 0)
-					(length 2.54)
-					(name "RCLK"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -5.08 0)
-					(length 2.54)
-					(name "~{OE}"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 15.24 270)
-					(length 2.54)
-					(name "VCC"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -17.78 90)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 10.16 180)
-					(length 2.54)
-					(name "QA"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "15"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 7.62 180)
-					(length 2.54)
-					(name "QB"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 5.08 180)
-					(length 2.54)
-					(name "QC"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 2.54 180)
-					(length 2.54)
-					(name "QD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 0 180)
-					(length 2.54)
-					(name "QE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 -2.54 180)
-					(length 2.54)
-					(name "QF"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 -5.08 180)
-					(length 2.54)
-					(name "QG"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin tri_state line
-					(at 10.16 -7.62 180)
-					(length 2.54)
-					(name "QH"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 10.16 -12.7 180)
-					(length 2.54)
-					(name "QH'"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(symbol "74HC595_1_1"
-				(rectangle
-					(start -7.62 12.7)
-					(end 7.62 -15.24)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "Device:C_Small"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0.254)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "C"
-				(at 0.254 1.778 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "C_Small"
-				(at 0.254 -2.032 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Unpolarized capacitor, small symbol"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "capacitor cap"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "C_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "C_Small_0_1"
-				(polyline
-					(pts
-						(xy -1.524 0.508) (xy 1.524 0.508)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.524 -0.508) (xy 1.524 -0.508)
-					)
-					(stroke
-						(width 0.3302)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "C_Small_1_1"
-				(pin passive line
-					(at 0 2.54 270)
-					(length 2.032)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -2.54 90)
-					(length 2.032)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Device:R_US"
 			(pin_numbers
 				(hide yes)
@@ -692,20 +181,19 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Display_Character:LTS-6960HR"
+		(symbol "LED:LD274"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "AFF"
-				(at -7.874 13.97 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LTS-6960HR"
-				(at -2.032 13.97 0)
+			(property "Reference" "D"
+				(at 0.508 1.778 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -713,8 +201,16 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" "Display_7Segment:7SegmentLED_LTS6760_LTS6780"
-				(at 0 -15.24 0)
+			(property "Value" "LD274"
+				(at -1.016 -2.794 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "LED_THT:LED_D5.0mm_IRGrey"
+				(at 0 4.445 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -722,7 +218,16 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "https://datasheet.octopart.com/LTS-6960HR-Lite-On-datasheet-11803242.pdf"
+			(property "Datasheet" "http://pdf.datasheetcatalog.com/datasheet/siemens/LD274.pdf"
+				(at -1.27 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "950nm IR-LED, 5mm"
 				(at 0 0 0)
 				(effects
 					(font
@@ -731,7 +236,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "DISPLAY 7 SEGMENTS common A."
+			(property "ki_keywords" "IR LED"
 				(at 0 0 0)
 				(effects
 					(font
@@ -740,7 +245,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "display LED 7-segment"
+			(property "ki_fp_filters" "LED*5.0mm*IRGrey*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -749,30 +254,22 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "7SegmentLED?LTS6760?LTS6780*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
+			(symbol "LD274_0_1"
+				(polyline
+					(pts
+						(xy -2.54 1.27) (xy -2.54 -1.27)
 					)
-					(hide yes)
-				)
-			)
-			(symbol "LTS-6960HR_0_1"
-				(rectangle
-					(start -10.16 12.7)
-					(end 10.16 -12.7)
 					(stroke
 						(width 0.254)
 						(type default)
 					)
 					(fill
-						(type background)
+						(type none)
 					)
 				)
 				(polyline
 					(pts
-						(xy -3.81 -0.508) (xy 3.81 -0.508) (xy 2.54 -8.128) (xy -5.08 -8.128) (xy -3.81 -0.508) (xy -3.81 -0.508)
+						(xy -2.413 1.651) (xy -0.889 3.175) (xy -0.889 2.667) (xy -0.889 3.175) (xy -1.397 3.175)
 					)
 					(stroke
 						(width 0)
@@ -784,7 +281,7 @@
 				)
 				(polyline
 					(pts
-						(xy -2.54 8.128) (xy 5.08 8.128) (xy 3.81 0.508) (xy -3.81 0.508) (xy -2.54 8.128) (xy -2.54 8.128)
+						(xy -1.143 1.651) (xy 0.381 3.175) (xy 0.381 2.667)
 					)
 					(stroke
 						(width 0)
@@ -794,95 +291,48 @@
 						(type none)
 					)
 				)
-				(circle
-					(center 4.572 -8.128)
-					(radius 0.508)
+				(polyline
+					(pts
+						(xy 0 0) (xy -2.54 0)
+					)
 					(stroke
 						(width 0)
 						(type default)
 					)
 					(fill
-						(type outline)
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -1.27) (xy -2.54 0) (xy 0 1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.381 3.175) (xy -0.127 3.175)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
 					)
 				)
 			)
-			(symbol "LTS-6960HR_1_1"
+			(symbol "LD274_1_1"
 				(pin passive line
-					(at -12.7 10.16 0)
+					(at -5.08 0 0)
 					(length 2.54)
-					(name "a"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -12.7 7.62 0)
-					(length 2.54)
-					(name "b"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -12.7 5.08 0)
-					(length 2.54)
-					(name "c"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -12.7 2.54 0)
-					(length 2.54)
-					(name "d"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -12.7 0 0)
-					(length 2.54)
-					(name "e"
+					(name "K"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -898,88 +348,16 @@
 					)
 				)
 				(pin passive line
-					(at -12.7 -2.54 0)
+					(at 2.54 0 180)
 					(length 2.54)
-					(name "f"
+					(name "A"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -12.7 -5.08 0)
-					(length 2.54)
-					(name "g"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 12.7 10.16 180)
-					(length 2.54)
-					(name "C.A."
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 12.7 7.62 180)
-					(length 2.54)
-					(name "C.A."
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 12.7 -7.62 180)
-					(length 2.54)
-					(name "DP"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
+					(number "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1580,156 +958,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Switch:SW_Push"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "SW"
-				(at 1.27 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "SW_Push"
-				(at 0 -1.524 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Push button switch, generic, two pins"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "switch normally-open pushbutton push-button"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "SW_Push_0_1"
-				(circle
-					(center -2.032 0)
-					(radius 0.508)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 1.27) (xy 0 3.048)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.032 0)
-					(radius 0.508)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 1.27) (xy -2.54 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -5.08 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 0 180)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "power:Earth"
 			(power)
 			(pin_numbers
@@ -1993,143 +1221,31 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "560R Resistors Used for 7-Segment Display Connections"
-		(exclude_from_sim no)
-		(at 135.636 104.14 0)
-		(effects
-			(font
-				(size 0.635 0.635)
-			)
-		)
-		(uuid "3ae6fb55-6870-4a6a-9dac-627f9c2f414d")
-	)
 	(junction
-		(at 100.33 134.62)
+		(at 114.3 93.98)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "29c06ffa-7179-4198-85d7-77e2bcb4136f")
-	)
-	(junction
-		(at 106.68 71.12)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "325e794e-34aa-4d46-ad30-ef82af298aee")
-	)
-	(junction
-		(at 105.41 107.95)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "72cb47f1-d79b-42db-81e9-c237f724ff02")
+		(uuid "77a47b42-dc4b-4092-a0f9-78bc85b001cc")
 	)
 	(wire
 		(pts
-			(xy 87.63 68.58) (xy 87.63 92.71)
+			(xy 114.3 93.98) (xy 118.11 93.98)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "0bf3b7d4-3499-48c9-aac0-9eb31dcee274")
+		(uuid "3dd1313b-f077-43c9-9f4a-a6b5b301334a")
 	)
 	(wire
 		(pts
-			(xy 91.44 95.25) (xy 95.25 95.25)
+			(xy 88.9 91.44) (xy 88.9 99.06)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "18d5df95-3dca-4c97-871b-8c0718515cfb")
-	)
-	(wire
-		(pts
-			(xy 78.74 66.04) (xy 90.17 66.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "18d7d2ec-3725-44c0-a5f5-c2de37ddf2ce")
-	)
-	(wire
-		(pts
-			(xy 82.55 134.62) (xy 100.33 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "200dabbb-5b36-485a-ac07-4acb037dd3f5")
-	)
-	(wire
-		(pts
-			(xy 87.63 92.71) (xy 95.25 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "20c5c902-1bdc-49e9-86bb-82fc5763259b")
-	)
-	(wire
-		(pts
-			(xy 90.17 66.04) (xy 90.17 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2872669c-6dc5-48be-9737-92e84d9a18de")
-	)
-	(wire
-		(pts
-			(xy 90.17 80.01) (xy 95.25 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "379c2baa-5166-41a1-9ffb-dfd17bef5b39")
-	)
-	(wire
-		(pts
-			(xy 78.74 68.58) (xy 87.63 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "379de252-25fc-4f39-9819-dd30d6259a8d")
-	)
-	(wire
-		(pts
-			(xy 119.38 134.62) (xy 118.11 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "39987bee-cef6-4d61-94e8-d0c0b0861a89")
-	)
-	(wire
-		(pts
-			(xy 106.68 71.12) (xy 92.71 71.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4b31abac-00dd-42e7-85cf-812f95b1564a")
-	)
-	(wire
-		(pts
-			(xy 151.13 82.55) (xy 151.13 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4c410c8f-fbbe-418d-bd31-270be31da247")
+		(uuid "4b1abeee-e9ef-4dcb-89ee-30430b63ad8e")
 	)
 	(wire
 		(pts
@@ -2143,213 +1259,83 @@
 	)
 	(wire
 		(pts
-			(xy 92.71 71.12) (xy 92.71 87.63)
+			(xy 109.22 99.06) (xy 114.3 99.06)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6a6de1c1-4eb5-4a00-870a-745f4e4c5529")
+		(uuid "71f03e0f-7f82-4551-92be-6e4e8a5ab9e7")
 	)
 	(wire
 		(pts
-			(xy 148.59 80.01) (xy 154.94 80.01)
+			(xy 114.3 93.98) (xy 114.3 99.06)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6b0e80f6-d0e5-45b5-9239-a88ac6d3b4b2")
+		(uuid "735a8e69-0489-4dfb-82c8-9ae205f49023")
 	)
 	(wire
 		(pts
-			(xy 91.44 107.95) (xy 105.41 107.95)
+			(xy 114.3 88.9) (xy 114.3 93.98)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "79ce3282-afdf-4d44-ac8f-38251f252006")
+		(uuid "827cde7a-d897-4a56-9696-0ec0711106b7")
 	)
 	(wire
 		(pts
-			(xy 154.94 83.82) (xy 158.75 83.82)
+			(xy 118.11 93.98) (xy 118.11 99.06)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "85f04af5-31cb-481a-83b3-a87938c4d263")
+		(uuid "85004b9b-2f49-4ac3-98d1-070c740d09c9")
 	)
 	(wire
 		(pts
-			(xy 85.09 85.09) (xy 95.25 85.09)
+			(xy 109.22 88.9) (xy 114.3 88.9)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "88981e5f-9626-4ba9-9f52-820f4d809604")
+		(uuid "980d4269-689e-4576-bc68-0a91ebb7ce61")
 	)
 	(wire
 		(pts
-			(xy 105.41 107.95) (xy 105.41 111.76)
+			(xy 96.52 88.9) (xy 101.6 88.9)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "8c6f68bd-1071-4591-a4d0-fad3a2d371e6")
+		(uuid "ab3760ca-614b-4db7-950b-a1491e8437e4")
 	)
 	(wire
 		(pts
-			(xy 78.74 71.12) (xy 85.09 71.12)
+			(xy 78.74 91.44) (xy 88.9 91.44)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "a6549db5-6ebe-4616-8cf8-2b76722f65e0")
+		(uuid "adc4b9e1-b25c-489f-97a8-1bf077b185bf")
 	)
 	(wire
 		(pts
-			(xy 148.59 82.55) (xy 151.13 82.55)
+			(xy 78.74 88.9) (xy 88.9 88.9)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "af4c3852-6cb4-4d33-8f17-583f91dcdc5e")
-	)
-	(wire
-		(pts
-			(xy 118.11 97.79) (xy 118.11 106.68)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b106e6f4-8bbc-4ea7-9a77-74ec294f7cc6")
-	)
-	(wire
-		(pts
-			(xy 154.94 80.01) (xy 154.94 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b3441de4-294c-400e-bbda-47113c04b082")
-	)
-	(wire
-		(pts
-			(xy 156.21 106.68) (xy 156.21 97.79)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b9a19099-fe47-4a30-88e7-72fe3be9de44")
-	)
-	(wire
-		(pts
-			(xy 115.57 97.79) (xy 118.11 97.79)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ba50c8e6-c030-477a-b9f6-aed9c317cd8c")
-	)
-	(wire
-		(pts
-			(xy 85.09 71.12) (xy 85.09 85.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "be3898eb-ac34-4381-8e23-c350769e2d38")
-	)
-	(wire
-		(pts
-			(xy 92.71 87.63) (xy 95.25 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "be621ee3-b2ac-44a4-90ef-60d5b6c321e1")
-	)
-	(wire
-		(pts
-			(xy 82.55 73.66) (xy 82.55 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c5d7d5f8-706e-481d-ae11-49cbcf71852c")
-	)
-	(wire
-		(pts
-			(xy 118.11 106.68) (xy 156.21 106.68)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c75d0b0c-f4a2-4fb4-b5cd-d703f3e9181e")
-	)
-	(wire
-		(pts
-			(xy 91.44 107.95) (xy 91.44 95.25)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ca25f99d-7a63-45ce-aba0-c894d3ba7405")
-	)
-	(wire
-		(pts
-			(xy 101.6 134.62) (xy 100.33 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ccdd712a-371b-4f98-b986-53af3906479c")
-	)
-	(wire
-		(pts
-			(xy 109.22 134.62) (xy 107.95 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d62ff815-1206-4e51-986c-27a86902d4f9")
-	)
-	(wire
-		(pts
-			(xy 105.41 72.39) (xy 106.68 72.39)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d6cda55c-7476-4448-9c20-bc9686eb3162")
-	)
-	(wire
-		(pts
-			(xy 106.68 68.58) (xy 106.68 71.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e3cdd0f8-30f6-4d7f-b9a4-efecf099b13a")
+		(uuid "f042f824-5ec4-445a-a510-8ed2c2f13dba")
 	)
 	(wire
 		(pts
@@ -2363,55 +1349,27 @@
 	)
 	(wire
 		(pts
-			(xy 78.74 73.66) (xy 82.55 73.66)
+			(xy 96.52 99.06) (xy 101.6 99.06)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "f29257bd-159b-4e43-8235-3c6d9ce27b0d")
-	)
-	(wire
-		(pts
-			(xy 119.38 135.89) (xy 119.38 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f6a78559-b8d2-43d0-b710-8924624aef77")
-	)
-	(wire
-		(pts
-			(xy 106.68 72.39) (xy 106.68 71.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f7497d66-7330-4c1d-ab7c-db9c168cf79e")
-	)
-	(wire
-		(pts
-			(xy 105.41 74.93) (xy 105.41 72.39)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f8df9755-356f-4287-aef5-baff0aba3658")
+		(uuid "fa0a7fa5-49b1-44ac-8e47-9a2c014426f4")
 	)
 	(symbol
-		(lib_id "Switch:SW_Push")
-		(at 113.03 134.62 0)
+		(lib_id "LED:LD274")
+		(at 104.14 88.9 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "0020effe-99aa-4a27-9207-0f65567e736c")
-		(property "Reference" "SW1"
-			(at 144.526 113.792 0)
+		(fields_autoplaced yes)
+		(uuid "727f46f1-4d64-4bcf-ba43-03844bbb9ab9")
+		(property "Reference" "D1"
+			(at 105.283 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2419,25 +1377,16 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "Push Button"
-			(at 113.03 129.54 0)
+		(property "Value" "LED (red)"
+			(at 105.283 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" ""
-			(at 113.03 129.54 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 113.03 129.54 0)
+		(property "Footprint" "LED_THT:LED_D5.0mm_IRGrey"
+			(at 104.14 84.455 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2445,8 +1394,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Push button switch, generic, two pins"
-			(at 113.03 134.62 0)
+		(property "Datasheet" "http://pdf.datasheetcatalog.com/datasheet/siemens/LD274.pdf"
+			(at 105.41 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2454,759 +1403,25 @@
 				(hide yes)
 			)
 		)
-		(pin "2"
-			(uuid "7dc2c41a-9894-41cb-869d-829dfeef4d64")
+		(property "Description" "950nm IR-LED, 5mm"
+			(at 104.14 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
 		)
 		(pin "1"
-			(uuid "f1fac478-eab3-4e22-bd2a-a09b7c2e0f1b")
+			(uuid "a37be8dd-2de1-433f-b7d5-e20033a09235")
+		)
+		(pin "2"
+			(uuid "ba1359f1-cecc-4f2e-bc25-8ee33e29691a")
 		)
 		(instances
 			(project ""
 				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "SW1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:VCC")
-		(at 100.33 127 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "06dca0fc-8a6b-4e29-a3e2-5161bf807119")
-		(property "Reference" "#PWR03"
-			(at 100.33 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VCC"
-			(at 100.33 121.92 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 100.33 127 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 100.33 127 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 100.33 127 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "856299a2-bbc3-48a1-8651-09e1e9b5503a")
-		)
-		(instances
-			(project ""
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR03")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:Earth")
-		(at 158.75 83.82 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "0985b565-6728-44c3-8c13-349a4ddbda56")
-		(property "Reference" "#PWR05"
-			(at 158.75 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 158.75 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 158.75 83.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 158.75 83.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"Earth\""
-			(at 158.75 83.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "55773aee-0897-41c3-810f-2b964eef05b0")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR05")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 87.63 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "167c732e-618f-4814-9d39-376a7e1b1cbb")
-		(property "Reference" "R6"
-			(at 119.38 81.28 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 85.598 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 88.646 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 87.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 87.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "632570bf-4b6c-4b88-97a6-bc74ebeb82ae")
-		)
-		(pin "1"
-			(uuid "7a1e34d1-1cb7-411f-9270-1bab0ee85032")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:Earth")
-		(at 105.41 111.76 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "1ab88978-8088-4ff8-b920-b77d3515f62e")
-		(property "Reference" "#PWR06"
-			(at 105.41 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 105.156 116.332 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 105.41 111.76 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 105.41 111.76 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"Earth\""
-			(at 105.41 111.76 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "167214ee-2b9d-4eb5-bd34-c84de26a0b83")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR06")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 85.09 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "26b57d25-9f30-41d5-8d97-36c62b85b453")
-		(property "Reference" "R5"
-			(at 119.38 78.74 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 83.058 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 86.106 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "c71df7c5-9ef1-4df8-afbe-5c81f09e25e6")
-		)
-		(pin "1"
-			(uuid "e143a04b-b017-4d07-974f-fb534d6ec668")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 80.01 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "2e6fb9a5-d7af-44ed-846a-f3750381bb35")
-		(property "Reference" "R3"
-			(at 119.38 73.66 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 77.978 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 81.026 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "6de09d28-738a-4ef1-90a2-2bb364bd5e43")
-		)
-		(pin "1"
-			(uuid "49efa725-5cc9-48aa-8be5-7e548ea50495")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:VCC")
-		(at 106.68 68.58 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "35b96d94-e318-4fd1-afe9-1b844a4d611e")
-		(property "Reference" "#PWR07"
-			(at 106.68 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VCC"
-			(at 106.68 63.5 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 106.68 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 106.68 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 106.68 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1cc007c5-92b0-4a72-937c-25ad1b71889f")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR07")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 90.17 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "4b069cac-3db9-4b25-afbf-6d1186f784c1")
-		(property "Reference" "R7"
-			(at 119.38 83.82 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 88.138 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 91.186 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "11a38d5c-c9a2-4fb8-8963-42022e8dd58b")
-		)
-		(pin "1"
-			(uuid "9cccc09e-b610-4ce2-9242-e067d7911028")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:Earth")
-		(at 119.38 135.89 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "54c101fd-462e-4c33-88a8-079b121a41b3")
-		(property "Reference" "#PWR02"
-			(at 119.38 142.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 119.38 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.38 135.89 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 135.89 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"Earth\""
-			(at 119.38 135.89 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "10197dc4-9b93-4f5a-8de8-15f5c61b0f8f")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR02")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 95.25 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "5f3027c8-f104-4eb8-b496-c1300a749d21")
-		(property "Reference" "R9"
-			(at 119.38 88.9 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 93.218 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 96.266 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 95.25 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 95.25 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "99fd756f-7020-4e3f-8a9e-85d27ceb7e34")
-		)
-		(pin "1"
-			(uuid "825b68c2-6446-4547-b036-c5f6b0e9c907")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R9")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 82.55 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6a2fd11d-4d74-4d15-a7b7-0483e39829e4")
-		(property "Reference" "R4"
-			(at 119.38 76.2 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 80.518 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 83.566 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "b21b2864-52f8-4458-9ecc-99745ea5b846")
-		)
-		(pin "1"
-			(uuid "546620cb-7471-4281-bbe2-cfdba5ff81f7")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R4")
+					(reference "D1")
 					(unit 1)
 				)
 			)
@@ -3426,372 +1641,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_US")
-		(at 100.33 130.81 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8da8154c-d127-44b3-8456-c1068ed4de8e")
-		(property "Reference" "R2"
-			(at 93.98 130.81 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "100KΩ"
-			(at 98.298 133.858 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 101.346 131.064 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 100.33 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 100.33 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "f9a3db09-c81d-4cc7-b7c0-e36e256d2df5")
-		)
-		(pin "1"
-			(uuid "898b7d42-c8c4-4a6f-8a6d-0bbbd3109bf3")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 119.38 92.71 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8e0f4243-ea34-467e-a834-090b1856b7bc")
-		(property "Reference" "R8"
-			(at 119.38 86.36 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 119.126 90.678 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 119.126 93.726 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 119.38 92.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 119.38 92.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "9d8e5a14-deae-4ab3-bc20-6f3f3c5c2929")
-		)
-		(pin "1"
-			(uuid "0200954a-b17e-4f57-83ee-cf6823f6dd80")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R8")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Display_Character:LTS-6960HR")
-		(at 135.89 90.17 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "99f66295-4b5e-48be-a433-9dcb25c20bf2")
-		(property "Reference" "AFF1"
-			(at 135.89 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "7-Segment"
-			(at 135.89 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Display_7Segment:7SegmentLED_LTS6760_LTS6780"
-			(at 135.89 105.41 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://datasheet.octopart.com/LTS-6960HR-Lite-On-datasheet-11803242.pdf"
-			(at 135.89 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "DISPLAY 7 SEGMENTS common A."
-			(at 135.89 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "6"
-			(uuid "d5ce6ade-dc34-4a8a-9326-e5bc852d903d")
-		)
-		(pin "5"
-			(uuid "a7c25a6c-2a24-4015-a001-56a1ab00eba4")
-		)
-		(pin "1"
-			(uuid "8dc1cad8-cd93-40b3-ad58-0f74ee259ca8")
-		)
-		(pin "8"
-			(uuid "10edbb96-3209-47d2-87c6-18c785d8989d")
-		)
-		(pin "7"
-			(uuid "f9ed5a1f-0b23-4d5f-b6ff-1903baf51b1e")
-		)
-		(pin "9"
-			(uuid "e3661894-a15f-45f8-836f-296b37914b39")
-		)
-		(pin "4"
-			(uuid "5d63c06a-c19e-45a8-a371-1880ad4e55e6")
-		)
-		(pin "2"
-			(uuid "6857e7c7-b06b-4cd7-a4f8-1d5cdb17fdbb")
-		)
-		(pin "10"
-			(uuid "87a31400-098c-47ad-bc89-83f0eb9e0435")
-		)
-		(pin "3"
-			(uuid "99c3f445-2a99-4ae1-a4db-2fe918789493")
-		)
-		(instances
-			(project ""
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "AFF1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_US")
-		(at 152.4 97.79 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "a07098de-1f65-40cb-af1e-70e0e2030cda")
-		(property "Reference" "R10"
-			(at 152.4 91.44 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "10K"
-			(at 152.146 95.758 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 152.146 98.806 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 152.4 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, US symbol"
-			(at 152.4 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "d7a93883-10b0-467c-bb3f-f1f9754cbbc8")
-		)
-		(pin "1"
-			(uuid "4f964946-44b1-49fe-a3fd-f90b4514d3b2")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "R10")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:Earth")
-		(at 151.13 83.82 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a4a755a0-9e7f-4e01-af93-c7dff380176d")
-		(property "Reference" "#PWR04"
-			(at 151.13 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 151.13 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 151.13 83.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 151.13 83.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"Earth\""
-			(at 151.13 83.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "6594b91b-f8c2-4f29-af26-aad482140cc0")
-		)
-		(instances
-			(project "lab2_schematic"
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR04")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:Earth")
 		(at 63.5 137.16 0)
 		(unit 1)
@@ -3858,16 +1707,17 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_US")
-		(at 105.41 134.62 270)
+		(lib_id "power:Earth")
+		(at 118.11 99.06 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "b9080ed4-2509-40b9-8a1e-c1a81f0cbab2")
-		(property "Reference" "R1"
-			(at 105.41 128.27 90)
+		(fields_autoplaced yes)
+		(uuid "bdd70b97-63fe-4248-8624-1862e3e85326")
+		(property "Reference" "#PWR010"
+			(at 118.11 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3875,8 +1725,8 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "10KΩ"
-			(at 105.156 132.588 90)
+		(property "Value" "GND"
+			(at 118.11 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3884,7 +1734,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 105.156 135.636 90)
+			(at 118.11 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3893,7 +1743,73 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 105.41 134.62 0)
+			(at 118.11 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"Earth\""
+			(at 118.11 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2851c6bb-6b5d-4964-89dd-1496cc239f55")
+		)
+		(instances
+			(project "lab1_schematic"
+				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
+					(reference "#PWR010")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_US")
+		(at 92.71 99.06 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c73a61fc-445e-4ebb-97d3-4dd29401ee6c")
+		(property "Reference" "R2"
+			(at 92.71 92.71 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "230Ω"
+			(at 92.71 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 92.964 98.044 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 92.71 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3902,7 +1818,7 @@
 			)
 		)
 		(property "Description" "Resistor, US symbol"
-			(at 105.41 134.62 0)
+			(at 92.71 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3910,11 +1826,80 @@
 				(hide yes)
 			)
 		)
+		(pin "1"
+			(uuid "6033f983-2d50-474d-82f1-c050176eccf3")
+		)
 		(pin "2"
-			(uuid "19c54910-ee2b-41ff-b29e-40f1ceb40a6b")
+			(uuid "02d62fd8-7a04-4d91-a079-b422db4ab492")
+		)
+		(instances
+			(project "lab1_schematic"
+				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_US")
+		(at 92.71 88.9 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cdd43fe4-49fd-44bc-8d4c-e000bba59ddc")
+		(property "Reference" "R1"
+			(at 92.71 82.55 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "230Ω"
+			(at 92.71 85.09 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 92.964 87.884 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 92.71 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, US symbol"
+			(at 92.71 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
 		)
 		(pin "1"
-			(uuid "dc7c6e25-f683-4c71-b37b-400c9cf4eb2e")
+			(uuid "24d52f65-3bf9-4081-8a88-16e039ac3823")
+		)
+		(pin "2"
+			(uuid "ccececa9-9937-43ce-b3d9-932a3615368e")
 		)
 		(instances
 			(project ""
@@ -3926,36 +1911,18 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Small")
-		(at 100.33 137.16 0)
+		(lib_id "LED:LD274")
+		(at 104.14 99.06 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "c0eea421-e3ad-428b-994c-a9fd0595446d")
-		(property "Reference" "C1"
-			(at 102.87 135.8962 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Value" "0.1µF"
-			(at 102.87 138.4362 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 100.33 137.16 0)
+		(uuid "e7fd8619-fc56-46fe-9112-aa0fb2142445")
+		(property "Reference" "D2"
+			(at 105.283 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3963,8 +1930,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
-			(at 100.33 137.16 0)
+		(property "Value" "LED (green)"
+			(at 105.283 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "LED_THT:LED_D5.0mm_IRGrey"
+			(at 104.14 94.615 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3972,8 +1947,17 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 100.33 137.16 0)
+		(property "Datasheet" "http://pdf.datasheetcatalog.com/datasheet/siemens/LD274.pdf"
+			(at 105.41 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "950nm IR-LED, 5mm"
+			(at 104.14 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3982,194 +1966,15 @@
 			)
 		)
 		(pin "1"
-			(uuid "9660fc51-5732-4049-8814-4df1c39f7ee6")
+			(uuid "b0fa3e0a-aa41-4639-a420-398c5b337a3e")
 		)
 		(pin "2"
-			(uuid "b38fe865-eb78-4ced-a552-7c75e8a8f351")
+			(uuid "0ef8e597-1ab7-4b92-80b4-c16a4fa5db63")
 		)
 		(instances
-			(project ""
+			(project "lab1_schematic"
 				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "C1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "74xx:74HC595")
-		(at 105.41 90.17 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "c3d1d933-4427-4e90-b6d0-7aafddf27b7c")
-		(property "Reference" "U1"
-			(at 107.5533 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Value" "74HC595"
-			(at 107.5533 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 105.41 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "http://www.ti.com/lit/ds/symlink/sn74hc595.pdf"
-			(at 105.41 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "8-bit serial in/out Shift Register 3-State Outputs"
-			(at 105.41 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "12"
-			(uuid "5eaa2129-8056-4534-a035-dd8cd1700cbf")
-		)
-		(pin "13"
-			(uuid "92c7473a-5e52-48e8-93e6-bc5a847d7041")
-		)
-		(pin "1"
-			(uuid "0b3368c8-22aa-41b2-9a1a-4de1f68f6527")
-		)
-		(pin "9"
-			(uuid "d02d04e0-6b1a-45ca-9450-d0c1da89da2f")
-		)
-		(pin "5"
-			(uuid "5c8de6d8-9d10-4a65-a74d-948caa40f26e")
-		)
-		(pin "7"
-			(uuid "1f44d918-27d9-430d-8859-7390943eacf4")
-		)
-		(pin "14"
-			(uuid "033b7d8b-45ed-4fcf-b525-e49ca3234cac")
-		)
-		(pin "10"
-			(uuid "e686fad0-0923-49f4-88cc-9d34f8a8e0d5")
-		)
-		(pin "16"
-			(uuid "30161d41-c556-48c4-bd02-e848534ccd54")
-		)
-		(pin "2"
-			(uuid "ac79379a-4595-4bcc-8e59-7a86158851a7")
-		)
-		(pin "3"
-			(uuid "c49603d9-ec74-4b88-a67d-859006513497")
-		)
-		(pin "4"
-			(uuid "3dbab741-604d-4ba6-b349-5023f648f981")
-		)
-		(pin "8"
-			(uuid "ba7862bf-5824-4175-8875-17a65f0183b6")
-		)
-		(pin "11"
-			(uuid "35169014-64d2-4f85-a0e6-dc4f8b176ee2")
-		)
-		(pin "6"
-			(uuid "d1197e5c-d17e-4873-9b13-a758754efddf")
-		)
-		(pin "15"
-			(uuid "bce41f7d-6c1d-4856-a753-be5ff7949223")
-		)
-		(instances
-			(project ""
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "U1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:Earth")
-		(at 100.33 139.7 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "e6c14144-87e8-47ea-a59c-09e1c5a029a6")
-		(property "Reference" "#PWR01"
-			(at 100.33 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 100.33 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 100.33 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 100.33 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"Earth\""
-			(at 100.33 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "c7c600b8-63f5-4aa4-97c6-a927ddd7c75d")
-		)
-		(instances
-			(project ""
-				(path "/5a9f816b-81f3-4b3b-b305-817caf4bd656"
-					(reference "#PWR01")
+					(reference "D2")
 					(unit 1)
 				)
 			)
