@@ -29,17 +29,11 @@ This lab introduces basic microcontroller programming using the ATmega328P. The 
 - Two LEDs connected to PB1 and PB2
 - LEDs alternate in a continuous pattern
 - Pattern sequence: PB2 → delay → PB1 → delay → repeat
-- Each cycle takes 16 machine cycles to complete
 
 #### Timing Control
 - Program uses precise cycle counting for timing
 - Each LED state change includes a delay for visible blinking
 - Timing is achieved through software delays
-
-#### Port Configuration
-- PB1 and PB2 configured as outputs using DDRB
-- Uses direct port manipulation for LED control
-- Implements efficient bit-setting instructions (sbi/cbi)
 
 ## Source Code 
 - [main.asm](../lab1/asm/main.asm): assembly code for lab
