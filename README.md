@@ -8,7 +8,7 @@ This repository contains the lab work and final project for the Embedded Systems
 
 #### Lab 1: Blinky 
 - [README](labs/lab1/README.md)
-- [Lab Report](labs/lab1/lab_report.pdf)
+- no report
 
 #### Lab 2: Counter with 7-Segment Display
 - [README](labs/lab2/README.md)
