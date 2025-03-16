@@ -1,5 +1,5 @@
 # ECE:3360:0001 - Embedded Systems (Spring 2025)
-**Instructor:** Professor Reinhard Beichel, University of Iowa, College of Engineering
+**Instructor:** Professor Reinhard Beichel, University of Iowa
 
 ## Course Overview
 This repository contains the lab work and final project for the Embedded Systems course at the University of Iowa. The course consists of five progressive labs and culminates in a final project, each focusing on different aspects of embedded systems development.
