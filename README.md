@@ -1,4 +1,4 @@
-# ECE:3360:0001 - Embedded Systems (Spring 2025)
+# ECE:3360 - Embedded Systems (Spring 2025)
 **Instructor:** Professor Reinhard Beichel, University of Iowa
 
 ## Course Overview
