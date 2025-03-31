@@ -34,7 +34,10 @@ setup_interrupts:
 int0_interrupt:
 	sbi PORTD, 1;
 	rcall timer_delay_1_s;
-	rcall timer_delay_2_s;
+	cbi PORTD, 1;
+	rcall timer_delay_1_s;
+	sbi PORTD, 1;
+	rcall timer_delay_1_s;
 	cbi PORTD, 1;
 	reti;
 
@@ -45,13 +48,12 @@ start:
 	sbi DDRC, 0; D4 on LCD (arduino pin A0)
 	sbi DDRC, 1; D5 on LCD (arduino pin A1)
 	sbi DDRC, 2; D6 on LCD (arduino pin A2)
-	sbi DDRC, 3; D7 on LCD (arduino pin A3)
+	sbi DDRC, 3; D7 on LCD (arduino pin A3) 
 	sbi DDRD, 3; PWM fan signal (arduino pin ~3)
-	sbi DDRD, 2 ; TESTING FOR Interrupts (arduino pin 2 INT0)
-	sbi DDRD, 1; TESTING FOR Interrupts (arduino pin 1 INT1)
-
+	sbi DDRD, 1; TESTING FOR Interrupts (arduino pin 1)
+	
 	;inputs
-	cbi DDRD, 7; Pushbutton signal (arduino pin 7)
+	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
 	cbi DDRD, 4; A signal from RPG (arduino pin 4)
 	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
 
