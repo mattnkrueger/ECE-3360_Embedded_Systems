@@ -1,41 +1,71 @@
 ;Lab 4 Matt Krueger and Sage Marks
 
-;outputs
-sbi DDRB, 5; R/S on LCD (Instruction/register selection)
-sbi DDRB, 2; E on LCD 
-sbi DDRC, 0; D4 on LCD
-sbi DDRC, 1; D5 on LCD
-sbi DDRC, 2; D6 on LCD
-sbi DDRC, 3; D7 on LCD
-sbi DDRD, 3; PWM fan signal
-
-;inputs
-cbi DDRD, 7; Pushbutton signal
-cbi DDRD, 4; A signal from RPG
-cbi DDRD, 5; B signal from RPG
-
-.def count = r22
-.def tmp1 = r23
-.def tmp2 = r24
+.def count = r22; counter for timer
+.def tmp1 = r23; temporary register used to store TCCR0B
+.def tmp2 = r24; temporary register used to store TIFR0
 
 .def rpg_current_state = r21;
 .def rpg_previous_state = r20;
 
-rjmp setup;
+.include "m328pdef.inc"
+
+; jump to main code
+.cseg
+.org 0x0000
+rjmp start;
+
+; interrupt vector for INT0
+.org 0x0002
+rjmp int0_interrupt;
+
+rjmp start;
 msg1:
 	.db "DC = --% ", 0x00
 
-setup:
+.org 0x0034 ; end of interrupt vector table
+setup_interrupts:
+	lds r16, EICRA; load EICRA into r16
+	sbr r16, (1<<ISC01); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
+	sts EICRA, r16; writeback to EICRA
+	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
+	sei; enable global interrupts
+	ret;
+
+int0_interrupt:
+	sbi PORTD, 1;
+	rcall timer_delay_1_s;
+	rcall timer_delay_2_s;
+	cbi PORTD, 1;
+	reti;
+
+start:
+	;outputs
+	sbi DDRB, 5; R/S on LCD (Instruction/register selection) (arduino pin 13)
+	sbi DDRB, 2; E on LCD (arduino pin ~10)
+	sbi DDRC, 0; D4 on LCD (arduino pin A0)
+	sbi DDRC, 1; D5 on LCD (arduino pin A1)
+	sbi DDRC, 2; D6 on LCD (arduino pin A2)
+	sbi DDRC, 3; D7 on LCD (arduino pin A3)
+	sbi DDRD, 3; PWM fan signal (arduino pin ~3)
+	sbi DDRD, 2 ; TESTING FOR Interrupts (arduino pin 2 INT0)
+	sbi DDRD, 1; TESTING FOR Interrupts (arduino pin 1 INT1)
+
+	;inputs
+	cbi DDRD, 7; Pushbutton signal (arduino pin 7)
+	cbi DDRD, 4; A signal from RPG (arduino pin 4)
+	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
+
+	rcall setup_interrupts
 
 setup_timer:
 	ldi count, 0x38;
-	ldi tmp1, (1<<CS01); prescalar of /8
-	out TCNT0, count;
-	out TCCR0B, tmp1;
+	ldi tmp1, (1<<CS01) ; prescaler of /8 -> 16MHz/8 = 2MHz per tick
+	out TCNT0, count; load the timer counter register with preset value (0x38 0011 1000 -> 56 decimal)
+	out TCCR0B, tmp1; load the timer control register with the preset value (0x01 0000 001 -> 1 decimal) this ends timer configuration for timer0
 
 initialize_LCD:
 	rcall timer_delay_100ms;
-	cbi PORTB, 5;
+	cbi PORTB, 5; set R/S to low (data transferred is treated as commands)
 	rcall set_8_bit_mode;
 	rcall LCDStrobe;
 	rcall timer_delay_10ms;
@@ -96,10 +126,9 @@ initialize_LCD:
 		rcall LCDStrobe;
 		rcall timer_delay_1ms;
 
-;Main program displaying stuff
 setup_rpg:
 	in rpg_previous_state, PIND;
-	andi rpg_previous_state, 0x30;
+	andi rpg_previous_state, 0x30; mask (0011 0000) to get pins 5 (A) and 4 (B)
 
 setup_pwm:
 	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
@@ -130,8 +159,6 @@ program_loop:
 	rcall rpg_check;
 	rcall update_pwm;
 	rjmp program_loop;
-
-
 
 rpg_check:
 	rcall timer_delay_1ms;
@@ -187,16 +214,24 @@ set_8_bit_mode:
 	ret;
 
 LCDStrobe:
-	sbi PORTB, 2;
-	ldi r27, 0x00;
-	ldi r26, 0x05;
+	sbi PORTB, 2; set E to high (initiate data transfer). 
+	ldi r27, 0x00; load X reg
+	ldi r26, 0x05; (000 0101) loads 5 to run 100us 5 times
 	Strobe_loop:
 		rcall timer_delay_100us;
-		sbiw r27:r26, 1
+		sbiw r27:r26, 1; decrement X reg
 		brne Strobe_loop;
-		cbi PORTB, 2;
+		cbi PORTB, 2; set E to low (end of data transfer)
 		ret
-	
+
+timer_delay_1_s:
+	ldi r27, 0xFF;
+	ldi r26, 0xFF;
+	loop_4_s:
+		rcall timer_delay_100us;
+		sbiw r27:r26, 1;
+		brne loop_4_s;
+		ret;
 
 ;delays
 timer_delay_100ms:
