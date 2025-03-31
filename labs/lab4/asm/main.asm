@@ -6,6 +6,8 @@
 .def rpg_current_state = r21;
 .def rpg_previous_state = r20;
 .def dc_ocr2b = r16;
+.def fan_state = r13
+.def prev_dc = r12
 
 .include "m328pdef.inc"
 
@@ -37,14 +39,16 @@ setup_interrupts:
 	ret;
 
 int0_interrupt:
-	sbi PORTD, 1;
-	rcall timer_delay_1_s;
-	cbi PORTD, 1;
-	rcall timer_delay_1_s;
-	sbi PORTD, 1;
-	rcall timer_delay_1_s;
-	cbi PORTD, 1;
-	reti;
+	mov prev_dc, dc_ocr2b; store the previous duty cycle
+	eor fan_state, 0xff; toggle fan off on
+	cpi fan_state, 0xff
+	breq turn_fan_on
+	turn_fan_off:
+		ldi dc_ocr2b, 0 ; set duty cycle to 0%
+		reti;
+	turn_fan_on:
+		mov dc_ocr2b, prev_dc; restore the previous duty cycle
+		reti;
 
 timer2_overflow_interrupt:
 	; first, load the prefix string into Z register
@@ -169,6 +173,9 @@ setup_pwm:
 	ldi dc_ocr2b, 25 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
 	sts OCR2B, dc_ocr2b  ; OCR2B controls duty cycle!
 
+	;initial fan state is on
+	ldi fan_state, 0xff
+
 reset:
 	rcall configure_ports
 	rcall setup_interrupts
@@ -200,12 +207,12 @@ rpg_check:
 		breq counter_clockwise;
 		rjmp save_rpg_state;
 	clockwise:
-		cpi dc_ocr2b, 79;
+		cpi dc_ocr2b, 79; ; 79 is the max duty cycle
 		breq save_rpg_state
 		inc dc_ocr2b
 		rjmp save_rpg_state
 	counter_clockwise:
-		cpi dc_ocr2b, 0;
+		cpi dc_ocr2b, 0; 0 is the min duty cycle (0% duty cycle i.e. off)
 		breq save_rpg_state
 		dec dc_ocr2b
 	save_rpg_state:
