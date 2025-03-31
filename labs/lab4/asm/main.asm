@@ -3,32 +3,37 @@
 .def count = r22; counter for timer
 .def tmp1 = r23; temporary register used to store TCCR0B
 .def tmp2 = r24; temporary register used to store TIFR0
-
 .def rpg_current_state = r21;
 .def rpg_previous_state = r20;
+.def dc_ocr2b = r16;
 
 .include "m328pdef.inc"
 
 ; jump to main code
 .cseg
 .org 0x0000
-rjmp start;
 
 ; interrupt vector for INT0
 .org 0x0002
-rjmp int0_interrupt;
+rjmp int0_interrupt
 
-rjmp start;
-msg1:
-	.db "DC = --% ", 0x00
+; interrupt vector for Timer2 Overflow
+.org 0x0012
+rjmp timer2_overflow_interrupt
+
+rjmp reset;
+prefix_string:
+	.db "DC = ", 0x00 
+
+suffix_string:
+	.db "%", 0x00 
 
 .org 0x0034 ; end of interrupt vector table
 setup_interrupts:
-	lds r16, EICRA; load EICRA into r16
+	lds r16, EICRA; load EICRA into r16 (r15 is not a valid register for most operations)
 	sbr r16, (1<<ISC01); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
 	sts EICRA, r16; writeback to EICRA
 	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
-	sei; enable global interrupts
 	ret;
 
 int0_interrupt:
@@ -41,7 +46,23 @@ int0_interrupt:
 	cbi PORTD, 1;
 	reti;
 
-start:
+timer2_overflow_interrupt:
+	; first, load the prefix string into Z register
+	ldi r30,LOW(2*prefix_string) 
+	ldi r31,HIGH(2*prefix_string)
+	rcall displayCString;
+
+	; second, get the current duty cycle
+
+	; third, load the suffix string into Z register
+	ldi r30,LOW(2*suffix_string)
+	ldi r31,HIGH(2*suffix_string)
+	rcall displayCString;
+
+	rcall setup_pwm; reset the timer for next interrupt
+	reti
+
+configure_ports:
 	;outputs
 	sbi DDRB, 5; R/S on LCD (Instruction/register selection) (arduino pin 13)
 	sbi DDRB, 2; E on LCD (arduino pin ~10)
@@ -56,8 +77,6 @@ start:
 	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
 	cbi DDRD, 4; A signal from RPG (arduino pin 4)
 	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
-
-	rcall setup_interrupts
 
 setup_timer:
 	ldi count, 0x38;
@@ -147,16 +166,18 @@ setup_pwm:
 
 	; Set duty cycle (e.g., 50% = 40)
 	;initial duty cycle is 0%
-	ldi r16, 25
-	sts OCR2B, r16  ; OCR0B controls duty cycle!
+	ldi dc_ocr2b, 25 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
+	sts OCR2B, dc_ocr2b  ; OCR2B controls duty cycle!
 
-sbi PORTB, 5;
-Duty_Cycle_Display:
-	ldi r30,LOW(2*msg1) ; Load Z register low
-	ldi r31,HIGH(2*msg1) ; Load Z register high
-	rcall displayCString;
+reset:
+	rcall configure_ports
+	rcall setup_interrupts
+	rcall initialize_LCD
+	rcall setup_timer
+	rcall setup_rpg
+	rcall setup_pwm
+	sei
 
-;ACTUAL PROGRAM HERE
 program_loop:
 	rcall rpg_check;
 	rcall update_pwm;
@@ -179,21 +200,21 @@ rpg_check:
 		breq counter_clockwise;
 		rjmp save_rpg_state;
 	clockwise:
-		cpi r16, 79;
+		cpi dc_ocr2b, 79;
 		breq save_rpg_state
-		inc r16
+		inc dc_ocr2b
 		rjmp save_rpg_state
 	counter_clockwise:
-		cpi r16, 0;
+		cpi dc_ocr2b, 0;
 		breq save_rpg_state
-		dec r16
+		dec dc_ocr2b
 	save_rpg_state:
 		mov rpg_previous_state, rpg_current_state;
 	no_change:
 		ret
 
 update_pwm:
-	sts OCR2B, r16;
+	sts OCR2B, dc_ocr2b;
 	ret
 
 displayCString:
@@ -206,7 +227,7 @@ displayCString:
 	swap r0 ; Lower nibble in place
 	out PORTC,r0 ; Send lower nibble out
 	rcall LCDStrobe ; Latch nibble
-	rjmp displayCstring
+	rjmp displayCString; continue until done
 done:
 	ret
 
