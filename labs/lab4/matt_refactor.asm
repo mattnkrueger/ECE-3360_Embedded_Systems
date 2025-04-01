@@ -89,13 +89,16 @@ configure_timer0:
 	out TCCR0B, tmp1
 	ret
 
-configure_interrupts:
-	lds r16, EICRA; load EICRA into r16 
-	andi r16, ~((1<<ISC01) | (1<<ISC00))  ; Clear existing bits
-	sbr r16, (1<<ISC01); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
-	sts EICRA, r16; writeback to EICRA
-	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
-	ret
+; EIMSK - external interrupt mask register - set int1 or int0 enable (or both)
+; EIFR  - external interrupt flag register - prompt mcu jump to vector table
+configure_int0_interrupt:
+
+; PCICR - pin change interrupt control register - enable which pin change i/os to enable (2,1,0)
+; PCIFR - pin change interrupt flag register - prompt mcu jump to vector table
+; PCMSK2 - pin change mask register 2 - PCINT[23..16] mask
+; PCMSK1 - pin change mask register 1 - PCINT[14..8] mask
+; PCMSK0 - pin change mask register 0 - PCINT[7..0] mask
+configure_pin_change_d_interrupts
 
 configure_lcd:
 	rcall timer_delay_100ms;
@@ -188,7 +191,7 @@ configure_pwm:
 RESET:
 	rcall configure_ports
 	rcall configure_timer0
-	rcall configure_interrupts
+	rcall configure_int0_interrupt
 	rcall configure_lcd
 	rcall configure_rpg
 	rcall configure_pwm
@@ -317,7 +320,7 @@ timer_delay_1ms:
 		ret;
 
 timer_delay_100us:
-	in tmp1, TCCR0B;
+	in tmp1, TCCR0B 
 	ldi tmp2, 0x00;
 	out TCCR0B, tmp2;
 	in tmp2, TIFR0;
