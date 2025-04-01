@@ -1,3 +1,4 @@
+
 ;Lab 4 Matt Krueger and Sage Marks
 
 .def count = r22; counter for timer
@@ -20,6 +21,9 @@ rjmp start;
 .org 0x0002
 rjmp toggle_fan
 
+.org 0x0006
+rjmp rpg_change
+
 prefix_string:
 	.db "DC = ", 0x00 
 
@@ -27,28 +31,11 @@ suffix_string:
 	.db "%", 0x00 
 
 .org 0x0034 ; end of interrupt vector table
-toggle_fan:
-	push r25
-	com fan_state
-	tst fan_state
-	breq turn_fan_on
-	turn_fan_off:
-		mov prev_dc, dc_ocr2b
-		ldi dc_ocr2b, 0
-		rjmp update_pwm
-	turn_fan_on:
-		mov dc_ocr2b, prev_dc
-	update_pwm:
-		sts OCR2B, dc_ocr2b;
-		pop r25
-		reti
-
 start:
-setup_interrupts:
-	lds r16, EICRA; load EICRA into r16 
-	sbr r16, (1<<ISC01) | (0<<ISC00); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
-	sts EICRA, r16; writeback to EICRA
-	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
+ ldi r16, high(RAMEND)
+ out SPH, r16
+ ldi r16, low(RAMEND)
+ out SPL, r16
 
 configure_ports:
 	;outputs
@@ -59,12 +46,28 @@ configure_ports:
 	sbi DDRC, 2; D6 on LCD (arduino pin A2)
 	sbi DDRC, 3; D7 on LCD (arduino pin A3) 
 	sbi DDRD, 3; PWM fan signal (arduino pin ~3)
-	sbi DDRD, 1; TESTING FOR Interrupts (arduino pin 1)
+
+	sbi DDRD, 5;
 	
 	;inputs
 	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
-	cbi DDRD, 4; A signal from RPG (arduino pin 4)
-	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
+	cbi DDRB, 1; A signal from RPG (arduino pin 9) PCINT1
+	cbi DDRB, 0; B signal from RPG (arduino pin 8) PCINT0
+
+setup_PBS_interrupt:
+	lds r16, EICRA; load EICRA into r16 
+	;andi r16, ~((1<<ISC01) | (1<<ISC00))  ; Clear existing bits
+	ldi r16, 0b10; set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
+	sts EICRA, r16; writeback to EICRA
+	ldi r16, 0b01
+	out EIMSK, r16; enable INT0 interrupt in EIMSK
+
+setup_RPG_interrupt:;PB0 PCINT0
+	lds r16, PCICR;
+	sbr r16, (1<<PCIE0);
+	sts PCICR, r16
+	sbr r16, (1<<PCINT0);
+	sts PCMSK0, r16
 
 setup_timer:
 	ldi count, 0x38;
@@ -136,8 +139,8 @@ initialize_LCD:
 		rcall timer_delay_1ms;
 
 setup_rpg:
-	in rpg_previous_state, PIND;
-	andi rpg_previous_state, 0x30; mask (0011 0000) to get pins 5 (A) and 4 (B)
+	in rpg_previous_state, PINB;
+	andi rpg_previous_state, 0x03; mask (0000 0011) to get pins 5 (A) and 4 (B)
 	
 
 setup_pwm:
@@ -145,57 +148,92 @@ setup_pwm:
 	ldi r16, (1 << COM2B1)| (1 << WGM21) | (1 << WGM20)
 	sts TCCR2A, r16
 
-	; Prescaler=8 (CS01=1), Fast PWM with TOP=OCR0A (WGM02=1)
-	ldi r16, (1 << WGM22) | (1 << CS21)
+	; Prescaler=1 (CS20=1), Fast PWM with TOP=OCR0A (WGM02=1)
+	ldi r16, (1 << WGM22) | ( 1<< CS20)
 	sts TCCR2B, r16
 
 	; Set TOP for 25kHz (OCR0A = 79)
-	ldi r16, 79
+	ldi r16, 199
 	sts OCR2A, r16
 
 	; Set duty cycle (e.g., 50% = 40)
 	;initial duty cycle is 0%
-	ldi dc_ocr2b, 25 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
+	ldi dc_ocr2b, 100 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
 	sts OCR2B, dc_ocr2b  ; OCR2B controls duty cycle!
 
 	;initial fan state is on
+	mov prev_dc, dc_ocr2b;
 	ldi fan_state, 0xff
 
 sei
+sbi PORTD, 5;
 program_loop:
     nop
-	; rcall rpg_check;
+	nop
 	rjmp program_loop;
 
-rpg_check:
-	rcall timer_delay_1ms;
+toggle_fan:
+	push r17
+    in r17, SREG
+    push r17
+	lds r17, OCR2B           ; Get current PWM value
+	tst fan_state
+	brne turn_off            ; If currently ON, turn OFF
+	turn_on:
+		sbi PORTD, 5;
+		ldi fan_state, 0xFF      ; Set state to ON
+		mov r17, prev_dc         ; Restore saved duty cycle
+		rjmp update_pwm
+	turn_off:
+		cbi PORTD, 5;
+		clr fan_state            ; Set state to OFF
+		mov prev_dc, r17         ; Save current duty cycle
+		ldi r17, 0               ; Set duty to 0
+	update_pwm:
+		sts OCR2B, r17           ; Update PWM register
+		;mov dc_ocr2b, r17        ; Keep variable in sync
+	pop r17
+	out SREG, r17
+	pop r17
+	reti
+
+rpg_change:
+	push r16
+    in r16, SREG
+    push r16
+	rpg_check:
 	lds r16, OCR2B;
-	in rpg_current_state, PIND;
-	andi rpg_current_state, 0x30;
+	in rpg_current_state, PINB;
+	andi rpg_current_state, 0x03;
 	cp rpg_current_state, rpg_previous_state
 	breq no_change
 	cpi rpg_current_state, 0x00
 	breq check_state
 	rjmp save_rpg_state
 	check_state:
-		cpi rpg_previous_state, 0x10;
+		cpi rpg_previous_state, 0x01;
 		breq clockwise;
-		cpi rpg_previous_state, 0x20;
+		cpi rpg_previous_state, 0x02;
 		breq counter_clockwise;
 		rjmp save_rpg_state;
 	clockwise:
-		cpi dc_ocr2b, 79; ; 79 is the max duty cycle
+		cpi dc_ocr2b, 199; ; 79 is the max duty cycle
 		breq save_rpg_state
-		inc dc_ocr2b
+		inc r16
+		sts OCR2B, r16
 		rjmp save_rpg_state
 	counter_clockwise:
 		cpi dc_ocr2b, 0; 0 is the min duty cycle (0% duty cycle i.e. off)
 		breq save_rpg_state
-		dec dc_ocr2b
+		dec r16
+		sts OCR2B, r16;
 	save_rpg_state:
 		mov rpg_previous_state, rpg_current_state;
 	no_change:
-		ret
+	pop r16
+	out SREG, r16
+	pop r16
+	reti
 
 displayCString:
 	lpm r0,Z+ ; r0 <-- first byte
