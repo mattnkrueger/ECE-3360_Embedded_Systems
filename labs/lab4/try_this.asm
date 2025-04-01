@@ -28,9 +28,9 @@ suffix_string:
 
 .org 0x0034 ; end of interrupt vector table
 toggle_fan:
-	ldi r25, 0xff
+	push r25
 	com fan_state
-	cpi fan_state, 0xff
+	tst fan_state
 	breq turn_fan_on
 	turn_fan_off:
 		mov prev_dc, dc_ocr2b
@@ -40,12 +40,13 @@ toggle_fan:
 		mov dc_ocr2b, prev_dc
 	update_pwm:
 		sts OCR2B, dc_ocr2b;
+		pop r25
 		reti
 
 start:
 setup_interrupts:
 	lds r16, EICRA; load EICRA into r16 
-	sbr r16, (1<<ISC01) | (1<<ISC00); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
+	sbr r16, (1<<ISC01) | (0<<ISC00); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
 	sts EICRA, r16; writeback to EICRA
 	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
 
@@ -159,8 +160,9 @@ setup_pwm:
 
 	;initial fan state is on
 	ldi fan_state, 0xff
-sei
 
+sei
+ldi prev_dc, 0x00;
 program_loop:
     nop
 	; rcall rpg_check;
