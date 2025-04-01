@@ -6,24 +6,20 @@
 .def rpg_current_state = r21;
 .def rpg_previous_state = r20;
 .def dc_ocr2b = r16;
-.def fan_state = r13
-.def prev_dc = r12
+.def fan_state = r19
+.def prev_dc = r18
 
 .include "m328pdef.inc"
 
 ; jump to main code
 .cseg
 .org 0x0000
+rjmp start;
 
 ; interrupt vector for INT0
 .org 0x0002
-rjmp int0_interrupt
+rjmp toggle_fan
 
-; interrupt vector for Timer2 Overflow
-.org 0x0012
-rjmp timer2_overflow_interrupt
-
-rjmp reset;
 prefix_string:
 	.db "DC = ", 0x00 
 
@@ -31,40 +27,27 @@ suffix_string:
 	.db "%", 0x00 
 
 .org 0x0034 ; end of interrupt vector table
-setup_interrupts:
-	lds r16, EICRA; load EICRA into r16 (r15 is not a valid register for most operations)
-	sbr r16, (1<<ISC01); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
-	sts EICRA, r16; writeback to EICRA
-	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
-	ret;
-
-int0_interrupt:
-	mov prev_dc, dc_ocr2b; store the previous duty cycle
-	eor fan_state, 0xff; toggle fan off on
+toggle_fan:
+	ldi r25, 0xff
+	com fan_state
 	cpi fan_state, 0xff
 	breq turn_fan_on
 	turn_fan_off:
-		ldi dc_ocr2b, 0 ; set duty cycle to 0%
-		reti;
+		mov prev_dc, dc_ocr2b
+		ldi dc_ocr2b, 0
+		rjmp update_pwm
 	turn_fan_on:
-		mov dc_ocr2b, prev_dc; restore the previous duty cycle
-		reti;
+		mov dc_ocr2b, prev_dc
+	update_pwm:
+		sts OCR2B, dc_ocr2b;
+		reti
 
-timer2_overflow_interrupt:
-	; first, load the prefix string into Z register
-	ldi r30,LOW(2*prefix_string) 
-	ldi r31,HIGH(2*prefix_string)
-	rcall displayCString;
-
-	; second, get the current duty cycle
-
-	; third, load the suffix string into Z register
-	ldi r30,LOW(2*suffix_string)
-	ldi r31,HIGH(2*suffix_string)
-	rcall displayCString;
-
-	rcall setup_pwm; reset the timer for next interrupt
-	reti
+setup_interrupts:
+	lds r16, EICRA; load EICRA into r16 
+	sbr r16, (1<<ISC01) | (1<<ISC00); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
+	sts EICRA, r16; writeback to EICRA
+	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
+	ret;
 
 configure_ports:
 	;outputs
@@ -81,12 +64,14 @@ configure_ports:
 	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
 	cbi DDRD, 4; A signal from RPG (arduino pin 4)
 	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
+	ret
 
 setup_timer:
 	ldi count, 0x38;
 	ldi tmp1, (1<<CS01) ; prescaler of /8 -> 16MHz/8 = 2MHz per tick
-	out TCNT0, count; load the timer counter register with preset value (0x38 0011 1000 -> 56 decimal)
-	out TCCR0B, tmp1; load the timer control register with the preset value (0x01 0000 001 -> 1 decimal) this ends timer configuration for timer0
+	out TCNT0, count; load the timer counter register with pstart value (0x38 0011 1000 -> 56 decimal)
+	out TCCR0B, tmp1; load the timer control register with the pstart value (0x01 0000 001 -> 1 decimal) this ends timer configuration for timer0
+	ret
 
 initialize_LCD:
 	rcall timer_delay_100ms;
@@ -154,6 +139,7 @@ initialize_LCD:
 setup_rpg:
 	in rpg_previous_state, PIND;
 	andi rpg_previous_state, 0x30; mask (0011 0000) to get pins 5 (A) and 4 (B)
+	ret
 
 setup_pwm:
 	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
@@ -175,8 +161,9 @@ setup_pwm:
 
 	;initial fan state is on
 	ldi fan_state, 0xff
+	ret
 
-reset:
+start:
 	rcall configure_ports
 	rcall setup_interrupts
 	rcall initialize_LCD
@@ -186,8 +173,8 @@ reset:
 	sei
 
 program_loop:
-	rcall rpg_check;
-	rcall update_pwm;
+    nop
+	; rcall rpg_check;
 	rjmp program_loop;
 
 rpg_check:
@@ -219,10 +206,6 @@ rpg_check:
 		mov rpg_previous_state, rpg_current_state;
 	no_change:
 		ret
-
-update_pwm:
-	sts OCR2B, dc_ocr2b;
-	ret
 
 displayCString:
 	lpm r0,Z+ ; r0 <-- first byte
