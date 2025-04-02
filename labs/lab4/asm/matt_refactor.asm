@@ -1,40 +1,43 @@
-; Lab 4: ECE:3360 Embedded Systems
-; Authors: 
-; 	- Matt Krueger
-; 	- Sage Marks
-; 
-; Project Statement:
-; 	This AVR program controls a cooling fan monitor, utilizing a PWM controlled fan,
-;	LCD display, Active-Low Pushbutton, and Rotary Pulse Generator.
-;
-; This program is interrupt driven, and uses the following interrupts:
-; 	- INT0        to detect RPG usage
-; 	- PCINT[1..0] to detect RPG usage
-;
-; Extra Credit achieved by using Tachometer to monitor the RPM of the fan.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                     Lab 4: ECE:3360 Embedded Systems									  ;
+; Authors: 																								  ;
+; 	- Matt Krueger																						  ;
+; 	- Sage Marks																						  ;
+; 																										  ;
+; Project Statement:																					  ;
+; 	This AVR program controls a cooling fan monitor, utilizing a PWM controlled fan,				      ;
+;	LCD display, Active-Low Pushbutton, and Rotary Pulse Generator.										  ;
+;																								          ;
+; This program is interrupt driven, and uses the following interrupts:									  ;
+; 	- INT0        to detect RPG usage																	  ;
+; 	- PCINT[1..0] to detect RPG usage																	  ;
+;																										  ;
+; Extra Credit achieved by using Tachometer to monitor the RPM of the fan.								  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 .include "m328pdef.inc"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                           Register Aliases                                                ;
+;                                           Register Aliases                                              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.def count = r22								
-.def tmp1 = r23								
-.def tmp2 = r24							
+.def tmp2 		= r24
+.def tmp1 	    = r23
+.def count 	    = r22
 .def rpg_prev_a = r21
 .def rpg_prev_b = r20
-.def dc_ocr0b = r16		
-.def fan_state = r19	
-.def previous_duty_cycle = r18
+.def fan_state	= r19
+.def prev_dc 	= r18
+.def dc_ocr0b 	= r16
 
 .cseg
 .org 0x0000
 rjmp RESET
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                          Interrupt Vectors                                                ;
+;                                          Interrupt Vectors                                              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 .org 0x0002
-rjmp toggle_fan
+rjmp pushbutton_isr
 
 .org 0x0006  
 rjmp rpg_a_isr
@@ -42,10 +45,10 @@ rjmp rpg_a_isr
 .org 0x0008
 rjmp rpg_b_isr
 
-.org 0x0034 ; end of interrupt vector table
+.org 0x0034 ; end of interrupt vector 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                           Lookup Tables                                                   ;
+;                                           Lookup Tables                                                 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 duty_cycle_prefix:
 	.db "DC = ", 0x00 
@@ -72,10 +75,9 @@ status_suffx_lt_low:
 	.db "low RPM", 0x00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                      Component Configuration                                              ;
+;                                      Component Configuration                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-configure_ports:
-	; outputs
+configure_outputs:
 	sbi DDRB, 5				; R/S on LCD (Instruction/register selection) (arduino pin 13)
 	sbi DDRB, 2				; E on LCD (arduino pin ~10)
 	sbi DDRC, 0				; D4 on LCD (arduino pin A0)
@@ -83,18 +85,19 @@ configure_ports:
 	sbi DDRC, 2				; D6 on LCD (arduino pin A2)
 	sbi DDRC, 3				; D7 on LCD (arduino pin A3) 
 	sbi DDRD, 3				; PWM fan signal (arduino pin ~3)
-	; inputs
+	ret
+	
+configure_inputs:
 	cbi DDRD, 2				; Pushbutton signal (arduino pin 7) 
 	cbi DDRD, 4				; A signal from RPG (arduino pin 4)
 	cbi DDRD, 5				; B signal from RPG (arduino pin ~5)
 	ret
 
 configure_timer0:
-	ldi count, 0x38			; count of 56
-	ldi tmp1, (1<<CS01)		; prescaler of /8 -> 16MHz/8 = 2MHz per tick
-	out TCNT0, count
-	out TCCR0B, tmp1
-	ret
+	; todo
+
+configure_timer2:
+	; todo
 
 configure_pushbutton_interrupt:
 	ldi r16, (1 << ISC1) | (1 << ISC0)		
@@ -184,13 +187,14 @@ configure_pwm:
 	; TODO rewrite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                            MAIN CODE                                                      ;
+;                                            MAIN CODE                                                    ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 RESET:
-	rcall configure_ports
+	rcall configure_outputs
+	rcall configure_inputs
 	rcall configure_timer0
-	rcall configure_pushbutton_interrupt   ; Interrupt [TODO]
-	rcall configure_rpg_interrupt          ; Interrupt [TODO]
+	rcall configure_pushbutton_interrupt   
+	rcall configure_rpg_interrupt         
 	rcall configure_lcd
 	rcall configure_rpg
 	rcall configure_pwm
@@ -199,10 +203,16 @@ RESET:
 program_loop:
 	rjmp program_loop;
 
-toggle_fan:
-	; TODO: rewrite
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                 Pushbutton Interrupt Service Routine 									  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+pushbutton_isr:
+	; this should simply toggle the current value inside of the fan state.
+	; look into the pwm 0 weird error shit going on 
 
-; RPG ISRs 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                      RPG Interrupt Service Routine 									  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 rpg_a_isr:
 	detect_current_a:
 		in r16, PINB
@@ -212,8 +222,8 @@ rpg_a_isr:
 		ldi r17, 0
 	mov rpg_prev_a, r17
 	cpse r17, rpg_prev_b
-	rjmp rpg_cw							; current a != prev b --> CW
-	rjmp rpg_ccw						; current a == prev b --> CCW
+	rjmp rpg_cw		
+	rjmp rpg_ccw	
 rpg_b_isr:
 	detect_current_b:
 		in r16, PINB
@@ -223,8 +233,8 @@ rpg_b_isr:
 		ldi r17, 0
 	mov rpg_prev_b, r17
 	cpse r17, rpg_prev_a
-	rjmp rpg_cw							; current b != prev a --> CWW
-	rjmp rpg_ccw						; current b == prev a --> CW
+	rjmp rpg_cw		
+	rjmp rpg_ccw	
 rpg_cw:
 	cpi dc_ocr0b, 79
 	breq at_ceiling
@@ -239,16 +249,16 @@ rpg_ccw:
 	reti
 
 displayCString:
-	lpm r0, Z+ 				; auto post increment Z, to read next char 
-	tst r0 					; check for terminating char 0x00
+	lpm r0, Z+
+	tst r0 			
 	breq done 			
-	swap r0 				; swap upper nibble
-	out PORTC, r0 			; send upper nibble to LCD
+	swap r0 			
+	out PORTC, r0
 	rcall LCDStrobe 
-	swap r0 				; now, lower nibble
-	out PORTC, r0 			; send lower nibble to LCD
+	swap r0 				
+	out PORTC, r0 			
 	rcall LCDStrobe 	
-	rjmp displayCString		; continue for entire string
+	rjmp displayCString
 done:
 	ret
 
@@ -258,18 +268,18 @@ set_8_bit_mode:
 	ret
 
 LCDStrobe:
-	sbi PORTB, 2					; set E to high (initiate data transfer). 
-	ldi r27, 0x00					; load X reg
-	ldi r26, 0x05					; (000 0101) loads 5 to run 100us 5 times
-	Strobe_loop:
-		rcall delay_100us
-		sbiw r27:r26, 1
-		brne Strobe_loop
-		cbi PORTB, 2				; set E to low (end of data transfer)
+	sbi PORTB, 2					
+	ldi r27, 0x00			
+	ldi r26, 0x05		
+	Strobe_loop:  
+		rcall delay_100us  
+		sbiw r27:r26, 1   
+		brne Strobe_loop  
+		cbi PORTB, 2				
 		ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                        Timers and Delays                                                  ;
+;                                            Timer2 Delays                                                ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 delay_100ms:
 	ldi r27, 0x03
@@ -299,16 +309,16 @@ delay_1ms:
 		ret
 
 delay_100us:
-	in tmp1, TCCR0B 
+	in tmp1, TCCR2B 
 	ldi tmp2, 0x00
-	out TCCR0B, tmp2
-	in tmp2, TIFR0
-	sbr tmp2, 1<<TOV0
-	out TIFR0, tmp2
-	out TCNT0, count
-	out TCCR0B, tmp1
+	out TCCR2B, tmp2
+	in tmp2, TIFR2
+	sbr tmp2, 1<<TOV2
+	out TIFR2, tmp2
+	out TCNT2, count
+	out TCCR2B, tmp1
 	wait_for_overflow
-		in tmp2, TIFR0
-		sbrs tmp2, TOV0
+		in tmp2, TIFR2
+		sbrs tmp2, TOV2
 		rjmp wait_for_overflow
 		ret
