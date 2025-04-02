@@ -56,13 +56,13 @@ status_prefix:
 	.db "Fan: ", 0x00
 
 status_suffix_on:
-	.db "ON", 0x00
+	.db "ON ", 0x00
 
 status_suffix_off:
 	.db "OFF", 0x00
 
 status_suffix_gt_ok:
-	.db "RPM OK", 0x00
+	.db "RPM OK ", 0x00
 
 status_suffix_lt_stopped:
 	.db "Stopped", 0x00
@@ -156,10 +156,10 @@ configure_timer2:
 	sts TCCR2A, r16
 	ldi r16, (1 << WGM22) | ( 1<< CS20)
 	sts TCCR2B, r16
-	ldi r16, 199           ; top - 200
+	ldi r16, 199           
 	sts OCR2A, r16
-	ldi current_dc_q, 100      ; bottom - 100
-	sts OCR2B, current_dc_q    ; initial fan pwm: 50%
+	ldi current_dc_q, 100      
+	sts OCR2B, current_dc_q   
 	ret
 
 configure_pushbutton_interrupt:
@@ -268,9 +268,42 @@ program_loop:
 ;                                 Pushbutton Interrupt Service Routine 									  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 pushbutton_isr:
-	; this should simply toggle the current value inside of the fan state.
-	; look into the pwm 0 weird error shit going on 
+	push r17					 ;Keep SREG the same before and after ISR
+    in r17, SREG
+    push r17
 
+	rcall delay_100ms		;delay for pushbutton signal 
+
+	sbic PIND,2					;ensure that the button was pressed and is low
+	rjmp exit_toggle
+
+	toggle_code:
+	lds r17, OCR2B               ; Get current PWM value
+	tst fan_state				 ; If fan state is 0 (off)
+	brne turn_off                ; If currently ON (0xFF), turn OFF (0x00)
+	turn_on:
+		sbi PORTD, 5			 ; Turn LED OFF
+		ldi fan_state, 0xFF      ; Set state to ON
+		mov r17, prev_dc_q         ; Restore saved duty cycle
+		rjmp update_pwm
+	turn_off:
+		cbi PORTD, 5			 ; Turn LED on	
+		clr fan_state            ; Set state to OFF
+		mov prev_dc_q, r17         ; Save current duty cycle
+		ldi r17, 0               ; Set duty to 0
+	update_pwm:
+		sts OCR2B, r17           ; Update PWM register with the stored value
+	wait:
+		sbis PIND, 2			 ; Make sure that the push button is back to high before leaving and enabling interrupts again
+		rjmp wait;				 ; low again could start another interrupt
+
+	rcall delay_100ms		 ; delay before exiting and renabling interrupts, debouncing
+
+	exit_toggle:
+		pop r17
+		out SREG, r17
+		pop r17
+		reti
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                      RPG Interrupt Service Routine 									  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -373,16 +406,16 @@ delay_1ms:
 		ret
 
 delay_100us:
-	in tmp1, TCCR2B 
+	in tmp1, TCCR0B 
 	ldi tmp2, 0x00
-	out TCCR2B, tmp2
-	in tmp2, TIFR2
-	sbr tmp2, 1<<TOV2
-	out TIFR2, tmp2
-	out TCNT2, count
-	out TCCR2B, tmp1
+	out TCCR0B, tmp2
+	in tmp2, TIFR0
+	sbr tmp2, (1 << TOV0)
+	out TIFR0, tmp2
+	out TCNT0, count
+	out TCCR0B, tmp1
 	wait_for_overflow:
-		in tmp2, TIFR2
-		sbrs tmp2, TOV2
+		in tmp2, TIFR0
+		sbrs tmp2, TOV0
 		rjmp wait_for_overflow
 		ret
