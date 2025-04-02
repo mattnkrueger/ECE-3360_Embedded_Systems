@@ -4,62 +4,49 @@
 ; 	- Sage Marks
 ; 
 ; Project Statement:
-; 	- This AVR program controls a cooling fan monitor, utilizing a PWM controlled fan, LCD display, Active-Low Pushbutton, and Rotary Pulse Generator.
+; 	This AVR program controls a cooling fan monitor, utilizing a PWM controlled fan,
+;	LCD display, Active-Low Pushbutton, and Rotary Pulse Generator.
 ;
 ; This program is interrupt driven, and uses the following interrupts:
-; - [TODO] signal via Pushbutton -> toggle_fan
-; - [TODO] signal via RPG -> rpg_check
-; - [TODO] signal via RPG -> rpg_check
-; See `configure_interrupts` for details.
+; 	- INT0        to detect RPG usage
+; 	- PCINT[1..0] to detect RPG usage
 ;
 ; Extra Credit achieved by using Tachometer to monitor the RPM of the fan.
 .include "m328pdef.inc"
 
-; REGISTER ALIASES
-;
-; This section defines registers frequently used inside of the program
-.def count = r22								; counter for timer
-.def tmp1 = r23									; temporary register used to store TCCR0B
-.def tmp2 = r24									; temporary register used to store TIFR0
-.def rpg_current_state = r21					; current state (gray code) used for RPG logic
-.def rpg_previous_state = r20					; previous state (gray code) used for RPG logic
-.def dc_ocr0b = r16								; pwm duty cycle control
-.def fan_state = r19							; current fan state used in toggling of PWM fan
-.def previous_duty_cycle = r18					; previous duty cycle to return to after toggling the fan
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                           Register Aliases                                                ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.def count = r22								
+.def tmp1 = r23								
+.def tmp2 = r24							
+.def rpg_prev_a = r21
+.def rpg_prev_b = r20
+.def dc_ocr0b = r16		
+.def fan_state = r19	
+.def previous_duty_cycle = r18
 
 .cseg
 .org 0x0000
 rjmp RESET
 
-; INTERRUPT VECTORS
-; 
-; This section maps interrupt vectors to respective Interrupt Service Routines
-; - External Interrupt request 0 (INT0): 
-; 				pushbutton falling edge -> toggle_fan
-; - Pin Change Interrupt request 0 (PCINT0):
-; 				RPG B logic change -> rpg_change
-; - Pin Change Interrupt request 1 (PCINT1):
-; 				RPG B logic change -> rpg_change
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                          Interrupt Vectors                                                ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 .org 0x0002
 rjmp toggle_fan
 
 .org 0x0006  
-rjmp rpg_change
+rjmp rpg_a_isr
 
 .org 0x0008
-rjmp rpg_change
+rjmp rpg_b_isr
 
 .org 0x0034 ; end of interrupt vector table
 
-; LOOKUP TABLE
-;
-; This section is used to store string pattern to be displayed inside of main loop
-; - the LCD Displays in the form
-;   				row1:	DC = [duty cycle]%
-; 					row2:   Fan: [status]
-; - this code lives on program memory following the Interrupt Vector Table
-
-; non-extra credit display strings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                           Lookup Tables                                                   ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 duty_cycle_prefix:
 	.db "DC = ", 0x00 
 
@@ -75,7 +62,6 @@ status_suffix_on:
 status_suffix_off:
 	.db "OFF", 0x00
 
-; extra credit display strings
 status_suffix_gt_ok:
 	.db "RPM OK", 0x00
 
@@ -85,10 +71,9 @@ status_suffix_lt_stopped:
 status_suffx_lt_low:
 	.db "low RPM", 0x00
 
-; SETUP & CONFIGURATION
-;
-; This section is used to configure the ports, timers, rpg, and interrupts
-; - this code is ran upon startup or reset 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                      Component Configuration                                              ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 configure_ports:
 	; outputs
 	sbi DDRB, 5				; R/S on LCD (Instruction/register selection) (arduino pin 13)
@@ -112,21 +97,17 @@ configure_timer0:
 	ret
 
 configure_pushbutton_interrupt:
-	; falling edge triggered
 	ldi r16, (1 << ISC1) | (1 << ISC0)		
 	sts EICRA, r16
-	; mask INT0
 	ldi r17, (1 << INT0)			
 	sts EIMSK, r17
 	ret 
 
 configure_rpg_interrupt:
-	; enable pin change interrupts for PCINT[1..0]
-	ldi r16, (1 << PCIE1) | (PCIE0) 
+	ldi r16, (1 << PCIE0)
 	sts PCICR, r16
-	; mask bits inside of PCMSK0
-	ldi r17, (1 << PCINT1) | (1 << PCINT0)
-	sts PCMSK0, r17
+	ldi r16, (1 << PCINT1) | (1 << PCINT0)
+	sts PCMSK0, r16
 	ret
 
 configure_lcd:
@@ -194,19 +175,17 @@ configure_lcd:
 		ret
 
 configure_rpg:
-	in rpg_previous_state, PINB
-	andi rpg_previous_state, 0x03		; mask (0000 0011) to get pins 9 (A) and 8 (B) of PIND
+	ldi r18, 0
+	mov rpg_prev_a, r18
+	mov rpg_prev_b, r18
 	ret
 
 configure_pwm:
 	; TODO rewrite
 
-; MAIN CODE
-;
-; This program is interrupt driven.
-; - 1st: the components are configured
-; - 2nd: the program enters an infinite loop, 
-;   	 waiting for interrupts via user interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            MAIN CODE                                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 RESET:
 	rcall configure_ports
 	rcall configure_timer0
@@ -223,35 +202,41 @@ program_loop:
 toggle_fan:
 	; TODO: rewrite
 
-rpg_check:
-	rcall delay_1ms
-	lds r16, OCR2B
-	in rpg_current_state, PIND
-	andi rpg_current_state, 0x30
-	cp rpg_current_state, rpg_previous_state
-	breq no_change
-	cpi rpg_current_state, 0x00
-	breq check_state
-	rjmp save_rpg_state
-	check_state:
-		cpi rpg_previous_state, 0x10
-		breq clockwise
-		cpi rpg_previous_state, 0x20
-		breq counter_clockwise
-		rjmp save_rpg_state
-	clockwise:
-		cpi dc_ocr0b, 79				; 79 is the max duty cycle
-		breq save_rpg_state
-		inc dc_ocr0b
-		rjmp save_rpg_state
-	counter_clockwise:
-		cpi dc_ocr0b, 0					; 0 is the min duty cycle (0% duty cycle i.e. off)
-		breq save_rpg_state
-		dec dc_ocr0b
-	save_rpg_state:
-		mov rpg_previous_state, rpg_current_state;
-	no_change:
-		ret
+; RPG ISRs 
+rpg_a_isr:
+	detect_current_a:
+		in r16, PINB
+		andi r16, (1 << PB1)       	
+		ldi r17, 1					
+		sbrs r16, PB1 
+		ldi r17, 0
+	mov rpg_prev_a, r17
+	cpse r17, rpg_prev_b
+	rjmp rpg_cw							; current a != prev b --> CW
+	rjmp rpg_ccw						; current a == prev b --> CCW
+rpg_b_isr:
+	detect_current_b:
+		in r16, PINB
+		andi r16, (1 << PB0)
+		ldi r17, 1					
+		sbrs r16, PB0 
+		ldi r17, 0
+	mov rpg_prev_b, r17
+	cpse r17, rpg_prev_a
+	rjmp rpg_cw							; current b != prev a --> CWW
+	rjmp rpg_ccw						; current b == prev a --> CW
+rpg_cw:
+	cpi dc_ocr0b, 79
+	breq at_ceiling
+	inc dc_ocr0b
+	at_ceiling:
+	reti
+rpg_ccw:
+	cpi dc_ocr0b, 0
+	breq at_floor
+	dec dc_ocr0b
+	at_floor:
+	reti
 
 displayCString:
 	lpm r0, Z+ 				; auto post increment Z, to read next char 
@@ -283,13 +268,9 @@ LCDStrobe:
 		cbi PORTB, 2				; set E to low (end of data transfer)
 		ret
 
-; TIMERS & DELAYS
-;
-; This section defines the timers utilized in the program. 
-; Its critical to time the LCD process correctly, thus we have implemented various timers to avoid confusion.
-;
-; Please note that PWM uses timer0 in fast pwm non-inverting mode (and not included in this section). 
-; See `configure_pwm` for details
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                        Timers and Delays                                                  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 delay_100ms:
 	ldi r27, 0x03
 	ldi r26, 0xE8
