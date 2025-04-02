@@ -1,13 +1,13 @@
 ;Lab 4 Matt Krueger and Sage Marks
 
 .def count = r22; counter for timer
-.def tmp1 = r23; temporary register used to store TCCR0B
 .def tmp2 = r24; temporary register used to store TIFR0
-.def rpg_prev_a = r21
-.def rpg_prev_b = r20
-.def dc_ocr2b = r16;
+.def tmp1 = r23; temporary register used to store TCCR0B
+.def rpg_prev_a = r21;
+.def rpg_prev_b = r20;
 .def fan_state = r19
 .def prev_dc = r18
+.def dc_ocr2b = r16;
 
 .include "m328pdef.inc"
 
@@ -21,11 +21,8 @@ rjmp start;
 .org 0x0002
 rjmp toggle_fan
 
-.org 0x0006  
-rjmp rpg_a_isr
-
-.org 0x0008
-rjmp rpg_b_isr
+.org 0x0006
+rjmp rpg_change
 
 prefix_string:
 	.db "DC = ", 0x00 
@@ -50,7 +47,7 @@ start:
 	sbi DDRC, 3; D7 on LCD (arduino pin A3) 
 	sbi DDRD, 3; PWM fan signal (arduino pin ~3)
 
-	sbi DDRD, 5;
+	sbi DDRD, 5; Output for LED (debugging)
 	
 	;inputs
 	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
@@ -59,18 +56,17 @@ start:
 
 setup_PBS_interrupt:
 	lds r16, EICRA; load EICRA into r16 
-	;andi r16, ~((1<<ISC01) | (1<<ISC00))  ; Clear existing bits
 	ldi r16, 0b10; set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
 	sts EICRA, r16; writeback to EICRA
 	ldi r16, 0b01
 	out EIMSK, r16; enable INT0 interrupt in EIMSK
 
 setup_RPG_interrupt:;PB0 PCINT0
-	ldi r16, (1 << PCIE0)
+	lds r16, PCICR;
+	sbr r16, (1<<PCIE0);
 	sts PCICR, r16
-	ldi r16, (1 << PCINT1) | (1 << PCINT0)
+	sbr r16, (1<<PCINT0);
 	sts PCMSK0, r16
-	ret
 
 setup_timer:
 	ldi count, 0x38;
@@ -141,11 +137,19 @@ initialize_LCD:
 		rcall LCDStrobe;
 		rcall timer_delay_1ms;
 
+sbi PORTB, 5;
+Duty_Cycle_Display:
+	ldi r30,LOW(2*prefix_string) ; Load Z register low
+	ldi r31,HIGH(2*prefix_string) ; Load Z register high
+	rcall displayCString;
+	ldi r30,LOW(2*suffix_string) ; Load Z register low
+	ldi r31,HIGH(2*suffix_string) ; Load Z register high
+	rcall displayCString;
+
 setup_rpg:
-	ldi r18, 0
-	mov rpg_prev_a, r18
-	mov rpg_prev_b, r18
-	ret
+	in rpg_prev_b, PINB;
+	andi rpg_prev_b, 0x03; mask (0000 0011) to get pins 5 (A) and 4 (B)
+	
 
 setup_pwm:
 	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
@@ -169,91 +173,138 @@ setup_pwm:
 	mov prev_dc, dc_ocr2b;
 	ldi fan_state, 0xff
 
-cbi PORTD, 5;
+sbi PORTD, 5; turn off LED initially
 cbi PORTD, 2; disable internal pullup resistor
 sei
+
 program_loop:
 	nop;
 	nop
 	rjmp program_loop;
 
 toggle_fan:
-	push r17
+	push r17					 ;Keep SREG the same before and after ISR
     in r17, SREG
     push r17
-	ldi r17, 5
-	loop:
-	rcall timer_delay_1ms
-	dec r17
-	breq toggle_code
+
+	rcall timer_delay_100ms		;delay for pushbutton signal 
+
+	sbic PIND,2					;ensure that the button was pressed and is low
+	rjmp exit_toggle
+
 	toggle_code:
-	lds r17, OCR2B           ; Get current PWM value
-	tst fan_state
-	brne turn_off            ; If currently ON, turn OFF
+	lds r17, OCR2B               ; Get current PWM value
+	tst fan_state				 ; If fan state is 0 (off)
+	brne turn_off                ; If currently ON (0xFF), turn OFF (0x00)
 	turn_on:
-		cbi PORTD, 5;
+		sbi PORTD, 5			 ; Turn LED OFF
 		ldi fan_state, 0xFF      ; Set state to ON
 		mov r17, prev_dc         ; Restore saved duty cycle
 		rjmp update_pwm
 	turn_off:
-		sbi PORTD, 5;
+		cbi PORTD, 5			 ; Turn LED on	
 		clr fan_state            ; Set state to OFF
 		mov prev_dc, r17         ; Save current duty cycle
-		ldi r17, 5               ; Set duty to 0
+		ldi r17, 0               ; Set duty to 0
 	update_pwm:
-		sts OCR2B, r17           ; Update PWM register
-		;mov dc_ocr2b, r17        ; Keep variable in sync
-	pop r17
-	out SREG, r17
-	pop r17
-	reti
+		sts OCR2B, r17           ; Update PWM register with the stored value
+	wait:
+		sbis PIND, 2			 ; Make sure that the push button is back to high before leaving and enabling interrupts again
+		rjmp wait;				 ; low again could start another interrupt
 
-; RPG ISRs 
-rpg_a_isr:
-	push r16
-	push r17
-	detect_position_a:
-		in r16, PINB
-		andi r16, (1 << PB1)       	
-		ldi r17, 1					
-		sbrs r16, PB1 
-		ldi r17, 0
-	mov rpg_prev_a, r17
-	cpse r17, rpg_prev_b
-	rjmp rpg_cw							; current a != prev b --> CW
-	rjmp rpg_ccw						; current a == prev b --> CCW
+	rcall timer_delay_100ms		 ; delay before exiting and renabling interrupts, debouncing
 
-rpg_b_isr:
-	push r16
-	push r17
-	detect_position_b:
-		in r16, PINB
-		andi r16, (1 << PB0)
-		ldi r17, 1					
-		sbrs r16, PB0 
-		ldi r17, 0
-	mov rpg_prev_b, r17
-	cpse r17, rpg_prev_a
-	rjmp rpg_cw							; current b != prev a --> CWW
-	rjmp rpg_ccw						; current b == prev a --> CW
+	exit_toggle:
+		pop r17
+		out SREG, r17
+		pop r17
+		reti
 
-rpg_cw:
-	cpi dc_ocr2b, 79
-	breq at_ceiling
-	inc dc_ocr2b
-	at_ceiling:
-	pop r17
-	pop r16
-	reti
 
-rpg_ccw:
-	cpi dc_ocr2b, 0
-	breq at_floor
-	dec dc_ocr2b
-	at_floor:
-	pop r17
-	pop r16
-	reti
+rpg_change:
+    push r16
+    in r16, SREG
+    push r16
+    push r17
+    
+	tst fan_state
+	breq exit_rpg_isr		   ; IF the state is off do not update RPG
+    ; Read current state of RPG pins (A and B)
+    in r17, PINB
+    andi r17, 0x03             ; Mask to get just the two RPG pins
+    
+    ; Combine previous and current states for direction detection
+    ; Shift previous state left by 2 and combine with current state
+    mov r16, rpg_prev_b
+    lsl r16
+    lsl r16
+    or r16, r17                ; r16 now contains [prev1 prev0 curr1 curr0]
+    
+    ; Update previous state for next time
+    mov rpg_prev_b, r17
+    
+    ; Check rotation pattern based on combined states
+    ; Common patterns for counter-clockwise: 0b0001, 0b0111, 0b1000, 0b1110
+    ; Common patterns for clockwise: 0b0010, 0b0100, 0b1011, 0b1101
+    
+    ; Check for counter clockwise rotation
+    cpi r16, 0b0001
+    breq counter_clockwise
+    cpi r16, 0b0111
+    breq counter_clockwise
+    cpi r16, 0b1000
+    breq counter_clockwise
+    cpi r16, 0b1110
+    breq counter_clockwise
+    
+    ; Check for clockwise rotation
+    cpi r16, 0b0010
+    breq clockwise
+    cpi r16, 0b0100
+    breq clockwise
+    cpi r16, 0b1011
+    breq clockwise
+    cpi r16, 0b1101
+    breq clockwise
+    
+    ; If we're here, it's not a valid rotation pattern or it's a half step
+    rjmp exit_rpg_isr
+    
+clockwise:
+    lds r16, OCR2B            ; Get current duty cycle
+    cpi r16, 199              ; Check if at max (199)
+    breq exit_rpg_isr
+    inc r16                   ; Increase duty cycle
+    sts OCR2B, r16            ; Update PWM register
+    rjmp exit_rpg_isr
+    
+	counter_clockwise:
+		lds r16, OCR2B            ; Get current duty cycle
+		cpi r16, 0                   ; Check if at min (0)
+		breq exit_rpg_isr
+		dec r16                   ; Decrease duty cycle
+		sts OCR2B, r16            ; Update PWM register
+    
+	exit_rpg_isr:
+		pop r17
+		pop r16
+		out SREG, r16
+		pop r16
+		reti
+
+displayCString:
+	lpm r0,Z+ ; r0 <-- first byte
+	tst r0 ; Reached end of message ?
+	breq done ; Yes => quit
+	swap r0 ; Upper nibble in place
+	out PORTC,r0 ; Send upper nibble out
+	rcall LCDStrobe ; Latch nibble
+	swap r0 ; Lower nibble in place
+	out PORTC,r0 ; Send lower nibble out
+	rcall LCDStrobe ; Latch nibble
+	rjmp displayCString; continue until done
+done:
+	ret
 
 set_8_bit_mode:
 	ldi r17, 0x03;

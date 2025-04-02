@@ -1,18 +1,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                     Lab 4: ECE:3360 Embedded Systems									  ;
-; Authors: 																								  ;
-; 	- Matt Krueger																						  ;
-; 	- Sage Marks																						  ;
+; 																										  ;	
+;												 Authors:												  ;
+; 	 									 Matt Krueger & Sage Marks								          ;
 ; 																										  ;
-; Project Statement:																					  ;
-; 	This AVR program controls a cooling fan monitor, utilizing a PWM controlled fan,				      ;
-;	LCD display, Active-Low Pushbutton, and Rotary Pulse Generator.										  ;
+; 											Project Statement:											  ;
+; 					This AVR program controls a PWM cooling fan monitor, LCD display,					  ;
+; 					active-Low pushbutton, and RPG Encoder to create a monitoring system.		  	      ;
 ;																								          ;
-; This program is interrupt driven, and uses the following interrupts:									  ;
-; 	- INT0        to detect RPG usage																	  ;
-; 	- PCINT[1..0] to detect RPG usage																	  ;
-;																										  ;
-; Extra Credit achieved by using Tachometer to monitor the RPM of the fan.								  ;
+; 					Extra Credit achieved by using Tachometer to monitor the RPM of the fan.			  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 .include "m328pdef.inc"
@@ -20,18 +16,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                           Register Aliases                                              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.def tmp2 		= r24
-.def tmp1 	    = r23
-.def count 	    = r22
-.def rpg_prev_a = r21
-.def rpg_prev_b = r20
-.def fan_state	= r19
-.def prev_dc 	= r18
-.def dc_ocr0b 	= r16
+.def tmp2 			= r24						  ; temporary register 
+.def tmp1 	    	= r23						  ; temporary register
+.def count 	    	= r22						  ; stores counter for timer0
+.def rpg_prev_a 	= r21						  ; tracks previous RPG A signal
+.def rpg_prev_b	 	= r20						  ; tracks previous RPG B signal
+.def fan_state		= r19						  ; boolean flag for fan on/off
+.def prev_dc_q 	    = r18						  ; tracks previous duty cycle quotient
+.def current_dc_q 	= r16						  ; tracks  current duty cycle quotient
 
 .cseg
 .org 0x0000
-rjmp RESET
+rjmp reset										  ; jump over interrupts & LUTs
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                          Interrupt Vectors                                              ;
@@ -45,7 +41,7 @@ rjmp rpg_a_isr
 .org 0x0008
 rjmp rpg_b_isr
 
-.org 0x0034 ; end of interrupt vector 
+.org 0x0034  							 	 	  ; end of interrupt vector 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                           Lookup Tables                                                 ;
@@ -78,36 +74,103 @@ status_suffx_lt_low:
 ;                                      Component Configuration                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 configure_outputs:
-	sbi DDRB, 5				; R/S on LCD (Instruction/register selection) (arduino pin 13)
-	sbi DDRB, 2				; E on LCD (arduino pin ~10)
-	sbi DDRC, 0				; D4 on LCD (arduino pin A0)
-	sbi DDRC, 1				; D5 on LCD (arduino pin A1)
-	sbi DDRC, 2				; D6 on LCD (arduino pin A2)
-	sbi DDRC, 3				; D7 on LCD (arduino pin A3) 
-	sbi DDRD, 3				; PWM fan signal (arduino pin ~3)
+	sbi DDRB, 5								      ; R/S on LCD (Instruction/register selection) (arduino pin 13)
+	sbi DDRB, 2									  ; E on LCD (arduino pin ~10)
+	sbi DDRC, 3									  ; D7 on LCD (arduino pin A3) 
+	sbi DDRC, 2									  ; D6 on LCD (arduino pin A2)
+	sbi DDRC, 1									  ; D5 on LCD (arduino pin A1)
+	sbi DDRC, 0									  ; D4 on LCD (arduino pin A0)
+	sbi DDRD, 3									  ; PWM fan signal (arduino pin ~3)
+	sbi DDRD, 5									  ; LED indicator for fan interrupt (arduino pin ~5)
 	ret
 	
 configure_inputs:
-	cbi DDRD, 2				; Pushbutton signal (arduino pin 7) 
-	cbi DDRD, 4				; A signal from RPG (arduino pin 4)
-	cbi DDRD, 5				; B signal from RPG (arduino pin ~5)
+	cbi DDRB, 1									  ; A signal from RPG (arduino pin 4)
+	cbi DDRB, 0									  ; B signal from RPG (arduino pin ~5)
+	cbi DDRD, 2									  ; Pushbutton signal (arduino pin 7) 
 	ret
 
 configure_timer0:
-	; todo
+	; timer used for main loop timing
+	;
+	; TCCR0A 
+	;   -------------------------------------------------------------
+	;	| COM0A1 | COM0A0 | COM0B1 | COM0B0 | - | - | WGM01 | WGM00 |
+	;   -------------------------------------------------------------
+	; COM0A1 [0]:
+	; COM0A0 [0]: ^
+	; COM0B1 [0]:
+	; COM0B0 [0]: ^
+	; RES    [-]:
+	; RES    [-]:
+	; WGM01  [0]:
+	; WGM00  [0]: ^
+	; 
+	; TCCR0A
+	;   ------------------------------------------------------
+	;	| FOC0A | FOC0B | - | - | WGM02 | CS02 | CS01 | CS00 |
+	;   ------------------------------------------------------
+	; FOC0A  [0]:
+	; FOC0B  [0]: ^
+	; RES    [-]:
+	; RES    [-]:
+	; WGM02  [0]:
+	; CS02   [0]:
+	; CS01   [0]:
+	; CS00   [0]:
+	ldi count, 0x38
+	ldi tmp1, (1 << CS01) 	
+	out TCNT0, count
+	out TCCR0B, tmp1
+	ret
 
 configure_timer2:
-	; todo
+	; timer used for pwm on fan
+	;
+	; TCCR2A
+	;   -------------------------------------------------------------
+	;	| COM2A1 | COM2A0 | COM2B1 | COM2B0 | - | - | WGM21 | WGM20 |
+	;   -------------------------------------------------------------
+	; COM2A1 [0]:
+	; COM2A0 [0]: ^
+	; COM2B1 [0]:
+	; COM2B0 [0]: ^
+	; RES    [-]:
+	; RES    [-]:
+	; WGM21  [0]:
+	; WGM20  [0]: ^
+	; 
+	; TCCR2A 
+	;   ------------------------------------------------------
+	;	| FOC2A | FOC2B | - | - | WGM22 | CS22 | CS21 | CS20 |
+	;   ------------------------------------------------------
+	; FOC2A  [0]:
+	; FOC2B  [0]: ^
+	; RES    [-]:
+	; RES    [-]:
+	; WGM22  [0]:
+	; CS22   [0]:
+	; CS21   [0]:
+	; CS20   [0]:
+	ldi r16, (1 << COM2B1) | (1 << WGM21) | (1 << WGM20) 
+	sts TCCR2A, r16
+	ldi r16, (1 << WGM22) | ( 1<< CS20)
+	sts TCCR2B, r16
+	ldi r16, 199           ; top - 200
+	sts OCR2A, r16
+	ldi current_dc_q, 100      ; bottom - 100
+	sts OCR2B, current_dc_q    ; initial fan pwm: 50%
+	ret
 
 configure_pushbutton_interrupt:
-	ldi r16, (1 << ISC1) | (1 << ISC0)		
+	ldi r16, (1 << ISC01)  		
 	sts EICRA, r16
 	ldi r17, (1 << INT0)			
 	sts EIMSK, r17
 	ret 
 
 configure_rpg_interrupt:
-	ldi r16, (1 << PCIE0)
+	ldi r16, (1 << PCIE0) 					
 	sts PCICR, r16
 	ldi r16, (1 << PCINT1) | (1 << PCINT0)
 	sts PCMSK0, r16
@@ -115,7 +178,7 @@ configure_rpg_interrupt:
 
 configure_lcd:
 	rcall delay_100ms
-	cbi PORTB, 5			; set R/S to low (data transferred is treated as commands)
+	cbi PORTB, 5		
 	rcall set_8_bit_mode
 	rcall LCDStrobe
 	rcall delay_10ms
@@ -126,7 +189,7 @@ configure_lcd:
 	rcall LCDStrobe
 	rcall delay_1ms
 	set_4_bit_mode:
-		ldi r17, 0x02		; sets to 4-bit mode
+		ldi r17, 0x02
 		out PORTC, r17
 		rcall LCDStrobe
 	rcall delay_10ms
@@ -177,30 +240,28 @@ configure_lcd:
 		rcall delay_1ms
 		ret
 
-configure_rpg:
-	ldi r18, 0
-	mov rpg_prev_a, r18
-	mov rpg_prev_b, r18
-	ret
-
-configure_pwm:
-	; TODO rewrite
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            MAIN CODE                                                    ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-RESET:
+reset:
 	rcall configure_outputs
 	rcall configure_inputs
 	rcall configure_timer0
+	rcall configure_timer2
 	rcall configure_pushbutton_interrupt   
 	rcall configure_rpg_interrupt         
 	rcall configure_lcd
-	rcall configure_rpg
-	rcall configure_pwm
-	sei
+	initialize_rpg:
+		ldi r18, 0
+		mov rpg_prev_a, r18						  ; previous a set to 0
+		mov rpg_prev_b, r18						  ; previous b set to 0
+	initialize_fan:
+		mov prev_dc_q, current_dc_q				  ; fan state set to 50%
+		ldi fan_state, 0xff						  ; fan flagged to 1 (on)
+	sei											  ; enable global interrupts
 
 program_loop:
+	; TODO -> display with LCD. this should run inside the loop as it needs to be constantly refreshed.
 	rjmp program_loop;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -222,7 +283,7 @@ rpg_a_isr:
 		ldi r17, 0
 	mov rpg_prev_a, r17
 	cpse r17, rpg_prev_b
-	rjmp rpg_cw		
+	rjmp rpg_cw	
 	rjmp rpg_ccw	
 rpg_b_isr:
 	detect_current_b:
@@ -236,18 +297,21 @@ rpg_b_isr:
 	rjmp rpg_cw		
 	rjmp rpg_ccw	
 rpg_cw:
-	cpi dc_ocr0b, 79
+	cpi current_dc_q, 79
 	breq at_ceiling
-	inc dc_ocr0b
+	inc current_dc_q
 	at_ceiling:
 	reti
 rpg_ccw:
-	cpi dc_ocr0b, 0
+	cpi current_dc_q, 0   
 	breq at_floor
-	dec dc_ocr0b
+	dec current_dc_q
 	at_floor:
 	reti
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            LCD Display												  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 displayCString:
 	lpm r0, Z+
 	tst r0 			
@@ -279,12 +343,12 @@ LCDStrobe:
 		ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                            Timer2 Delays                                                ;
+;                                            Timer0 Delays                                                ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 delay_100ms:
 	ldi r27, 0x03
 	ldi r26, 0xE8
-	loop_100ms
+	loop_100ms:
 		rcall delay_100us
 		sbiw r27:r26, 1
 		brne loop_100ms
@@ -317,7 +381,7 @@ delay_100us:
 	out TIFR2, tmp2
 	out TCNT2, count
 	out TCCR2B, tmp1
-	wait_for_overflow
+	wait_for_overflow:
 		in tmp2, TIFR2
 		sbrs tmp2, TOV2
 		rjmp wait_for_overflow
