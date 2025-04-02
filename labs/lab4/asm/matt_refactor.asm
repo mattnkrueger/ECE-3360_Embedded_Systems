@@ -34,11 +34,22 @@ rjmp RESET
 ; INTERRUPT VECTORS
 ; 
 ; This section maps interrupt vectors to respective Interrupt Service Routines
-; - [TODO] signal via Pushbutton -> toggle_fan
-; - [TODO] signal via RPG -> rpg_check
-; - [TODO] signal via RPG -> rpg_check
+; - External Interrupt request 0 (INT0): 
+; 				pushbutton falling edge -> toggle_fan
+; - Pin Change Interrupt request 0 (PCINT0):
+; 				RPG B logic change -> rpg_change
+; - Pin Change Interrupt request 1 (PCINT1):
+; 				RPG B logic change -> rpg_change
 .org 0x0002
 rjmp toggle_fan
+
+.org 0x0006  
+rjmp rpg_change
+
+.org 0x0008
+rjmp rpg_change
+
+.org 0x0034 ; end of interrupt vector table
 
 ; LOOKUP TABLE
 ;
@@ -47,7 +58,6 @@ rjmp toggle_fan
 ;   				row1:	DC = [duty cycle]%
 ; 					row2:   Fan: [status]
 ; - this code lives on program memory following the Interrupt Vector Table
-.org 0x0034 ; end of interrupt vector table
 
 ; non-extra credit display strings
 duty_cycle_prefix:
@@ -102,8 +112,22 @@ configure_timer0:
 	ret
 
 configure_pushbutton_interrupt:
+	; falling edge triggered
+	ldi r16, (1 << ISC1) | (1 << ISC0)		
+	sts EICRA, r16
+	; mask INT0
+	ldi r17, (1 << INT0)			
+	sts EIMSK, r17
+	ret 
 
 configure_rpg_interrupt:
+	; enable pin change interrupts for PCINT[1..0]
+	ldi r16, (1 << PCIE1) | (PCIE0) 
+	sts PCICR, r16
+	; mask bits inside of PCMSK0
+	ldi r17, (1 << PCINT1) | (1 << PCINT0)
+	sts PCMSK0, r17
+	ret
 
 configure_lcd:
 	rcall delay_100ms
@@ -170,8 +194,8 @@ configure_lcd:
 		ret
 
 configure_rpg:
-	in rpg_previous_state, PIND
-	andi rpg_previous_state, 0x30		; mask (0011 0000) to get pins 5 (A) and 4 (B) of PIND
+	in rpg_previous_state, PINB
+	andi rpg_previous_state, 0x03		; mask (0000 0011) to get pins 9 (A) and 8 (B) of PIND
 	ret
 
 configure_pwm:
@@ -200,28 +224,28 @@ toggle_fan:
 	; TODO: rewrite
 
 rpg_check:
-	rcall delay_1ms;
-	lds r16, OCR2B;
-	in rpg_current_state, PIND;
-	andi rpg_current_state, 0x30;
+	rcall delay_1ms
+	lds r16, OCR2B
+	in rpg_current_state, PIND
+	andi rpg_current_state, 0x30
 	cp rpg_current_state, rpg_previous_state
 	breq no_change
 	cpi rpg_current_state, 0x00
 	breq check_state
 	rjmp save_rpg_state
 	check_state:
-		cpi rpg_previous_state, 0x10;
-		breq clockwise;
-		cpi rpg_previous_state, 0x20;
-		breq counter_clockwise;
-		rjmp save_rpg_state;
+		cpi rpg_previous_state, 0x10
+		breq clockwise
+		cpi rpg_previous_state, 0x20
+		breq counter_clockwise
+		rjmp save_rpg_state
 	clockwise:
-		cpi dc_ocr0b, 79; ; 79 is the max duty cycle
+		cpi dc_ocr0b, 79				; 79 is the max duty cycle
 		breq save_rpg_state
 		inc dc_ocr0b
 		rjmp save_rpg_state
 	counter_clockwise:
-		cpi dc_ocr0b, 0; 0 is the min duty cycle (0% duty cycle i.e. off)
+		cpi dc_ocr0b, 0					; 0 is the min duty cycle (0% duty cycle i.e. off)
 		breq save_rpg_state
 		dec dc_ocr0b
 	save_rpg_state:
