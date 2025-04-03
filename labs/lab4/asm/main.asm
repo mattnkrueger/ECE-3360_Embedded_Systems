@@ -134,63 +134,63 @@ configure_lcd:
 	rcall delay_100ms
 	cbi PORTB, 5		
 	rcall set_8_bit_mode
-	rcall LCDStrobe
+	rcall lcd_strobe
 	rcall delay_10ms
 	rcall set_8_bit_mode
-	rcall LCDStrobe
+	rcall lcd_strobe
 	rcall delay_1ms
 	rcall set_8_bit_mode
-	rcall LCDStrobe
+	rcall lcd_strobe
 	rcall delay_1ms
 	set_4_bit_mode:
 		ldi r17, 0x02
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 	rcall delay_10ms
 	set_interface:
 		ldi r17, 0x02
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_100us
 		ldi r17, 0x08
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_1ms
 	enable_display_cursor:
 		ldi r17, 0x00
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_100us
 		ldi r17, 0x08
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_10ms
 	clear_home:
 		ldi r17, 0x00
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_100us
 		ldi r17, 0x01
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_10ms
 	set_cursor_move_direction:
 		ldi r17, 0x00
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_100us
 		ldi r17, 0x06
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_1ms
 	turn_on_display:
 		ldi r17, 0x00
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_100us
 		ldi r17, 0x0C
 		out PORTC, r17
-		rcall LCDStrobe
+		rcall lcd_strobe
 		rcall delay_1ms
 		ret
 
@@ -198,6 +198,7 @@ configure_lcd:
 ;                                            MAIN CODE                                                    ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 reset:
+	; configure components
 	rcall configure_outputs
 	rcall configure_inputs
 	rcall configure_timer0
@@ -205,18 +206,21 @@ reset:
 	rcall configure_pushbutton_interrupt   
 	rcall configure_rpg_interrupt         
 	rcall configure_lcd
-	initialize_rpg:
-		in rpg_previous_state, PINB;
-		andi rpg_previous_state, 0x03; mask (0000 0011) to get pins 5 (A) and 4 (B)
-	initialize_fan:
-		mov prev_dc_q, current_dc_q				  ; fan state set to 50%
-		ldi fan_state, 0xff						  ; fan flagged to 1 (on)
-	sei											  ; enable global interrupts
+
+	; read initial rpg state
+	in rpg_previous_state, PINB
+	andi rpg_previous_state, 0x03
+
+	; initialie fan to on with current duty cycle quotient set in configuration subroutine
+	mov prev_dc_q, current_dc_q
+	ldi fan_state, 0xff						 
+
+	; enable global interrupts
+	sei											
 
 main:
-	nop
-	nop
-	; rcall display_current_dc
+	; continuously display duty cycle
+	rcall display_current_dc
 	rjmp main
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -264,32 +268,47 @@ pushbutton_isr:
 ;                                      RPG Interrupt Service Routine 									  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 rpg_change:
+    ; save registers that will be operated on 
     push r16
     in r16, SREG
     push r16
     push r17
-    
+
+	; exit if fan is off
 	tst fan_state
-	breq exit_rpg_isr		   ; IF the state is off do not update RPG
-    ; Read current state of RPG pins (A and B)
-    in r17, PINB
-    andi r17, 0x03             ; Mask to get just the two RPG pins
-    
-    ; Combine previous and current states for direction detection
-    ; Shift previous state left by 2 and combine with current state
+	breq exit_rpg_isr		   
+
+	; detect state of RPG pins
+	;      	  ------------------------------------------
+	;      	  | 0 |  0 | 0 | 0 | 0 | 0 | currA | currB |
+	;      	  ------------------------------------------
+	in r17, PINB
+	andi r17, 0x03      
+
+    ; build sequence
+	; previous state bits are shifted twice, and then combined (bitwise or)
+	; because rpg A and B are two bits, shifting twice will result:
+	;      	  ------------------------------------------
+	;      	  | 0 |  0 | 0 | 0 | prevA | prevB | 0 | 0 |
+	;      	  ------------------------------------------
+	; then applying or with current A and current B (without shifting), will result:
+	;      --------------------------------------------------
+	;      | 0 |  0 | 0 | 0 | prevA | prevB | currA | currB |
+	;      --------------------------------------------------
+	; now, register 16 is in the form of a unique gray code encoding a cw or ccw turn.
     mov r16, rpg_previous_state
-    lsl r16
-    lsl r16
-    or r16, r17                ; r16 now contains [prev1 prev0 curr1 curr0]
-    
-    ; Update previous state for next time
+    lsl r16             
+    lsl r16           
+    or r16, r17        
+
+	; update previous state
     mov rpg_previous_state, r17
     
-    ; Check rotation pattern based on combined states
-    ; Common patterns for counter-clockwise: 0b0001, 0b0111, 0b1000, 0b1110
-    ; Common patterns for clockwise: 0b0010, 0b0100, 0b1011, 0b1101
-    
-    ; Check for counter clockwise rotation
+	; cases:
+    ; 	- counter-clockwise: 0b0001, 0b0111, 0b1000, 0b1110
+    ; 	- clockwise: 0b0010, 0b0100, 0b1011, 0b1101
+	; if none of these cases, jumps to exit
+    ; if ccw
     cpi r16, 0b0001
     breq counter_clockwise
     cpi r16, 0b0111
@@ -299,7 +318,7 @@ rpg_change:
     cpi r16, 0b1110
     breq counter_clockwise
     
-    ; Check for clockwise rotation
+    ; if cw
     cpi r16, 0b0010
     breq clockwise
     cpi r16, 0b0100
@@ -308,8 +327,8 @@ rpg_change:
     breq clockwise
     cpi r16, 0b1101
     breq clockwise
-    
-    ; If we're here, it's not a valid rotation pattern or it's a half step
+
+    ; if other
     rjmp exit_rpg_isr
     
 clockwise:
@@ -343,10 +362,10 @@ display_to_lcd:
 	breq done 			
 	swap r0 			
 	out PORTC, r0
-	rcall LCDStrobe 
+	rcall lcd_strobe 
 	swap r0 				
 	out PORTC, r0 			
-	rcall LCDStrobe 	
+	rcall lcd_strobe 	
 	rjmp display_to_lcd
 done:
 	ret
@@ -356,14 +375,14 @@ set_8_bit_mode:
 	out PORTC, r17
 	ret
 
-LCDStrobe:
+lcd_strobe:
 	sbi PORTB, 2					
 	ldi r27, 0x00			
 	ldi r26, 0x05		
-	Strobe_loop:  
+	strobe_loop:  
 		rcall delay_100us  
 		sbiw r27:r26, 1   
-		brne Strobe_loop  
+		brne strobe_loop  
 		cbi PORTB, 2				
 		ret
 
