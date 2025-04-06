@@ -42,12 +42,12 @@ toggle_fan:
 		sts OCR2B, dc_ocr2b;
 		reti
 
-start:
 setup_interrupts:
 	lds r16, EICRA; load EICRA into r16 
 	sbr r16, (1<<ISC01) | (1<<ISC00); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
 	sts EICRA, r16; writeback to EICRA
 	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
+	ret;
 
 configure_ports:
 	;outputs
@@ -64,12 +64,14 @@ configure_ports:
 	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
 	cbi DDRD, 4; A signal from RPG (arduino pin 4)
 	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
+	ret
 
 setup_timer:
 	ldi count, 0x38;
 	ldi tmp1, (1<<CS01) ; prescaler of /8 -> 16MHz/8 = 2MHz per tick
 	out TCNT0, count; load the timer counter register with pstart value (0x38 0011 1000 -> 56 decimal)
 	out TCCR0B, tmp1; load the timer control register with the pstart value (0x01 0000 001 -> 1 decimal) this ends timer configuration for timer0
+	ret
 
 initialize_LCD:
 	rcall timer_delay_100ms;
@@ -137,7 +139,7 @@ initialize_LCD:
 setup_rpg:
 	in rpg_previous_state, PIND;
 	andi rpg_previous_state, 0x30; mask (0011 0000) to get pins 5 (A) and 4 (B)
-	
+	ret
 
 setup_pwm:
 	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
@@ -159,7 +161,16 @@ setup_pwm:
 
 	;initial fan state is on
 	ldi fan_state, 0xff
-sei
+	ret
+
+start:
+	rcall configure_ports
+	rcall setup_interrupts
+	rcall initialize_LCD
+	rcall setup_timer
+	rcall setup_rpg
+	rcall setup_pwm
+	sei
 
 program_loop:
     nop

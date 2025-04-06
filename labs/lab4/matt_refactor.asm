@@ -1,55 +1,71 @@
 ;Lab 4 Matt Krueger and Sage Marks
-
-.def count = r22; counter for timer
-.def tmp1 = r23; temporary register used to store TCCR0B
-.def tmp2 = r24; temporary register used to store TIFR0
-.def rpg_current_state = r21;
-.def rpg_previous_state = r20;
-.def dc_ocr2b = r16;
-.def fan_state = r19
-.def prev_dc = r18
+; 
+; This AVR program controls a cooling fan monitor, utilizing a PWM controlled fan, LCD display, Active-Low Pushbutton, and Rotary Pulse Generator.
 
 .include "m328pdef.inc"
 
-; jump to main code
+; REGISTER ALIASES
+;
+; This section defines registers frequently used inside of the program
+.def count = r22; counter for timer
+.def tmp1 = r23; temporary register used to store TCCR0B
+.def tmp2 = r24; temporary register used to store TIFR0
+.def rpg_current_state = r21; current state (gray code) used for RPG logic
+.def rpg_previous_state = r20; previous state (gray code) used for RPG logic
+.def dc_ocr0b = r16; pwm duty cycle control
+.def fan_state = r19; current fan state used in toggling of PWM fan
+.def previous_duty_cycle = r18; previous duty cycle to return to after toggling the fan
+
 .cseg
 .org 0x0000
-rjmp start;
+rjmp RESET
 
-; interrupt vector for INT0
+; INTERRUPT VECTORS
+; 
+; This section maps interrupt vectors to respective Interrupt Service Routines
+; - INT0 (0x0002) signal via Pushbutton -> toggle_fan
+; - INT1 (0x0004) signal via RPG -> RPG rotation
 .org 0x0002
 rjmp toggle_fan
 
-prefix_string:
+; LOOKUP TABLE
+;
+; This section is used to store string pattern to be displayed inside of main loop
+; - the LCD Displays in the form
+;   				row1:	DC = [duty cycle]%
+; 					row2:   Fan: [status]
+; - this code lives on program memory following the Interrupt Vector Table
+.org 0x0034 ; end of interrupt vector table
+duty_cycle_prefix:
 	.db "DC = ", 0x00 
 
-suffix_string:
+duty_cycle_suffix:
 	.db "%", 0x00 
 
-.org 0x0034 ; end of interrupt vector table
-toggle_fan:
-	push r25
-	com fan_state
-	tst fan_state
-	breq turn_fan_on
-	turn_fan_off:
-		mov prev_dc, dc_ocr2b
-		ldi dc_ocr2b, 0
-		rjmp update_pwm
-	turn_fan_on:
-		mov dc_ocr2b, prev_dc
-	update_pwm:
-		sts OCR2B, dc_ocr2b;
-		pop r25
-		reti
+status_prefix:
+	.db "Fan: ", 0x00
 
-start:
-setup_interrupts:
-	lds r16, EICRA; load EICRA into r16 
-	sbr r16, (1<<ISC01) | (0<<ISC00); set ISC01 to 1 to trigger on falling edge (this is for the pushbutton active low)
-	sts EICRA, r16; writeback to EICRA
-	sbi EIMSK, INT0; enable INT0 interrupt in EIMSK
+status_suffix_on:
+	.db "ON", 0x00
 
+status_suffix_off:
+	.db "OFF", 0x00
+
+; extras for tachometer 5% EC
+
+status_suffix_gt_ok:
+	.db "RPM OK", 0x00
+
+status_suffix_lt_stopped:
+	.db "Stopped", 0x00
+
+status_suffx_lt_low:
+	.db "low RPM", 0x00
+
+; SETUP & CONFIGURATION
+;
+; This section is used to configure the ports, timers, rpg, and interrupts
+; - this code is ran upon startup or reset 
 configure_ports:
 	;outputs
 	sbi DDRB, 5; R/S on LCD (Instruction/register selection) (arduino pin 13)
@@ -59,20 +75,32 @@ configure_ports:
 	sbi DDRC, 2; D6 on LCD (arduino pin A2)
 	sbi DDRC, 3; D7 on LCD (arduino pin A3) 
 	sbi DDRD, 3; PWM fan signal (arduino pin ~3)
-	sbi DDRD, 1; TESTING FOR Interrupts (arduino pin 1)
 	
 	;inputs
 	cbi DDRD, 2; Pushbutton signal (arduino pin 7) INTERRUPT INT0
 	cbi DDRD, 4; A signal from RPG (arduino pin 4)
 	cbi DDRD, 5; B signal from RPG (arduino pin ~5)
+	ret
 
-setup_timer:
-	ldi count, 0x38;
-	ldi tmp1, (1<<CS01) ; prescaler of /8 -> 16MHz/8 = 2MHz per tick
-	out TCNT0, count; load the timer counter register with pstart value (0x38 0011 1000 -> 56 decimal)
-	out TCCR0B, tmp1; load the timer control register with the pstart value (0x01 0000 001 -> 1 decimal) this ends timer configuration for timer0
+configure_timer0:
+	ldi count, 0x38; count of 56
+	ldi tmp1, (1<<CS01); prescaler of /8 -> 16MHz/8 = 2MHz per tick
+	out TCNT0, count
+	out TCCR0B, tmp1
+	ret
 
-initialize_LCD:
+; EIMSK - external interrupt mask register - set int1 or int0 enable (or both)
+; EIFR  - external interrupt flag register - prompt mcu jump to vector table
+configure_int0_interrupt:
+
+; PCICR - pin change interrupt control register - enable which pin change i/os to enable (2,1,0)
+; PCIFR - pin change interrupt flag register - prompt mcu jump to vector table
+; PCMSK2 - pin change mask register 2 - PCINT[23..16] mask
+; PCMSK1 - pin change mask register 1 - PCINT[14..8] mask
+; PCMSK0 - pin change mask register 0 - PCINT[7..0] mask
+configure_pin_change_d_interrupts
+
+configure_lcd:
 	rcall timer_delay_100ms;
 	cbi PORTB, 5; set R/S to low (data transferred is treated as commands)
 	rcall set_8_bit_mode;
@@ -134,36 +162,63 @@ initialize_LCD:
 		out PORTC, r17;
 		rcall LCDStrobe;
 		rcall timer_delay_1ms;
+		ret
 
-setup_rpg:
-	in rpg_previous_state, PIND;
+configure_rpg:
+	in rpg_previous_state, PIND
 	andi rpg_previous_state, 0x30; mask (0011 0000) to get pins 5 (A) and 4 (B)
-	
+	ret
 
-setup_pwm:
-	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
-	ldi r16, (1 << COM2B1)| (1 << WGM21) | (1 << WGM20)
-	sts TCCR2A, r16
-
-	; Prescaler=8 (CS01=1), Fast PWM with TOP=OCR0A (WGM02=1)
-	ldi r16, (1 << WGM22) | (1 << CS21)
-	sts TCCR2B, r16
-
-	; Set TOP for 25kHz (OCR0A = 79)
+configure_pwm:
+	ldi r16, (1 << COM0B1) | (1 << WGM21) | (1 << WGM20)
+	out TCCR0A, r16
+	ldi r16, (1 << WGM02) | (1 << CS21)
+	out TCCR0B, r16
 	ldi r16, 79
-	sts OCR2A, r16
-
-	; Set duty cycle (e.g., 50% = 40)
-	;initial duty cycle is 0%
-	ldi dc_ocr2b, 25 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
-	sts OCR2B, dc_ocr2b  ; OCR2B controls duty cycle!
-
-	;initial fan state is on
+	out OCR0A, r16
+	ldi dc_ocr0b, 25 
+	out OCR0B, dc_ocr0b
+	mov previous_duty_cycle, dc_ocr0b
 	ldi fan_state, 0xff
+	ret
 
-sei
+; MAIN CODE
+;
+; This program is interrupt driven.
+; - 1st: the components are configured
+; - 2nd: the program enters an infinite loop, 
+;   	 waiting for interrupts via user interface
+RESET:
+	rcall configure_ports
+	rcall configure_timer0
+	rcall configure_int0_interrupt
+	rcall configure_lcd
+	rcall configure_rpg
+	rcall configure_pwm
+	sei
+
+; Interrupt service routine for INT0 (pushbutton)
+toggle_fan:
+	push r0 
+    in r0, SREG
+    push r0
+	com fan_state 
+    tst fan_state        
+    breq turn_fan_off
+	turn_fan_on: 
+		mov dc_ocr0b, previous_duty_cycle 
+		rjmp update_pwm
+	turn_fan_off:
+		mov previous_duty_cycle, dc_ocr0b 
+		ldi dc_ocr0b, 0
+    update_pwm:
+		sts OCR2B, dc_ocr0b
+		pop r0
+		out SREG, r0 
+		pop r0
+		reti
+
 program_loop:
-    nop
 	; rcall rpg_check;
 	rjmp program_loop;
 
@@ -184,14 +239,14 @@ rpg_check:
 		breq counter_clockwise;
 		rjmp save_rpg_state;
 	clockwise:
-		cpi dc_ocr2b, 79; ; 79 is the max duty cycle
+		cpi dc_ocr0b, 79; ; 79 is the max duty cycle
 		breq save_rpg_state
-		inc dc_ocr2b
+		inc dc_ocr0b
 		rjmp save_rpg_state
 	counter_clockwise:
-		cpi dc_ocr2b, 0; 0 is the min duty cycle (0% duty cycle i.e. off)
+		cpi dc_ocr0b, 0; 0 is the min duty cycle (0% duty cycle i.e. off)
 		breq save_rpg_state
-		dec dc_ocr2b
+		dec dc_ocr0b
 	save_rpg_state:
 		mov rpg_previous_state, rpg_current_state;
 	no_change:
@@ -265,7 +320,7 @@ timer_delay_1ms:
 		ret;
 
 timer_delay_100us:
-	in tmp1, TCCR0B;
+	in tmp1, TCCR0B 
 	ldi tmp2, 0x00;
 	out TCCR0B, tmp2;
 	in tmp2, TIFR0;
