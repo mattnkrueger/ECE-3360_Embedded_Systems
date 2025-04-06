@@ -198,42 +198,73 @@ toggle_fan:
 	reti
 
 rpg_change:
-	push r16
+    push r16
     in r16, SREG
     push r16
-	rpg_check:
-	lds r16, OCR2B;
-	in rpg_current_state, PINB;
-	andi rpg_current_state, 0x03;
-	cp rpg_current_state, rpg_previous_state
-	breq no_change
-	cpi rpg_current_state, 0x00
-	breq check_state
-	rjmp save_rpg_state
-	check_state:
-		cpi rpg_previous_state, 0x01;
-		breq clockwise;
-		cpi rpg_previous_state, 0x02;
-		breq counter_clockwise;
-		rjmp save_rpg_state;
-	clockwise:
-		cpi dc_ocr2b, 199; ; 79 is the max duty cycle
-		breq save_rpg_state
-		inc r16
-		sts OCR2B, r16
-		rjmp save_rpg_state
-	counter_clockwise:
-		cpi dc_ocr2b, 0; 0 is the min duty cycle (0% duty cycle i.e. off)
-		breq save_rpg_state
-		dec r16
-		sts OCR2B, r16;
-	save_rpg_state:
-		mov rpg_previous_state, rpg_current_state;
-	no_change:
-	pop r16
-	out SREG, r16
-	pop r16
-	reti
+    push r17
+    
+    ; Read current state of RPG pins (A and B)
+    in r17, PINB
+    andi r17, 0x03             ; Mask to get just the two RPG pins
+    
+    ; Combine previous and current states for direction detection
+    ; Shift previous state left by 2 and combine with current state
+    mov r16, rpg_previous_state
+    lsl r16
+    lsl r16
+    or r16, r17                ; r16 now contains [prev1 prev0 curr1 curr0]
+    
+    ; Update previous state for next time
+    mov rpg_previous_state, r17
+    
+    ; Check rotation pattern based on combined states
+    ; Common patterns for clockwise: 0b0001, 0b0111, 0b1000, 0b1110
+    ; Common patterns for counter-clockwise: 0b0010, 0b0100, 0b1011, 0b1101
+    
+    ; Check for clockwise rotation
+    cpi r16, 0b0001
+    breq clockwise
+    cpi r16, 0b0111
+    breq clockwise
+    cpi r16, 0b1000
+    breq clockwise
+    cpi r16, 0b1110
+    breq clockwise
+    
+    ; Check for counter-clockwise rotation
+    cpi r16, 0b0010
+    breq counter_clockwise
+    cpi r16, 0b0100
+    breq counter_clockwise
+    cpi r16, 0b1011
+    breq counter_clockwise
+    cpi r16, 0b1101
+    breq counter_clockwise
+    
+    ; If we're here, it's not a valid rotation pattern or it's a half step
+    rjmp exit_rpg_isr
+    
+clockwise:
+    lds r16, OCR2B            ; Get current duty cycle
+    cpi r16, 199              ; Check if at max
+    breq exit_rpg_isr
+    inc r16                   ; Increase duty cycle
+    sts OCR2B, r16            ; Update PWM register
+    rjmp exit_rpg_isr
+    
+counter_clockwise:
+    lds r16, OCR2B            ; Get current duty cycle
+    tst r16                   ; Check if at min (0)
+    breq exit_rpg_isr
+    dec r16                   ; Decrease duty cycle
+    sts OCR2B, r16            ; Update PWM register
+    
+exit_rpg_isr:
+    pop r17
+    pop r16
+    out SREG, r16
+    pop r16
+    reti
 
 displayCString:
 	lpm r0,Z+ ; r0 <-- first byte
