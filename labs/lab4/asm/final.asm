@@ -1,18 +1,18 @@
 
 ;Lab 4 Matt Krueger and Sage Marks
 
-.def count = r22; counter for timer
-.def tmp1 = r23; temporary register used to store TCCR0B
+.def dc_high = r29
+.def dc_low = r28
 .def tmp2 = r24; temporary register used to store TIFR0
+.def tmp1 = r23; temporary register used to store TCCR0B
+.def count = r22; counter for timer
 .def rpg_current_state = r21;
 .def rpg_previous_state = r20;
-.def dc_ocr2b = r16;
 .def fan_state = r19
-.def prev_dc = r18
-.def dc_low = r28
-.def dc_high = r29
+.def prev_dc_q = r18
+.def current_dc_q = r16;
 .def rpg_threshold = r4
-.def rpg_accumulate = r5
+.def rpg_accumulator = r5
 
 .include "m328pdef.inc"
 ; jump to main code
@@ -189,7 +189,7 @@ setup_rpg:
 	in rpg_previous_state, PINB;
 	andi rpg_previous_state, 0x03; mask (0000 0011) to get pins 5 (A) and 4 (B)
 
-	clr rpg_accumulate
+	clr rpg_accumulator
 	ldi r16, 3
 	mov rpg_threshold, r16
 	clr r16
@@ -209,11 +209,11 @@ setup_pwm:
 
 	; Set duty cycle (e.g., 50% = 40)
 	;initial duty cycle is 0%
-	ldi dc_ocr2b, 195 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
-	sts OCR2B, dc_ocr2b  ; OCR2B controls duty cycle!
+	ldi current_dc_q, 195 ; NOTE - alias for OCR2B r16 -> current_dc_q
+	sts OCR2B, current_dc_q  ; OCR2B controls duty cycle!
 
 	;initial fan state is on
-	mov prev_dc, dc_ocr2b;
+	mov prev_dc_q, current_dc_q;
 	ldi fan_state, 0xff
 
 initial_state:
@@ -253,14 +253,14 @@ toggle_fan:
 	turn_on:
 		sbi PORTD, 5			 ; Turn LED OFF
 		ldi fan_state, 0xFF      ; Set state to ON
-		mov r17, prev_dc         ; Restore saved duty cycle
+		mov r17, prev_dc_q         ; Restore saved duty cycle
 		in rpg_previous_state, PINB
 		andi rpg_previous_state, 0x03
 		rjmp update_pwm
 	turn_off:
 		cbi PORTD, 5			 ; Turn LED on	
 		clr fan_state            ; Set state to OFF
-		mov prev_dc, r17         ; Save current duty cycle
+		mov prev_dc_q, r17         ; Save current duty cycle
 		ldi r17, 0               ; Set duty to 0
 	update_pwm:
 		sts OCR2B, r17           ; Update PWM register with the stored value
@@ -329,12 +329,12 @@ rpg_change:
     rjmp exit_rpg_isr
     
 clockwise:
-    inc rpg_accumulate          ; Increment the accumulator
-    mov r30, rpg_accumulate     ; Use r30 as temporary register
+    inc rpg_accumulator          ; Increment the accumulator
+    mov r30, rpg_accumulator     ; Use r30 as temporary register
     cp r30, rpg_threshold       ; Compare with threshold
     brne exit_rpg_isr        ; If not reached threshold, skip OCR2B update
     
-    clr rpg_accumulate          ; Reset accumulator
+    clr rpg_accumulator          ; Reset accumulator
     lds r30, OCR2B              ; Get current duty cycle
     cpi r30, 198                ; Check if at max (199)
     breq full_speed_call        ; If at max, don't increment
@@ -345,12 +345,12 @@ clockwise:
     rjmp exit_rpg_update
     
 counter_clockwise:
-    inc rpg_accumulate          ; Increment the accumulator
-    mov r30, rpg_accumulate     ; Use r30 as temporary register
+    inc rpg_accumulator          ; Increment the accumulator
+    mov r30, rpg_accumulator     ; Use r30 as temporary register
     cp r30, rpg_threshold       ; Compare with threshold
     brne exit_rpg_isr			; If not reached threshold, skip OCR2B update
     
-    clr rpg_accumulate          ; Reset accumulator
+    clr rpg_accumulator          ; Reset accumulator
     lds r30, OCR2B              ; Get current duty cycle
     cpi r30, 2                  ; Check if at min (2 or 1%)
     breq exit_rpg_isr			; If at min, don't decrement
@@ -564,7 +564,7 @@ pwm_full_speed:
 	rcall displayCString;
 	exit_full_speed:
 		ldi r16, 2
-		mov rpg_accumulate, r16
+		mov rpg_accumulator, r16
 		ret
 ;------------------------------------------------------------------
 ;FAN ON AND OFF STUFF (display)

@@ -16,18 +16,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                           Register Aliases                                              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.def tmp2 			= r24						  ; temporary register 
-.def tmp1 	    	= r23						  ; temporary register
-.def count 	    	= r22						  ; stores counter for timer0
-.def rpg_current_state = r21;
-.def rpg_previous_state = r20;
-.def fan_state		= r19						  ; boolean flag for fan on/off
-.def prev_dc_q 	    = r18						  ; tracks previous duty cycle quotient
-.def current_dc_q 	= r16						  ; tracks  current duty cycle quotient
+.def 					= r29 						; Y reg
+.def dc_low 			= r28 						; Y reg
+.def tmp2               = r24                       ; temporary register 
+.def tmp1               = r23                       ; temporary register
+.def count              = r22                       ; stores counter for timer0
+.def rpg_current_state  = r21
+.def rpg_previous_state = r20
+.def fan_state          = r19                       ; boolean flag for fan on/off
+.def prev_dc_q          = r18                       ; tracks previous duty cycle quotient
+.def current_dc_q       = r16                       ; tracks current duty cycle quotient
+.def rpg_accumulator    = r5 						; accumulator for our rpg <1% change per turn
+.def rpg_threshold 		= r4 						; max for accumulator
 
 .cseg
 .org 0x0000
-rjmp reset										  ; jump over interrupts & LUTs
+rjmp reset										    ; jump over interrupts & LUTs
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                          Interrupt Vectors                                              ;
@@ -46,32 +50,23 @@ rjmp rpg_change
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                           Lookup Tables                                                 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-duty_cycle_prefix:
+prefix_string:
 	.db "DC = ", 0x00 
 
-DUMMY_DC:
-	.db "%", 0x00 
+suffix_string:
+	.db "%", 0x00
 
-duty_cycle_suffix:
-	.db "%", 0x00 
-
-status_prefix:
+fan_string:
 	.db "Fan: ", 0x00
 
-status_suffix_on:
+on_string:
 	.db "ON ", 0x00
 
-status_suffix_off:
+off_string:
 	.db "OFF", 0x00
 
-status_suffix_gt_ok:
-	.db "RPM OK ", 0x00
-
-status_suffix_lt_stopped:
-	.db "Stopped", 0x00
-
-status_suffx_lt_low:
-	.db "low RPM", 0x00
+space_string:
+	.db " ", 0x00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                      Component Configuration                                            ;
