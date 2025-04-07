@@ -145,6 +145,9 @@ configure_lcd:
 	rcall delay_1ms								  ; subsequent delays >100us. 
 	rcall set_8_bit_mode
 	rcall lcd_strobe
+	
+	; delay between commands >100us
+	rcall delay_1ms
 
 	; set 4-bit mode
 	set_4_bit_mode:
@@ -153,6 +156,7 @@ configure_lcd:
 		rcall lcd_strobe
 	rcall delay_10ms
 
+	; finilize 4-bit mode 
 	set_interface:
 		ldi r17, 0x02
 		out PORTC, r17
@@ -162,6 +166,8 @@ configure_lcd:
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_1ms
+	; now 4 bit mode is set
+
 	enable_display_cursor:
 		ldi r17, 0x00
 		out PORTC, r17
@@ -171,6 +177,7 @@ configure_lcd:
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_10ms
+
 	clear_home:
 		ldi r17, 0x00
 		out PORTC, r17
@@ -180,6 +187,7 @@ configure_lcd:
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_10ms
+
 	set_cursor_move_direction:
 		ldi r17, 0x00
 		out PORTC, r17
@@ -189,6 +197,7 @@ configure_lcd:
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_1ms
+
 	turn_on_display:
 		ldi r17, 0x00
 		out PORTC, r17
@@ -198,32 +207,36 @@ configure_lcd:
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_1ms
+
+	; display prefix on first row
 	display_dc_prefix:					
-		sbi PORTB, 5;
-		ldi r30,LOW(2*prefix_string) ; Load Z register low
-		ldi r31,HIGH(2*prefix_string) ; Load Z register high
-		rcall display_c_string;
-	;move the cursor to the second line and write the state of the fan (ON or OFF)
-	;This is for writing the FAN:
-	;Handle changing On and Off in subroutine
-	Cursor_2nd_Row:
+		sbi PORTB, 5
+		ldi r30, LOW(2 * prefix_string) 
+		ldi r31, HIGH(2 * prefix_string)
+		rcall display_c_string
+
+	;move the cursor to the second line 
+	move_cursor_to_second_row:
 		cbi PORTB, 5
 		ldi r17, 0x0C
 		out PORTC, r17
-		rcall lcd_strobe;
+		rcall lcd_strobe
 		rcall delay_100us
 		ldi r17, 0x00
-		out PORTC, r17;
-		rcall lcd_strobe;
-		rcall delay_1ms;
-		sbi PORTB, 5;
-	Initial_Fan_On_Dispaly:
-		ldi r30,LOW(2*fan_string) ; Load Z register low
-		ldi r31,HIGH(2*fan_string) ; Load Z register high
-		rcall display_c_string;
-		rcall delay_1ms;
-		rcall fan_on;
-		ret
+		out PORTC, r17
+		rcall lcd_strobe
+		rcall delay_1ms
+		sbi PORTB, 5
+
+	; display fan status on second row
+	display_fan_status:
+		ldi r30, LOW(2 * fan_string) 
+		ldi r31, HIGH(2 * fan_string)
+		rcall display_c_string
+	
+	; delay for fan status to be displayed before 
+	rcall delay_1ms
+	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            MAIN CODE                                                    ;
@@ -245,6 +258,7 @@ reset:
 	; initialie fan to on with current duty cycle quotient set in configuration subroutine
 	mov prev_dc_q, current_dc_q
 	ldi fan_state, 0xff							; set fan state to on (1)
+	rcall fan_on
 
 	; initial LED indicators used on circuit
 	sbi PORTD, 5
@@ -297,11 +311,11 @@ toggle_fan:
 	update_fan_display:
 		tst fan_state
 		brne display_on
-		rcall On_Off_Cursor_2nd_Row;
+		rcall On_Off_move_cursor_to_second_row;
 		rcall fan_off;
 		rjmp exit_toggle;
 		display_on:
-		rcall On_Off_Cursor_2nd_Row;
+		rcall On_Off_move_cursor_to_second_row;
 		rcall fan_on
 	exit_toggle:
 		pop r17
@@ -555,7 +569,7 @@ pwm_full_speed:
 		ret
 
 ;turns on the cursor for the 2nd row
-On_Off_Cursor_2nd_Row:
+On_Off_move_cursor_to_second_row:
 	cbi PORTB, 5
 	ldi r17, 0x0C 
 	out PORTC, r17
