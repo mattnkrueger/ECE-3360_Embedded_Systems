@@ -75,11 +75,13 @@ configure_outputs:
     ; port B
 	sbi DDRB, 5								      ; R/S on LCD (Instruction/register selection) (arduino pin 13)
 	sbi DDRB, 2									  ; E on LCD (arduino pin ~10)
+
 	; port C
 	sbi DDRC, 3									  ; D7 on LCD (arduino pin A3) 
 	sbi DDRC, 2									  ; D6 on LCD (arduino pin A2)
 	sbi DDRC, 1									  ; D5 on LCD (arduino pin A1)
 	sbi DDRC, 0									  ; D4 on LCD (arduino pin A0)
+
 	; port D
 	sbi DDRD, 3									  ; pwm fan signal (arduino pin ~3)
 	sbi DDRD, 5									  ; green LED indicator for fan ON (arduino pin ~5)
@@ -90,6 +92,7 @@ configure_inputs:
 	; port B
 	cbi DDRB, 1									  ; A signal from RPG (arduino pin 4)
 	cbi DDRB, 0									  ; B signal from RPG (arduino pin ~5)
+
 	; port d
 	cbi DDRD, 2									  ; Pushbutton input signal
 	ret
@@ -127,22 +130,29 @@ configure_rpg_interrupt:
 	ret
 
 configure_lcd:
-	rcall delay_100ms
-	cbi PORTB, 5								  ; set R/S to low (data transferred is treated as commands)
+    ; LCD power-up sequence
+	rcall delay_100ms						      ; wait >40ms
+
+	; set R/S to low (data transferred is treated as commands)
+	cbi PORTB, 5								  
+
+    ; set 8-bit mode by sending 0011 0000 3 times
+	rcall set_8_bit_mode						 
+	rcall lcd_strobe						
+	rcall delay_10ms	 					      ; wait for >4.1ms after setting 8-bit (via datasheet pg 45)						
+	rcall set_8_bit_mode			
+	rcall lcd_strobe				
+	rcall delay_1ms								  ; subsequent delays >100us. 
 	rcall set_8_bit_mode
 	rcall lcd_strobe
-	rcall delay_10ms
-	rcall set_8_bit_mode
-	rcall lcd_strobe
-	rcall delay_1ms
-	rcall set_8_bit_mode
-	rcall lcd_strobe
-	rcall delay_1ms
+
+	; set 4-bit mode
 	set_4_bit_mode:
-		ldi r17, 0x02							  ; sets to 4-bit mode
+		ldi r17, 0x02							  
 		out PORTC, r17
 		rcall lcd_strobe
 	rcall delay_10ms
+
 	set_interface:
 		ldi r17, 0x02
 		out PORTC, r17
@@ -313,7 +323,6 @@ rpg_change:
 	; exit if fan is off
     rcall delay_100us
 	tst fan_state
-	breq exit_rpg_isr		   
     breq exit_rpg_isr           ; IF the state is off do not update RPG
 
 	; detect state of RPG pins
@@ -425,14 +434,14 @@ set_8_bit_mode:
 	ret;
 
 lcd_strobe:
-	sbi PORTB, 2; set E to high (initiate data transfer). 
-	ldi r27, 0x00; load X reg
-	ldi r26, 0x05; (000 0101) loads 5 to run 100us 5 times
+	sbi PORTB, 2                     ; set E to high (initiate data transfer)
+	ldi r27, 0x00                    ; load X reg
+	ldi r26, 0x05                    ; (000 0101) loads 5 to run 100us 5 times
 	strobe_loop:
-		rcall delay_100us;
-		sbiw r27:r26, 1; decrement X reg
-		brne strobe_loop;
-		cbi PORTB, 2; set E to low (end of data transfer)
+		rcall delay_100us            ; delay
+		sbiw r27:r26, 1             ; decrement X reg
+		brne strobe_loop            ; if not done, loop
+		cbi PORTB, 2                ; set E to low (end of data transfer)
 		ret
 
 display_c_string:
