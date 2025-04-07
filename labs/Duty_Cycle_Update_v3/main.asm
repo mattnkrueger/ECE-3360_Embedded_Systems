@@ -41,6 +41,9 @@ on_string:
 off_string:
 	.db "OFF", 0x00
 
+space_string:
+	.db " ", 0x00
+
 .org 0x0034 ; end of interrupt vector table
 ;-----------------------------------------------------------------------------------------------
 ;Initialization
@@ -183,7 +186,6 @@ Initial_Fan_On_Dispaly:
 setup_rpg:
 	in rpg_previous_state, PINB;
 	andi rpg_previous_state, 0x03; mask (0000 0011) to get pins 5 (A) and 4 (B)
-	
 
 setup_pwm:
 	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
@@ -200,7 +202,7 @@ setup_pwm:
 
 	; Set duty cycle (e.g., 50% = 40)
 	;initial duty cycle is 0%
-	ldi dc_ocr2b, 115 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
+	ldi dc_ocr2b, 195 ; NOTE - alias for OCR2B r16 -> dc_ocr2b
 	sts OCR2B, dc_ocr2b  ; OCR2B controls duty cycle!
 
 	;initial fan state is on
@@ -245,6 +247,8 @@ toggle_fan:
 		sbi PORTD, 5			 ; Turn LED OFF
 		ldi fan_state, 0xFF      ; Set state to ON
 		mov r17, prev_dc         ; Restore saved duty cycle
+		in rpg_previous_state, PINB
+		andi rpg_previous_state, 0x03
 		rjmp update_pwm
 	turn_off:
 		cbi PORTD, 5			 ; Turn LED on	
@@ -274,27 +278,25 @@ rpg_change:
     in r16, SREG
     push r16
     push r17
-
+    push r30
+    
     rcall timer_delay_100us
-	tst fan_state
-	breq exit_rpg_isr		   ; IF the state is off do not update RPG
+    tst fan_state
+    breq exit_rpg_isr           ; IF the state is off do not update RPG
+    
+    
     ; Read current state of RPG pins (A and B)
     in r17, PINB
-    andi r17, 0x03             ; Mask to get just the two RPG pins
+    andi r17, 0x03              ; Mask to get just the two RPG pins
     
     ; Combine previous and current states for direction detection
-    ; Shift previous state left by 2 and combine with current state
     mov r16, rpg_previous_state
     lsl r16
     lsl r16
-    or r16, r17                ; r16 now contains [prev1 prev0 curr1 curr0]
+    or r16, r17                 ; r16 now contains [prev1 prev0 curr1 curr0]
     
     ; Update previous state for next time
     mov rpg_previous_state, r17
-    
-    ; Check rotation pattern based on combined states
-    ; Common patterns for counter-clockwise: 0b0001, 0b0111, 0b1000, 0b1110
-    ; Common patterns for clockwise: 0b0010, 0b0100, 0b1011, 0b1101
     
     ; Check for counter clockwise rotation
     cpi r16, 0b0001
@@ -320,29 +322,39 @@ rpg_change:
     rjmp exit_rpg_isr
     
 clockwise:
-    lds r16, OCR2B            ; Get current duty cycle
-    cpi r16, 199              ; Check if at max (199)
-    breq exit_rpg_isr
-    inc r16                   ; Increase duty cycle
-    sts OCR2B, r16            ; Update PWM register
+    lds r30, OCR2B              ; Get current duty cycle
+    cpi r30, 198                ; Check if at max (199)
+    breq full_speed_call        ; If at max, don't increment
+	cpi r30, 199
+	breq exit_rpg_isr
+    inc r30                     ; Increase duty cycle
+    sts OCR2B, r30              ; Update PWM register
+    rjmp exit_rpg_update
+    
+counter_clockwise:
+    lds r30, OCR2B              ; Get current duty cycle
+    cpi r30, 2                  ; Check if at min (2 or 1%)
+    breq exit_rpg_isr			; If at min, don't decrement
+    dec r30                     ; Decrease duty cycle
+    sts OCR2B, r30              ; Update PWM register
+	rjmp exit_rpg_update
+
+exit_rpg_update:
+    rcall PWM_cursor
+    rcall pwm_to_percent
+    rcall pwm_display
     rjmp exit_rpg_isr
-    
-	counter_clockwise:
-		lds r16, OCR2B            ; Get current duty cycle
-		cpi r16, 0                   ; Check if at min (0)
-		breq exit_rpg_isr
-		dec r16                   ; Decrease duty cycle
-		sts OCR2B, r16            ; Update PWM register
-    
-	exit_rpg_isr:
-		rcall PWM_cursor
-		rcall pwm_to_percent
-		rcall pwm_display
-		pop r17
-		pop r16
-		out SREG, r16
-		pop r16
-		reti
+
+full_speed_call:
+	rcall pwm_full_speed
+
+exit_rpg_isr:
+    pop r30
+    pop r17
+    pop r16
+    out SREG, r16
+    pop r16
+    reti
 
 ;-----------------------------------------------------------------------------------------
 ;SUBROUTINES
@@ -354,6 +366,7 @@ clockwise:
 
 ;pwm to percentage 0-999
 pwm_to_percent:
+	push r1
 	push r14
 	push r15
 	push r16
@@ -387,6 +400,7 @@ pwm_to_percent:
 	ldi r19, high(199)	;divisor high byte (divide by OCR2A)
 	rcall div16u		;result in r17:r16 (third digit is here)
 	add r28, r16
+	adc r29, r1
 
 	pop r22
 	pop r21
@@ -397,6 +411,7 @@ pwm_to_percent:
 	pop r16
 	pop r15
 	pop r14
+	pop r1
 	ret
 
 ;Code that displays the pwm percentage
@@ -432,6 +447,10 @@ pwm_display:
 	
 	ldi r30,LOW(2*suffix_string) ; Load Z register low
 	ldi r31,HIGH(2*suffix_string) ; Load Z register high
+	rcall displayCString;
+
+	ldi r30,LOW(2*space_string) ; Load Z register low
+	ldi r31,HIGH(2*space_string) ; Load Z register high
 	rcall displayCString;
 
 	pop r20
@@ -506,6 +525,26 @@ PWM_cursor:
 	rcall timer_delay_1ms;
 	sbi PORTB, 5;
 	ret
+
+pwm_full_speed:
+	inc r30
+	sts OCR2B, r30    ; Set OCR2B = OCR2A
+	rcall pwm_cursor
+	ldi r16, 1
+	mov r2, r16
+	rcall display_char1
+	ldi r16, 0
+	mov r2, r16
+	rcall display_char1
+	rcall display_char1
+	rcall display_decimal
+	rcall display_char1
+								 ;% sign
+	ldi r30,LOW(2*suffix_string) ; Load Z register low
+	ldi r31,HIGH(2*suffix_string) ; Load Z register high
+	rcall displayCString;
+	exit_full_speed:
+		ret
 ;------------------------------------------------------------------
 ;FAN ON AND OFF STUFF (display)
 ;-------------------------------------------------------------------
