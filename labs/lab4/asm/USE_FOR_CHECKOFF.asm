@@ -79,7 +79,7 @@ setup_PBS_interrupt:
 	ldi r16, 0b01
 	out EIMSK, r16; enable INT0 interrupt in EIMSK
 
-setup_RPG_interrupt:;PB0 PCINT0
+setup_RPG_interrupt:;PB0 PCINT0 PIN CHANGE INTERRUPT
 	lds r16, PCICR;
 	sbr r16, (1<<PCIE0);
 	sts PCICR, r16
