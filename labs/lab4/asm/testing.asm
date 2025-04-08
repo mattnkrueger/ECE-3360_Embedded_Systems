@@ -459,10 +459,8 @@ clockwise:
     
     clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
-    cpi r30, 198                                        ; check if newest turn reaches max dc
-    breq exit_rpg_update								; if at max, don't increment and exit
     cpi r30, 199
-    breq exit_rpg_update
+    breq exit_rpg_isr
     inc r30                                             ; increment
     sts OCR2B, r30                                      ; update ocr2b
     rjmp exit_rpg_update
@@ -704,6 +702,8 @@ convert_dc_to_percentage:
 	push r20
 	push r21
 	push r22
+	push r24
+	push r25
 	push r30
 	push r31
 	
@@ -712,6 +712,10 @@ convert_dc_to_percentage:
 	lds r24, OCR2B						
 	clr r25
 	adiw r25:r24, 1						; ocr2b + 1 
+	
+	; move into r17:r16 for mpy16u
+	mov r16, r24
+	mov r17, r25
 
 	; multiply r19:r18 * r17:r16
 	ldi r18, 100				
@@ -719,8 +723,6 @@ convert_dc_to_percentage:
 	rcall mpy16u						; product in r17:r16
 
 	; now we have duty cycle dividend * 100  in 17:16.
-	; because our rpg change is half a percent per turn,
-	; this resolution should be more than enough (65535 representable values)
 	; lets say we have ocr2b of 98, which one turn less than 50% dc:
 	;                      (98 + 1) * 100 = 9900
 	;
@@ -734,14 +736,18 @@ convert_dc_to_percentage:
 	lds r24, OCR2A
 	clr r25
 	adiw r25:r24, 1						; ocr2a + 1	
+
+	; move into r18:r19 for div16u
+	mov r18, r24
+	mov r19, r25
 	
 	; divide r17:r16 / r19:r18
 	rcall div16u					; quotient in r17:r16 (but lives in r16 as quotient never exceeds 255), remainder in 15:14 (but lives in r14 as it never exceeds 255)
 
 	; because our resolution is so low, we can simply save quotient to upper byte and remainder to lower byte to send to write_dc_to_lcd
 	; why does this work? 
-	; our ocr2a is 200, so we can never represent a quotient greater than 200, which fits within 8 bits
-	; similarly, our remainder will always be less than 200, which fits within 8 bits
+	;     - our ocr2a is 200, so we can never represent a quotient greater than 200, which fits within 8 bits
+	;     - similarly, our remainder will always be less than 200, which fits within 8 bits
 
 	;save the value to R29:R28
 	mov r29, r16
@@ -749,6 +755,8 @@ convert_dc_to_percentage:
 
     pop r31
 	pop r30
+	pop r25
+	pop r24
 	pop r22
 	pop r21
 	pop r20
@@ -773,8 +781,20 @@ write_dc_to_lcd:
 	push r19
 	push r20
 	
-	; see convert_dc_to_percentage for explanation. 
-	; r29:r28 contains the quotient and remainder
+	; get duty cycle
+	mov r16, dc_low
+	mov r17, dc_high
+
+	; divide by 10
+	ldi r18, low(10)
+	ldi r19, high(10)
+
+	rcall div16u								
+	mov r0, r14
+	rcall div16u
+	mov r1, r14
+	rcall div16u
+	mov r2, r14
 
 	rcall write_char1
 	rcall write_char2
@@ -804,7 +824,6 @@ write_dc_to_lcd:
 	ret
 
 ; division code taken from ATMEL AVR200.asm
-; 
 div16u:	
 	clr	r14	;clear remainder Low byte
 	sub	r15, r15;clear remainder High byte and carry
