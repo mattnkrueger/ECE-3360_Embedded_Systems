@@ -26,6 +26,8 @@
 .def fan_state           = r19                     ; boolean flag for fan on/off
 .def previous_dc_divisor = r18                     ; tracks previous duty cycle divisor
 .def current_dc_divisor  = r17                     ; tracks current duty cycle divisor
+.def rpg_accumulator     = r2
+.def rpg_threshold       = r3
 
 .cseg
 .org 0x0000
