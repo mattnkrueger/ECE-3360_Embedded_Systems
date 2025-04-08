@@ -16,22 +16,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                           Register Aliases                                              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.def dc_high			= r29 						; Y reg
-.def dc_low 			= r28 						; Y reg
-.def tmp2               = r24                       ; temporary register 
-.def tmp1               = r23                       ; temporary register
-.def count              = r22                       ; stores counter for timer0
-.def rpg_current_state  = r21
-.def rpg_previous_state = r20
-.def fan_state          = r19                       ; boolean flag for fan on/off
-.def prev_dc_q          = r18                       ; tracks previous duty cycle quotient
-.def current_dc_q       = r16                       ; tracks current duty cycle quotient
-.def rpg_accumulator    = r5 						; accumulator for our rpg <1% change per turn
-.def rpg_threshold 		= r4 						; max for accumulator
+.def dc_high			 = r29 					   ; Y reg
+.def dc_low 			 = r28 					   ; Y reg
+.def tmp2                = r24                     ; temporary register 
+.def tmp1                = r23                     ; temporary register
+.def count               = r22                     ; stores counter for timer0
+.def rpg_current_state   = r21
+.def rpg_previous_state  = r20
+.def fan_state           = r19                     ; boolean flag for fan on/off
+.def previous_dc_divisor = r18                     ; tracks previous duty cycle divisor
+.def current_dc_divisor  = r17                     ; tracks current duty cycle divisor
+.def rpg_accumulator     = r5 					   ; accumulator for our rpg <1% change per turn
+.def rpg_threshold 		 = r4 					   ; max for accumulator
 
 .cseg
 .org 0x0000
-rjmp reset										    ; jump over interrupts & LUTs
+rjmp reset										   ; jump over interrupts & LUTs
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                          Interrupt Vectors                                              ;
@@ -135,17 +135,20 @@ configure_timer2:
 	;               -----------------------------------------------------        ---------------------------------
 	;
 	; Configuration:
-	; - Fast PWM mode with non-inverting output
+	; - counter operation: Clear OC2B on compare match, set OC2B at BOTTOM (0). All wgm bits set, so top is fast-pwm with a top of OCR2A
+	; 						 With these selections, we can simlpy increment/decrement OCR2B to achieve the duty cycle. 
+	;  					     Setting OCR2A to 199, we can increment/decrement OCR2B from 0 to 199 to achieve a duty cycle of 0-99%
+	;                        Thus, an increment/decrement of 1 in OCR2B will change the duty cycle by +/-0.5%
 	;
-	;
+	; - clock source: no prescaling. 16MHz clock, so 1 tick = 0.0625us
 	ldi r16, (1 << COM2B1) | (1 << WGM21) | (1 << WGM20) 	  ; Fast pwm, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
 	sts TCCR2A, r16
 	ldi r16, (1 << WGM22) | ( 1<< CS20)					  		; Prescaler=1 (CS20=1), Fast pwm with TOP=OCR0A (WGM02=1)
 	sts TCCR2B, r16
 	ldi r16, 199           
 	sts OCR2A, r16
-	ldi current_dc_q, 195      									; initial duty cycle is 195/200 = 97.5%
-	sts OCR2B, current_dc_q   
+	ldi current_dc_divisor, 195      									; initial duty cycle is 195/200 = 97.5%
+	sts OCR2B, current_dc_divisor   
 	ret
 
 configure_pushbutton_interrupt:
@@ -180,7 +183,7 @@ configure_lcd:
 	rcall delay_1ms								  ; subsequent delays >100us. 
 	rcall set_8_bit_mode
 	rcall lcd_strobe
-	rcall delay_1ms 							; delay between commands >100us
+	rcall delay_1ms 							  ; delay between commands >100us
 
 	; set 4-bit mode
 	set_4_bit_mode:
@@ -206,7 +209,7 @@ configure_lcd:
 	; enable_display_cursor:
 	; 	ldi r17, 0x00;
 	; 	out PORTC, r17;
-	; 	rcall lcd_strobe;
+	; 	rcall lcd_strobe;       ; additional strobe included inside of slides: 
 	; 	rcall delay_100us;		; not needed as it is overwritten by turn on display
 	; 	ldi r17, 0x08;			; delaying before next command to ensure not busy is sufficient
 	; 	out PORTC, r17;
@@ -246,34 +249,38 @@ configure_lcd:
 		rcall lcd_strobe
 		rcall delay_1ms
 
+    ; The following code is for displaying static strings. these are overwritten by the dynamic strings in isrs
+	;  ---------------------------------------------------
+	;  | D | C | _ | = | _ |  |  |  |  |  |  |  |  |  |  |
+	;  | F | a | n | : | _ |  |  |  |  |  |  |  |  |  |  |
+	;  ---------------------------------------------------
 	; display prefix on first row
 	display_dc_prefix:					
-		sbi PORTB, 5
-		ldi r30, LOW(2 * prefix_string) 
-		ldi r31, HIGH(2 * prefix_string)
-		rcall display_c_string
+		sbi PORTB, 5									
+		ldi r30, LOW(2 * prefix_string) 				; "DC = "
+		ldi r31, HIGH(2 * prefix_string)   				; obtain address of prefix string
+		rcall write_string_to_lcd
 
-	;move the cursor to the second line 
+	;move the cursor to the second row
 	move_cursor_to_second_row:
 		cbi PORTB, 5
 		ldi r17, 0x0C
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_100us
-		ldi r17, 0x00
+		ldi r17, 0x00      							    ; move cursor to beginning of second row (ddram 40)
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_1ms
-		sbi PORTB, 5
 
 	; display fan status on second row
 	display_fan_status:
-		ldi r30, LOW(2 * fan_string) 
-		ldi r31, HIGH(2 * fan_string)
-		rcall display_c_string
+		sbi PORTB, 5
+		ldi r30, LOW(2 * fan_string) 					; "Fan: "
+		ldi r31, HIGH(2 * fan_string)				    ; obtain address of fan string
+		rcall write_string_to_lcd
 	
-	; delay for fan status to be displayed before 
-	rcall delay_1ms
+	rcall delay_1ms										
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -294,7 +301,7 @@ reset:
 	andi rpg_previous_state, 0x03				; mask to get pins 5 (A) and 4 (B)
 
 	; initialie fan to on with current duty cycle quotient set in configuration subroutine
-	mov prev_dc_q, current_dc_q
+	mov previous_dc_divisor, current_dc_divisor
 	ldi fan_state, 0xff							; set fan state to on (1)
 	rcall fan_on
 
@@ -305,9 +312,9 @@ reset:
 	sei											
 
 	; display initial pwm value
-	rcall pwm_cursor
-	rcall pwm_to_percent
-	rcall pwm_display
+	rcall move_cursor_to_dc_addr_lcd
+	rcall convert_dc_to_percentage
+	rcall write_dc_to_lcd
 
 ; program loop. because this is an interrupt-driven program, nothing is in main loop
 main:
@@ -321,55 +328,52 @@ toggle_fan:
     in r17, SREG
     push r17
 
-	;debouncing
-	rcall delay_100ms		;delay for pushbutton signal 
-	ldi r20, (1<< INTF0)
+	;debouncing (issue with manufacturing uc, fixed by prof Beichel)
+	rcall delay_100ms							
+	ldi r20, (1<< INTF0)						
 	out EIFR, r20
-	sbic PIND,2					;ensure that the button was pressed and is low
+	sbic PIND,2				
 	rjmp exit_toggle
 
 	toggle_code:
-		lds r17, OCR2B               			; Get current pwm value
-		tst fan_state				 			; If fan state is 0 (off)
-		brne turn_off                			; If currently ON (0xFF), turn OFF (0x00)
+		lds r17, OCR2B               			; get current pwm value
+		tst fan_state				 			; if fan state is 0 (off)
+		brne turn_off                			; if currently ON (0xFF), turn OFF (0x00)
 
 	turn_on:
 		; change indicator LEDs (simply to let user know if button has worked correctly)
-		sbi PORTD, 5			 				; Turn green led on
-		cbi PORTD, 7			 				; Turn red led off
+		sbi PORTD, 5			 				; turn green led on
+		cbi PORTD, 7			 				; turn red led off
 
 		; set fan state to on and restore saved duty cycle
 		ldi fan_state, 0xFF      				
-		mov r17, prev_dc_q       			
+		mov r17, previous_dc_divisor       			
 		in rpg_previous_state, PINB
 		andi rpg_previous_state, 0x03		
 		rjmp update_pwm
 
 	turn_off:
 		; change indicator LEDs (simply to let user know if button has worked correctly)
-		cbi PORTD, 5			   				; Turn green led off
-		sbi PORTD, 7			   				; Turn red led on
+		cbi PORTD, 5			   				; turn green led off
+		sbi PORTD, 7			   				; turn red led on
 
 		; set fan state to off and save current duty cycle
-		clr fan_state              				; Set state to OFF
-		mov prev_dc_q, r17         				; Save current duty cycle
-		ldi r17, 0                 				; Set duty to 0
+		clr fan_state              				; set state to OFF
+		mov previous_dc_divisor, r17         				; save current duty cycle
+		ldi r17, 0                 				; set duty to 0
 
 	update_pwm:
-		sts OCR2B, r17           				; Update pwm register with the stored value
+		sts OCR2B, r17           				; update pwm register with the stored value
 
-	;
-	; TODO COMMENT STILL
-	;
 	update_fan_display:
-		tst fan_state
+		tst fan_state				
 		brne display_on
-		rcall On_Off_move_cursor_to_second_row;
-		rcall fan_off;
-		rjmp exit_toggle;
+		rcall move_cursor_to_onoff_addr_lcd 
+		rcall fan_off
+		rjmp exit_toggle
 
 		display_on:
-		rcall On_Off_move_cursor_to_second_row;
+		rcall move_cursor_to_onoff_addr_lcd  
 		rcall fan_on
 
 	exit_toggle:
@@ -392,7 +396,7 @@ rpg_change:
 	; exit if fan is off
     rcall delay_100us
 	tst fan_state
-    breq exit_rpg_isr           ; IF the state is off do not update RPG
+    breq exit_rpg_isr           
 
 	; detect state of RPG pins
 	;      	  ------------------------------------------
@@ -402,12 +406,12 @@ rpg_change:
 	andi r17, 0x03      
 
     ; build sequence
-	; previous state bits are shifted twice, and then combined (bitwise or)
+	; previous state bits are shifted twice, and then combined.
 	; because rpg A and B are two bits, shifting twice will result:
 	;      	  ------------------------------------------
 	;      	  | 0 |  0 | 0 | 0 | prevA | prevB | 0 | 0 |
 	;      	  ------------------------------------------
-	; then applying or with current A and current B (without shifting), will result:
+	; then applying bitwise or with current A and current B (without shifting), will result:
 	;      --------------------------------------------------
 	;      | 0 |  0 | 0 | 0 | prevA | prevB | currA | currB |
 	;      --------------------------------------------------
@@ -447,43 +451,40 @@ rpg_change:
     ; if other
     rjmp exit_rpg_isr
     
-	;
-	; TODO COMMENT STILL
-	;
 clockwise:
-    inc rpg_accumulator          ; Increment the accumulator
-    mov r30, rpg_accumulator     ; Use r30 as temporary register
-    cp r30, rpg_threshold       ; Compare with threshold
-    brne exit_rpg_isr        ; If not reached threshold, skip OCR2B update
+    inc rpg_accumulator                                 ; increment accumulator and compare with threshold
+    mov r30, rpg_accumulator                            
+    cp r30, rpg_threshold                               
+    brne exit_rpg_isr                                   ; if threshold not reached, skip OCR2B update
     
-    clr rpg_accumulator          ; Reset accumulator
-    lds r30, OCR2B              ; Get current duty cycle
-    cpi r30, 198                ; Check if at max (199)
-    breq full_speed_call        ; If at max, don't increment
-	cpi r30, 199
-	breq exit_rpg_isr
-    inc r30                     ; Increase duty cycle
-    sts OCR2B, r30              ; Update pwm register
+    clr rpg_accumulator                                 ; reset accumulator
+    lds r30, OCR2B                                      ; get current duty cycle
+    cpi r30, 198                                        ; check if newest turn reaches max dc
+    breq full_speed_call                                ; if at max, don't increment and exit
+    cpi r30, 199
+    breq exit_rpg_isr
+    inc r30                                             ; increment
+    sts OCR2B, r30                                      ; update ocr2b
     rjmp exit_rpg_update
     
 counter_clockwise:
-    inc rpg_accumulator          ; Increment the accumulator
-    mov r30, rpg_accumulator     ; Use r30 as temporary register
-    cp r30, rpg_threshold       ; Compare with threshold
-    brne exit_rpg_isr			; If not reached threshold, skip OCR2B update
+    inc rpg_accumulator                                 ; increment the accumulator
+    mov r30, rpg_accumulator                            ; use r30 as temporary register
+    cp r30, rpg_threshold                               ; compare with threshold
+    brne exit_rpg_isr                                   ; if not reached threshold, skip OCR2B update
     
-    clr rpg_accumulator          ; Reset accumulator
-    lds r30, OCR2B              ; Get current duty cycle
-    cpi r30, 2                  ; Check if at min (2 or 1%)
-    breq exit_rpg_isr			; If at min, don't decrement
-    dec r30                     ; Decrease duty cycle
-    sts OCR2B, r30              ; Update pwm register
-	rjmp exit_rpg_update
+    clr rpg_accumulator                                 ; reset accumulator
+    lds r30, OCR2B                                      ; get current duty cycle
+    cpi r30, 2                                          ; check if at min (2 or 1%)
+    breq exit_rpg_isr                                   ; if at min, don't decrement
+    dec r30                                             ; decrease duty cycle
+    sts OCR2B, r30                                      ; update pwm register
+    rjmp exit_rpg_update
 
 exit_rpg_update:
-    rcall pwm_cursor
-    rcall pwm_to_percent
-    rcall pwm_display
+    rcall move_cursor_to_dc_addr_lcd				    ; move cursor to dc address
+    rcall convert_dc_to_percentage						; convert pwm to percent
+    rcall write_dc_to_lcd								; display pwm
     rjmp exit_rpg_isr
 
 full_speed_call:
@@ -500,173 +501,204 @@ exit_rpg_isr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            LCD Display												  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;
-	; TODO COMMENT STILL
-	;
 set_8_bit_mode:
-	ldi r17, 0x03;
-	out PORTC, r17;
-	ret;
+	; set 8-bit mode by sending 0011 0000 (this is a subroutine called 3 times to set 8-bit mode)
+	ldi r17, 0x03
+	out PORTC, r17
+	ret
 
 lcd_strobe:
 	sbi PORTB, 2                     ; set E to high (initiate data transfer)
-	ldi r27, 0x00                    ; load X reg
-	ldi r26, 0x05                    ; (000 0101) loads 5 to run 100us 5 times
+	ldi r27, 0x00                    
+	ldi r26, 0x05                    ; delay 500us
 	strobe_loop:
-		rcall delay_100us            ; delay
-		sbiw r27:r26, 1             ; decrement X reg
-		brne strobe_loop            ; if not done, loop
-		cbi PORTB, 2                ; set E to low (end of data transfer)
+		rcall delay_100us          
+		sbiw r27:r26, 1            
+		brne strobe_loop           
+		cbi PORTB, 2                 ; set E to low (end of data transfer)
 		ret
 
-display_c_string:
-	lpm r0,Z+ ; r0 <-- first byte
-	tst r0 ; Reached end of message ?
-	breq done ; Yes => quit
-	swap r0 ; Upper nibble in place
-	out PORTC,r0 ; Send upper nibble out
-	rcall lcd_strobe ; Latch nibble
-	swap r0 ; Lower nibble in place
-	out PORTC,r0 ; Send lower nibble out
-	rcall lcd_strobe ; Latch nibble
-	rjmp display_c_string; continue until done
+write_string_to_lcd:
+	lpm r0,Z+                        ; start of loaded memory address
+	tst r0                           ; check for terminating character 
+	breq done                        ; if done, exit
+	swap r0                          ; else, swap nibbles
+	out PORTC, r0                    ; send upper nibble out
+	rcall lcd_strobe                 ; latch nibble
+	swap r0                          ; lower nibble in place
+	out PORTC,r0                     ; send lower nibble out
+	rcall lcd_strobe                 ; latch nibble
+	rjmp write_string_to_lcd         ; continue until done
 done:
 	ret
 
-display_char1:
+write_char1:
 	push r16
-	ldi r25, 0x30
+
+	; add 0x30 to r2 and move to r16
+	ldi r25, 0x30 								
 	add r25, r2
 	mov r16, r25
+
+	; mask upper nibble, swap, and send
 	andi r25, 0xf0
 	swap r25
-	out PORTC, r25 ; Send upper nibble
-	rcall lcd_strobe ; Strobe Enable line
-	rcall delay_100us ; wait
+	out PORTC, r25 
+	rcall lcd_strobe 
+	rcall delay_100us
+
+	; mask lower nibble, send, and strobe
 	andi r16, 0x0f
-	out PORTC, r16 ; Send lower nibble
-	rcall lcd_strobe ; Strobe Enable line
+	out PORTC, r16 
+	rcall lcd_strobe
 	rcall delay_100us
 	pop r16
 	ret
 
-display_char2:
+write_char2:
 	push r16
+
+	; add 0x30 to r1 and move to r16
 	ldi r25, 0x30
 	add r25, r1
 	mov r16, r25
+
+	; mask upper nibble, swap, and send
 	andi r25, 0xf0
 	swap r25
-	out PORTC, r25 ; Send upper nibble
-	rcall lcd_strobe ; Strobe Enable line
-	rcall delay_100us ; wait
+	out PORTC, r25 						
+	rcall lcd_strobe 					
+	rcall delay_100us 					
+
+	; mask lower nibble, send, and strobe
 	andi r16, 0x0f
-	out PORTC, r16 ; Send lower nibble
-	rcall lcd_strobe ; Strobe Enable line
+	out PORTC, r16 					
+	rcall lcd_strobe 		
 	rcall delay_100us
 	pop r16
 	ret
 
-display_char3:
+write_char3:
 	push r16
+
+	; load 0x30 into r25 and add r0
 	ldi r25, 0x30
 	add r25, r0
 	mov r16, r25
+
+	; mask upper nibble, swap, and send
 	andi r25, 0xf0
 	swap r25
-	out PORTC, r25 ; Send upper nibble
-	rcall lcd_strobe ; Strobe Enable line
-	rcall delay_100us ; wait
+	out PORTC, r25 						
+	rcall lcd_strobe 			
+	rcall delay_100us 	
+
+	; mask lower nibble, send, and strobe
 	andi r16, 0x0f
-	out PORTC, r16 ; Send lower nibble
-	rcall lcd_strobe ; Strobe Enable line
+	out PORTC, r16 			
+	rcall lcd_strobe 
 	rcall delay_100us
 	pop r16
 	ret
 
-display_decimal:
+write_decimal:
+	; load 0x02 into r25 and send
 	ldi r25, 0x02
-	out PORTC,r25 ; Send upper nibble
-	rcall lcd_strobe ; Strobe Enable line
-	rcall delay_100us ; wait
+	out PORTC,r25 					
+	rcall lcd_strobe 	
+	rcall delay_100us 
+
+	; load 0x0e into r25 and send
 	ldi r25,0x0e
-	out PORTC,r25 ; Send lower nibble
-	rcall lcd_strobe ; Strobe Enable line
+	out PORTC,r25 					
+	rcall lcd_strobe 				
 	rcall delay_100us
 	ret
 
-pwm_cursor:
+; move cursor to ddram 05 of lcd
+move_cursor_to_dc_addr_lcd:							
 	cbi PORTB, 5
 	ldi r17, 0x08 
 	out PORTC, r17
-	rcall lcd_strobe;
+	rcall lcd_strobe
 	rcall delay_100us
-	ldi r17, 0x05
-	out PORTC, r17;
-	rcall lcd_strobe;
-	rcall delay_1ms;
-	sbi PORTB, 5;
+	ldi r17, 0x05					        ; move cursor to position 5
+	out PORTC, r17
+	rcall lcd_strobe
+	rcall delay_1ms
+	sbi PORTB, 5
 	ret
 
+; move cursor to ddram 05 of lcd and display longer string (100.0%)
 pwm_full_speed:
 	inc r30
 	sts OCR2B, r30   
-	rcall pwm_cursor
+	rcall move_cursor_to_dc_addr_lcd
 	ldi r16, 1
 	mov r2, r16
-	rcall display_char1
+	rcall write_char1
 	ldi r16, 0
 	mov r2, r16
-	rcall display_char1
-	rcall display_char1
-	rcall display_decimal
-	rcall display_char1
-	ldi r30,LOW(2*suffix_string) 
-	ldi r31,HIGH(2*suffix_string) 
-	rcall display_c_string;
+	rcall write_char1
+	rcall write_char1
+	rcall write_decimal
+	rcall write_char1
+	ldi r30,LOW(2 * suffix_string) 	  	 	  	 ; "%"
+	ldi r31,HIGH(2 * suffix_string)  			 ; obtain address of suffix string
+	rcall write_string_to_lcd
+
 	exit_full_speed:
 		ldi r16, 2
 		mov rpg_accumulator, r16
 		ret
 
-;turns on the cursor for the 2nd row
-	;
-	; TODO COMMENT STILL
-	;
-On_Off_move_cursor_to_second_row:
+; move cursor to ddram 45 of lcd
+move_cursor_to_onoff_addr_lcd:
 	cbi PORTB, 5
-	ldi r17, 0x0C 
+	ldi r17, 0x0C  						
 	out PORTC, r17
-	rcall lcd_strobe;
+	rcall lcd_strobe
 	rcall delay_100us
-	ldi r17, 0x05
-	out PORTC, r17;
-	rcall lcd_strobe;
-	rcall delay_1ms;
-	sbi PORTB, 5;
+	ldi r17, 0x05							; move cursor to position 45
+	out PORTC, r17
+	rcall lcd_strobe
+	rcall delay_1ms
+	sbi PORTB, 5
 	ret
-fan_on:
-	ldi r30,LOW(2*on_string) ; Load Z register low
-	ldi r31,HIGH(2*on_string) ; Load Z register high
-	rcall display_c_string;
-	ret;
 
+; load address of "ON" in mem for display
+fan_on:
+	ldi r30,LOW(2 * on_string) 
+	ldi r31,HIGH(2 * on_string)
+	rcall write_string_to_lcd
+	ret
+
+; load address of "OFF" in mem for display
 fan_off:
-	ldi r30,LOW(2*off_string) ; Load Z register low
-	ldi r31,HIGH(2*off_string) ; Load Z register high
-	rcall display_c_string;
-	ret;
+	ldi r30,LOW(2 * off_string) 
+	ldi r31,HIGH(2 * off_string)
+	rcall write_string_to_lcd
+	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                     Duty Cycle to LCD Subroutine                                        ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;
-	; TODO COMMENT STILL
-	;
-pwm_to_percent:
+; because dc is displayed as a percentage, we need to multiply by 100. 
+; even though registers are 8 bits and range from 0-255, multiplying 2 8-bit values results in a 16-bit value.
+;         					generally, b * b = 2b
+;
+; this is the highest resolution that we need for our application. Because we have valid dc divisor 
+; values from 0-200 our range of values will not exceed 65535 which is represented in 16-bits (2^16)
+;
+; Application Note AN_0936 “AVR200: Multiply and Divide Routines”:
+; - mpy16u: r17:r16 <- r17:r16 * r19:r18
+; - div16u: r17:r16 <- r17:r16 / r19:r18
+convert_dc_to_percentage:
+	; operation:
+	;    				ocr2b / ocr2a * 100 = percentage
 	push r1
 	push r14
-	push r15
+	push r15			
 	push r16
 	push r17
 	push r18
@@ -674,37 +706,46 @@ pwm_to_percent:
 	push r20
 	push r21
 	push r22
-	lds r16, low(OCR2B)		; multiplicand low byte
-	lds r17, high(OCR2B)	; multiplicand high byte
-	ldi r18, low(100)	; multiplier low byte
-	ldi r19, high(100)	; multiplier high byte
-	rcall mpy16u		; get OCR0B x 100
-	ldi r18, low(199)	;divisor low byte (divide by OCR2A)
-	ldi r19, high(199)	;divisor high byte (divide by OCR2A)
-	rcall div16u		;result in r17:r16
-						;remainder in r15:r14
+	
+	; get ocr2b (holds dc quotient)
+	lds r16, low(OCR2B)					
+	lds r17, high(OCR2B)				
+	
+	; multiply by 100
+	ldi r18, low(100)					
+	ldi r19, high(100)					
+	rcall mpy16u						
 
-	mov r16, r14		;multiply remainder by 10 and divide again
+	; divide by ocr2a (max pwm value, divisor)
+	ldi r18, low(199)					
+	ldi r19, high(199)					
+	rcall div16u						
+
+	; multiply remainder by 10 and divide again
+	mov r16, r14						
 	mov r17, r15
 	ldi r18, low(10)
 	ldi r19, high(10)
-	rcall mpy16u
+	rcall mpy16u						
 		
 	;save the value to R29:R28
 	mov r29, r17
 	mov r28, r16
 
-	ldi r18, low(199)	;divisor low byte (divide by OCR2A)
-	ldi r19, high(199)	;divisor high byte (divide by OCR2A)
-	rcall div16u		;result in r17:r16 (third digit is here)
-	add r28, r16
-	adc r29, r1
+	; divide by ocr2a (max pwm value, divisor)
+	ldi r18, low(199)	
+	ldi r19, high(199)	
+	rcall div16u						
+
+	; add quotient to r28 and add carry to r29 
+	add r28, r16						
+	adc r29, r17						
 
 	pop r22
 	pop r21
 	pop r20
 	pop r19
-	pop r18
+	pop r18								
 	pop r17
 	pop r16
 	pop r15
@@ -712,7 +753,7 @@ pwm_to_percent:
 	pop r1
 	ret
 
-pwm_display:
+write_dc_to_lcd:
 	push r0
 	push r1
 	push r2
@@ -724,30 +765,35 @@ pwm_display:
 	push r19
 	push r20
 	
+	; get duty cycle
 	mov r16, dc_low
 	mov r17, dc_high
+
+	; divide by 10
 	ldi r18, low(10)
 	ldi r19, high(10)
-	rcall div16u			;result in r17:r16
-							;remainder in r15:r14
+
+	rcall div16u								
 	mov r0, r14
 	rcall div16u
 	mov r1, r14
 	rcall div16u
 	mov r2, r14
 
-	rcall display_char1
-	rcall display_char2
-	rcall display_decimal
-	rcall display_char3
+	rcall write_char1
+	rcall write_char2
+	rcall write_decimal
+	rcall write_char3
 	
-	ldi r30,LOW(2*suffix_string) ; Load Z register low
-	ldi r31,HIGH(2*suffix_string) ; Load Z register high
-	rcall display_c_string;
+	ldi r30,LOW(2 * suffix_string) 			   ; "%"
+	ldi r31,HIGH(2 * suffix_string)	           ; obtain address of suffix string
+	rcall write_string_to_lcd;
 
-	ldi r30,LOW(2*space_string) ; Load Z register low
-	ldi r31,HIGH(2*space_string) ; Load Z register high
-	rcall display_c_string;
+    ; this handles case where 100.0% and then decremented to some other value in form xx.x%
+	; this overwrites the "%" with a space
+	ldi r30,LOW(2 * space_string) 		       ; " "
+	ldi r31,HIGH(2 * space_string) 			   ; obtain address of space string
+	rcall write_string_to_lcd;
 
 	pop r20
 	pop r19
@@ -761,7 +807,7 @@ pwm_display:
 	pop r0
 	ret
 
-; DIVISION CODE TAKEN FROM ATMEL AVR200.ASM
+; division code taken from ATMEL AVR200.asm
 div16u:	
 	clr	r14	;clear remainder Low byte
 	sub	r15, r15;clear remainder High byte and carry
@@ -787,7 +833,8 @@ div16u:
 		rjmp	d16u_1
 
 
-;Multiplication for getting value of 0-999, taken from ATMEL AVR200.asm CODE
+; Multiplication for getting value of 0-999, taken from ATMEL AVR200.asm
+; mpy16u: r17:r16 <- r17:r16 * r19:r18
 mpy16u:	
 	clr	r21		;clear 2 highest bytes of result
 	clr	r20
@@ -846,7 +893,7 @@ delay_100us:
 	in tmp2, TIFR0
 	sbr tmp2, (1 << TOV0)
 	out TIFR0, tmp2
-	out TCNT0, count  							; RELOAD COUNTER (bottom of 56)
+	out TCNT0, count  							; reload tcnt0 with count (56)
 	out TCCR0B, tmp1
 	wait_for_overflow:
 		in tmp2, TIFR0
