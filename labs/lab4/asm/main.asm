@@ -98,13 +98,41 @@ configure_inputs:
 	ret
 
 configure_timer0:
+	; TCCR0A:
+	;      --------------------------------------------------------------        ---------------------------------
+	;      | COM0A1 |  COM0A0 | COM0B1 | COM0B0 | - | - | WGM01 | WGM00 |  --->  | 0 | 0 | 0 | 0 | - | - | 0 | 0 |
+	;      --------------------------------------------------------------        ---------------------------------
+	; TCCR0B:
+	;      ------------------------------------------------------        ---------------------------------
+	;      | FOC0A | FOC0B | - | - | WGM02 | CS02 | CS01 | CS00 |  --->  | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+	;      ------------------------------------------------------        ---------------------------------
+	;
+	; Thus configuration is:
+	; - clock source: 16MHz prescaled by 8 to yield a 2MHz tick
+	;    							1/2MHz = 0.5us per tick
+	;
+	; - counter operation: normal with top of 0xFF, counting up from `count` (56 decimal)
+	;             					256 - 56 = 200 ticks before overflow,
+	;             					200 ticks * 0.5us = 100us	
+	;			this means that timer overflows every 100us, yeilding a delay of 100us
+    ;
+	; - *important note* because we are passing a count into the tcnt0 register, tcnt0 resets at turnover.
+	;    Therefore, we must reload at every overflow (see delay section for details)
 	ldi count, 0x38
-	ldi tmp1, (1 << CS01) 						  ; prescaler of /8 -> 16MHz/8 = 2MHz per tick		
-	out TCNT0, count							  ; load the timer counter register with pstart value (0x38 0011 1000 -> 56 decimal)
+	ldi tmp1, (1 << CS01) 						  
+	out TCNT0, count							  
 	out TCCR0B, tmp1
 	ret
 
 configure_timer2:
+	; TCCR2A:
+	;      --------------------------------------------------------------        -----------------------------------------------------
+	;      | COM2A1 |  COM2A0 | COM2B1 | COM2B0 | - | - | WGM21 | WGM20 |  --->  |  x|  x|  x|  x|  x|  x|  x| x|
+	;      --------------------------------------------------------------        -----------------------------------------------------
+	; TCCR2B:
+	;      -----------------------------------------------------        -----------------------------------------------------
+	;      | FOC2A | FOC2B | - | - | WGM22 | CS22 | CS21 | CS20|  --->  |  x|  x|  x|  x|  x|  x|  x| x|
+	;      -----------------------------------------------------        -----------------------------------------------------
 	ldi r16, (1 << COM2B1) | (1 << WGM21) | (1 << WGM20) 	  ; Fast pwm, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
 	sts TCCR2A, r16
 	ldi r16, (1 << WGM22) | ( 1<< CS20)					  		; Prescaler=1 (CS20=1), Fast pwm with TOP=OCR0A (WGM02=1)
@@ -276,11 +304,10 @@ toggle_fan:
     in r17, SREG
     push r17
 
-	;debouncing
+	; debouncing
+	; code provided by Prof. Beichel after fan debugging doesn't alter anything for our board it seems...
 	rcall delay_100ms		
-	ldi r20, (1<< INTF0)
-	out EIFR, r20
-	sbic PIND,2					
+	sbic PIND,2									; check if button is low (active low) -> if not, then exit.
 	rjmp exit_toggle
 
 	toggle_code:
@@ -289,30 +316,44 @@ toggle_fan:
 		brne turn_off                			; If currently ON (0xFF), turn OFF (0x00)
 
 	turn_on:
+		; change indicator LEDs (simply to let user know if button has worked correctly)
 		sbi PORTD, 5			 				; Turn green led on
 		cbi PORTD, 7			 				; Turn red led off
-		ldi fan_state, 0xFF      				; Set state to ON
-		mov r17, prev_dc_q       				; Restore saved duty cycle
+
+		; set fan state to on and restore saved duty cycle
+		ldi fan_state, 0xFF      				
+		mov r17, prev_dc_q       			
+		in rpg_previous_state, PINB
+		andi rpg_previous_state, 0x03		
 		rjmp update_pwm
 
 	turn_off:
+		; change indicator LEDs (simply to let user know if button has worked correctly)
 		cbi PORTD, 5			   				; Turn green led off
 		sbi PORTD, 7			   				; Turn red led on
+
+		; set fan state to off and save current duty cycle
 		clr fan_state              				; Set state to OFF
 		mov prev_dc_q, r17         				; Save current duty cycle
 		ldi r17, 0                 				; Set duty to 0
 
 	update_pwm:
 		sts OCR2B, r17           				; Update pwm register with the stored value
+
+	;
+	; TODO COMMENT STILL
+	;
 	update_fan_display:
 		tst fan_state
 		brne display_on
 		rcall On_Off_move_cursor_to_second_row;
 		rcall fan_off;
 		rjmp exit_toggle;
+
 		display_on:
 		rcall On_Off_move_cursor_to_second_row;
 		rcall fan_on
+
 	exit_toggle:
 		pop r17
 		out SREG, r17
@@ -388,6 +429,9 @@ rpg_change:
     ; if other
     rjmp exit_rpg_isr
     
+	;
+	; TODO COMMENT STILL
+	;
 clockwise:
     inc rpg_accumulator          ; Increment the accumulator
     mov r30, rpg_accumulator     ; Use r30 as temporary register
@@ -438,6 +482,9 @@ exit_rpg_isr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            LCD Display												  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;
+	; TODO COMMENT STILL
+	;
 set_8_bit_mode:
 	ldi r17, 0x03;
 	out PORTC, r17;
@@ -565,6 +612,9 @@ pwm_full_speed:
 		ret
 
 ;turns on the cursor for the 2nd row
+	;
+	; TODO COMMENT STILL
+	;
 On_Off_move_cursor_to_second_row:
 	cbi PORTB, 5
 	ldi r17, 0x0C 
@@ -592,6 +642,9 @@ fan_off:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                     Duty Cycle to LCD Subroutine                                        ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;
+	; TODO COMMENT STILL
+	;
 pwm_to_percent:
 	push r1
 	push r14
@@ -775,7 +828,7 @@ delay_100us:
 	in tmp2, TIFR0
 	sbr tmp2, (1 << TOV0)
 	out TIFR0, tmp2
-	out TCNT0, count
+	out TCNT0, count  							; RELOAD COUNTER (bottom of 56)
 	out TCCR0B, tmp1
 	wait_for_overflow:
 		in tmp2, TIFR0
