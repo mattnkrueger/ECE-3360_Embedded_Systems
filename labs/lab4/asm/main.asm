@@ -168,42 +168,35 @@ configure_lcd:
 		rcall delay_1ms
 	; now 4 bit mode is set
 
-	enable_display_cursor:
-		ldi r17, 0x00
-		out PORTC, r17
-		rcall lcd_strobe
-		rcall delay_100us
-		ldi r17, 0x08
-		out PORTC, r17
-		rcall lcd_strobe
-		rcall delay_10ms
-
+	; reset cursor to home
 	clear_home:
 		ldi r17, 0x00
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_100us
-		ldi r17, 0x01
+		ldi r17, 0x01 				; 0000 0001 -> return cursor to home
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_10ms
 
+    ; set cursor move direction to right
 	set_cursor_move_direction:
 		ldi r17, 0x00
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_100us
-		ldi r17, 0x06
+		ldi r17, 0x06 				; 0000 0110 -> cursor move direction to right
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_1ms
 
+	; turn on display... overwrites display off command enable_display_cursor
 	turn_on_display:
 		ldi r17, 0x00
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_100us
-		ldi r17, 0x0C
+		ldi r17, 0x0C 				; 0000 1100 -> display on, cursor off, blink off
 		out PORTC, r17
 		rcall lcd_strobe
 		rcall delay_1ms
@@ -266,10 +259,12 @@ reset:
 	; enable global interrupts
 	sei											
 
+	; display initial pwm value
 	rcall pwm_cursor
 	rcall pwm_to_percent
 	rcall pwm_display
 
+; program loop. because this is an interrupt-driven program, nothing is in main loop
 main:
 	rjmp main
 
@@ -277,37 +272,38 @@ main:
 ;                                 Pushbutton Interrupt Service Routine 									  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 toggle_fan:
-	push r17					 ;Keep SREG the same before and after ISR
+	push r17					 
     in r17, SREG
     push r17
 
 	;debouncing
-	rcall delay_100ms		;delay for pushbutton signal 
+	rcall delay_100ms		
 	ldi r20, (1<< INTF0)
 	out EIFR, r20
-	sbic PIND,2					;ensure that the button was pressed and is low
+	sbic PIND,2					
 	rjmp exit_toggle
 
 	toggle_code:
-	lds r17, OCR2B               ; Get current pwm value
-	tst fan_state				 ; If fan state is 0 (off)
-	brne turn_off                ; If currently ON (0xFF), turn OFF (0x00)
+		lds r17, OCR2B               			; Get current pwm value
+		tst fan_state				 			; If fan state is 0 (off)
+		brne turn_off                			; If currently ON (0xFF), turn OFF (0x00)
+
 	turn_on:
-		sbi PORTD, 5			 ; Turn green led on
-		cbi PORTD, 7			 ; Turn red led off
-		ldi fan_state, 0xFF      ; Set state to ON
-		mov r17, prev_dc_q         ; Restore saved duty cycle
-		in rpg_previous_state, PINB
-		andi rpg_previous_state, 0x03
+		sbi PORTD, 5			 				; Turn green led on
+		cbi PORTD, 7			 				; Turn red led off
+		ldi fan_state, 0xFF      				; Set state to ON
+		mov r17, prev_dc_q       				; Restore saved duty cycle
 		rjmp update_pwm
+
 	turn_off:
-		cbi PORTD, 5			 ; Turn green led off
-		sbi PORTD, 7			 ; Turn red led on
-		clr fan_state            ; Set state to OFF
-		mov prev_dc_q, r17         ; Save current duty cycle
-		ldi r17, 0               ; Set duty to 0
+		cbi PORTD, 5			   				; Turn green led off
+		sbi PORTD, 7			   				; Turn red led on
+		clr fan_state              				; Set state to OFF
+		mov prev_dc_q, r17         				; Save current duty cycle
+		ldi r17, 0                 				; Set duty to 0
+
 	update_pwm:
-		sts OCR2B, r17           ; Update pwm register with the stored value
+		sts OCR2B, r17           				; Update pwm register with the stored value
 	update_fan_display:
 		tst fan_state
 		brne display_on
@@ -594,7 +590,7 @@ fan_off:
 	ret;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                           PWM Calculations                                              ;
+;                                     Duty Cycle to LCD Subroutine                                        ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 pwm_to_percent:
 	push r1
