@@ -115,7 +115,7 @@ configure_timer0:
 	;             					256 - 56 = 200 ticks before overflow,
 	;             					200 ticks * 0.5us = 100us	
 	;			this means that timer overflows every 100us, yeilding a delay of 100us
-    ;
+	;
 	; - *important note* because we are passing a count into the tcnt0 register, tcnt0 resets at turnover.
 	;    Therefore, we must reload at every overflow (see delay section for details)
 	ldi count, 0x38
@@ -529,10 +529,23 @@ write_dc_to_lcd:
 	push r28
 	push r29
 
+	; quotient & remainder
+	mov r15, r29
+	mov r14, r28
+
     ; write duty cycle "__._"
+	mov r25, r15
 	rcall write_quotient_to_lcd 		       
-	rcall write_period_to_lcd
-	rcall write_remainder_to_lcd
+
+	; write period
+	ldi r25, '.'
+	rcall write_char_to_lcd
+
+	; write remainder
+	mov r25, r14
+	ldi r16, 0x30
+	add r25, r16
+	rcall write_char_to_lcd
 
     ; write suffix "%  "
 	ldi r30,LOW(2 * suffix_string) 			   ; "%  "
@@ -584,18 +597,21 @@ move_cursor_to_dc_addr_lcd:
 write_char_to_lcd:
 	push r16
 	push r25
+
+	; save full character to reference
+	mov r16, r25
   	
 	; upper nibble
-	andi r25, 0x0f
-	swap r25
-	out PORTC, r25
+	swap r16
+	andi r16, 0x0f
+	out PORTC, r16
 	rcall lcd_strobe
 	rcall delay_100us
 
 	; lower nibble
-	andi r25, 0x0f
-	swap r25
-	out PORTC, r25
+	mov r16, r25
+	andi r16, 0x0f
+	out PORTC, r16
 	rcall lcd_strobe
 	rcall delay_100us
 	
@@ -625,9 +641,25 @@ write_quotient_to_lcd:
 		jmp exit_write_quotient
 
 	write_2_digit_quotient:
-		ldi r25, 0x21
+		; Extract tens digit
+		mov r16, r15          ; Copy quotient to r16
+		ldi r25, 10           ; Divisor = 10
+		clr r14               ; Clear remainder
+		div10:                ; Simple division by 10 for single byte
+			inc r14           ; Increment quotient
+			subi r16, 10      ; Subtract 10
+			brcc div10        ; Branch if result still positive
+			dec r14           ; Fix overcount
+			subi r16, -10     ; Fix remainder (add back 10)
+		
+		; Convert tens digit to ASCII and write
+		mov r25, r14
+		subi r25, -0x30       ; Add ASCII offset
 		rcall write_char_to_lcd
-		ldi r25, 0x21
+		
+		; Convert ones digit to ASCII and write
+		mov r25, r16
+		subi r25, -0x30       ; Add ASCII offset
 		rcall write_char_to_lcd
 		jmp exit_write_quotient
 
@@ -636,34 +668,6 @@ write_quotient_to_lcd:
 		pop r15
 		pop r25
 		pop r16
-	ret
-
-write_remainder_to_lcd:
-	push r16
-	push r25
-	push r15
-	push r14
-
-	; only one digit for remainder, so we can just add the ascii value of the digit to 0x30
-	ldi r25, 0x30
-	add r25, r14
-	rcall write_char_to_lcd
-
-	pop r14
-	pop r15
-	pop r25
-	pop r16
-	ret
-
-write_period_to_lcd:
-	push r16
-	push r25
-
-	ldi r25, '.'
-	rcall write_char_to_lcd
-
-	pop r25
-	pop r16
 	ret
 
 ; move cursor to ddram 45 of lcd
