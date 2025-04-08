@@ -26,8 +26,6 @@
 .def fan_state           = r19                     ; boolean flag for fan on/off
 .def previous_dc_divisor = r18                     ; tracks previous duty cycle divisor
 .def current_dc_divisor  = r17                     ; tracks current duty cycle divisor
-.def rpg_accumulator     = r5 					   ; accumulator for our rpg <1% change per turn
-.def rpg_threshold 		 = r4 					   ; max for accumulator
 
 .cseg
 .org 0x0000
@@ -450,12 +448,6 @@ rpg_change:
     rjmp exit_rpg_isr
     
 clockwise:
-    inc rpg_accumulator                                 ; increment accumulator and compare with threshold
-    mov r30, rpg_accumulator                            
-    cp r30, rpg_threshold                               
-    brne exit_rpg_isr                                   ; if threshold not reached, skip OCR2B update
-    
-    clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
     cpi r30, 199
     breq exit_rpg_isr
@@ -464,12 +456,6 @@ clockwise:
     rjmp exit_rpg_update
     
 counter_clockwise:
-    inc rpg_accumulator                                 ; increment the accumulator
-    mov r30, rpg_accumulator                            ; use r30 as temporary register
-    cp r30, rpg_threshold                               ; compare with threshold
-    brne exit_rpg_isr                                   ; if not reached threshold, skip OCR2B update
-    
-    clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
     cpi r30, 2                                          ; check if at min (2 or 1%)
     breq exit_rpg_isr                                   ; if at min, don't decrement
@@ -542,9 +528,9 @@ write_dc_to_lcd:
 	rcall write_char_to_lcd
 
 	; write remainder
-	mov r25, r14
-	ldi r16, 0x30
-	add r25, r16
+	mov r25, r13
+	ldi r16, 0x30        ; Use consistent method - load 0x30 into register
+	add r25, r16         ; Add ASCII offset to remainder digit
 	rcall write_char_to_lcd
 
     ; write suffix "%  "
@@ -642,15 +628,15 @@ write_quotient_to_lcd:
 
 	write_2_digit_quotient:
 		; Extract tens digit
-		mov r16, r15          ; Copy quotient to r16
-		ldi r25, 10           ; Divisor = 10
-		clr r14               ; Clear remainder
-		div10:                ; Simple division by 10 for single byte
-			inc r14           ; Increment quotient
-			subi r16, 10      ; Subtract 10
-			brcc div10        ; Branch if result still positive
-			dec r14           ; Fix overcount
-			subi r16, -10     ; Fix remainder (add back 10)
+		mov r16, r15                  ; Copy quotient to r16
+		ldi r25, 10                   ; Divisor = 10
+		clr r14                       ; Clear remainder
+		div10:                        ; Simple division by 10 for single byte
+			inc r14                   ; Increment quotient
+			subi r16, 10              ; Subtract 10
+			brcc div10                ; Branch if result still positive
+			dec r14                   ; Fix overcount
+			subi r16, -10             ; Fix remainder (add back 10)
 		
 		; Convert tens digit to ASCII and write
 		mov r25, r14
@@ -730,53 +716,57 @@ convert_dc_to_percentage:
 	push r30
 	push r31
 	
-	; timer counter is 0 indexed, so we need to add 1 to the ocr2b to get the actual dividend.
-	; additionally, we need to make this a 16-bit value to work with mpy/div subroutines
+	; r24:r25 = OCR2B + 1 (dividend)
 	lds r24, OCR2B						
 	clr r25
-	adiw r25:r24, 1						; ocr2b + 1 
-	
-	; move into r17:r16 for mpy16u
+	adiw r24, 1							; r25:r24 = ocr2b + 1 
 	mov r16, r24
 	mov r17, r25
 
-	; multiply r19:r18 * r17:r16
+	; r18:r19 = 100
 	ldi r18, 100				
 	clr r19
-	rcall mpy16u						; product in r17:r16
+	rcall mpy16u						; r17:r16 = (ocr2b + 1) * 100
 
-	; now we have duty cycle dividend * 100  in 17:16.
-	; lets say we have ocr2b of 98, which one turn less than 50% dc:
-	;                      (98 + 1) * 100 = 9900
-	;
-	;
-	; we now need to divide by duty cycle divisor to get the duty cycle percentage
-	; duty cycle divisor is ocr2a + 1, which is 199 + 1 = 200
-	;            9900 / (199 + 1) = 49 (quotient) . (implied decimal point) 5 (remainder)
-	; 			 = 49.5%
-
-	; timer counter is 0 indexed, so we need to add 1 to the ocr2a to get the actual divisor
+	; r24:r25 = OCR2A + 1 (divisor)
 	lds r24, OCR2A
 	clr r25
-	adiw r25:r24, 1						; ocr2a + 1	
-
-	; move into r18:r19 for div16u
+	adiw r24, 1							; r25:r24 = ocr2a + 1
 	mov r18, r24
 	mov r19, r25
-	
-	; divide r17:r16 / r19:r18
-	rcall div16u					; quotient in r17:r16 (but lives in r16 as quotient never exceeds 255), remainder in 15:14 (but lives in r14 as it never exceeds 255)
 
-	; because our resolution is so low, we can simply save quotient to upper byte and remainder to lower byte to send to write_dc_to_lcd
-	; why does this work? 
-	;     - our ocr2a is 200, so we can never represent a quotient greater than 200, which fits within 8 bits
-	;     - similarly, our remainder will always be less than 200, which fits within 8 bits
+	; r17:r16 / r19:r18
+	rcall div16u						; quotient in r16, remainder in r14
 
-	;save the value to R29:R28
-	mov r29, r16     ; quotient
-	mov r28, r14     ; remainder
+	; Store results
+	mov r29, r16     ; quotient to r29
+	mov r28, r14     ; remainder to r28 (tenths digit)
 
-    pop r31
+	; Now compute tenths = (remainder * 10) / divisor
+	; Save divisor r18:r19 temporarily
+	mov r20, r18
+	mov r21, r19
+
+	; remainder in r14 → r24
+	mov r24, r14
+	clr r25
+	ldi r18, 10
+	clr r19
+	rcall mpy16u						; (remainder * 10) in r17:r16
+
+	; Restore divisor into r18:r19
+	mov r18, r20
+	mov r19, r21
+	mov r24, r16
+	mov r25, r17
+	rcall div16u						; r16 = tenths digit
+	mov r13, r16						; tenths to r30 if needed
+
+
+	; Optionally you could now have r29 = whole %, r30 = tenths of %
+	; e.g., 49.5% = r29 = 49, r30 = 5
+
+	pop r31
 	pop r30
 	pop r25
 	pop r24
@@ -784,7 +774,7 @@ convert_dc_to_percentage:
 	pop r21
 	pop r20
 	pop r19
-	pop r18								
+	pop r18												
 	pop r17
 	pop r16
 	pop r15
