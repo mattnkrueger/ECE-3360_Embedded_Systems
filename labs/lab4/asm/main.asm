@@ -54,7 +54,7 @@ prefix_string:
 	.db "DC = ", 0x00 
 
 suffix_string:
-	.db "%", 0x00
+	.db "%  ", 0x00
 
 fan_string:
 	.db "Fan: ", 0x00
@@ -311,10 +311,8 @@ reset:
 	; enable global interrupts
 	sei											
 
-	; display initial pwm value
-	rcall move_cursor_to_dc_addr_lcd
-	rcall convert_dc_to_percentage
-	rcall write_dc_to_lcd
+	; display initial dc value
+	rcall update_lcd_display
 
 ; program loop. because this is an interrupt-driven program, nothing is in main loop
 main:
@@ -459,10 +457,8 @@ clockwise:
     
     clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
-    cpi r30, 198                                        ; check if newest turn reaches max dc
-    breq exit_rpg_update								; if at max, don't increment and exit
     cpi r30, 199
-    breq exit_rpg_update
+    breq exit_rpg_isr
     inc r30                                             ; increment
     sts OCR2B, r30                                      ; update ocr2b
     rjmp exit_rpg_update
@@ -482,9 +478,7 @@ counter_clockwise:
     rjmp exit_rpg_update
 
 exit_rpg_update:
-    rcall move_cursor_to_dc_addr_lcd				    ; move cursor to dc address
-    rcall convert_dc_to_percentage						; convert pwm to percent
-    rcall write_dc_to_lcd								; display pwm
+    rcall update_lcd_display
     rjmp exit_rpg_isr
 
 exit_rpg_isr:
@@ -515,6 +509,50 @@ lcd_strobe:
 		cbi PORTB, 2                 ; set E to low (end of data transfer)
 		ret
 
+update_lcd_display:
+	rcall move_cursor_to_dc_addr_lcd
+	rcall convert_dc_to_percentage
+	rcall write_dc_to_lcd
+	ret
+
+write_dc_to_lcd:
+	push r0
+	push r1
+	push r2
+	push r14
+	push r15
+	push r16
+	push r17
+	push r18
+	push r19
+	push r20
+	push r28
+	push r29
+
+    ; write duty cycle "__._"
+	rcall write_quotient_to_lcd 		       
+	rcall write_period_to_lcd
+	rcall write_remainder_to_lcd
+
+    ; write suffix "%  "
+	ldi r30,LOW(2 * suffix_string) 			   ; "%  "
+	ldi r31,HIGH(2 * suffix_string)	           ; obtain address of suffix string
+	rcall write_string_to_lcd
+
+    pop r29
+	pop r28
+	pop r20
+	pop r19
+	pop r18
+	pop r17
+	pop r16
+	pop r15
+	pop r14
+	pop r2
+	pop r1
+	pop r0
+	ret
+
 write_string_to_lcd:
 	lpm r0,Z+                        ; start of loaded memory address
 	tst r0                           ; check for terminating character 
@@ -529,89 +567,6 @@ write_string_to_lcd:
 done:
 	ret
 
-write_char1:
-	push r16
-
-	; add 0x30 to r2 and move to r16
-	ldi r25, 0x30 								
-	add r25, r2
-	mov r16, r25
-
-	; mask upper nibble, swap, and send
-	andi r25, 0xf0
-	swap r25
-	out PORTC, r25 
-	rcall lcd_strobe 
-	rcall delay_100us
-
-	; mask lower nibble, send, and strobe
-	andi r16, 0x0f
-	out PORTC, r16 
-	rcall lcd_strobe
-	rcall delay_100us
-	pop r16
-	ret
-
-write_char2:
-	push r16
-
-	; add 0x30 to r1 and move to r16
-	ldi r25, 0x30
-	add r25, r1
-	mov r16, r25
-
-	; mask upper nibble, swap, and send
-	andi r25, 0xf0
-	swap r25
-	out PORTC, r25 						
-	rcall lcd_strobe 					
-	rcall delay_100us 					
-
-	; mask lower nibble, send, and strobe
-	andi r16, 0x0f
-	out PORTC, r16 					
-	rcall lcd_strobe 		
-	rcall delay_100us
-	pop r16
-	ret
-
-write_char3:
-	push r16
-
-	; load 0x30 into r25 and add r0
-	ldi r25, 0x30
-	add r25, r0
-	mov r16, r25
-
-	; mask upper nibble, swap, and send
-	andi r25, 0xf0
-	swap r25
-	out PORTC, r25 						
-	rcall lcd_strobe 			
-	rcall delay_100us 	
-
-	; mask lower nibble, send, and strobe
-	andi r16, 0x0f
-	out PORTC, r16 			
-	rcall lcd_strobe 
-	rcall delay_100us
-	pop r16
-	ret
-
-write_decimal:
-	; load 0x02 into r25 and send
-	ldi r25, 0x02
-	out PORTC,r25 					
-	rcall lcd_strobe 	
-	rcall delay_100us 
-
-	; load 0x0e into r25 and send
-	ldi r25,0x0e
-	out PORTC,r25 					
-	rcall lcd_strobe 				
-	rcall delay_100us
-	ret
-
 ; move cursor to ddram 05 of lcd
 move_cursor_to_dc_addr_lcd:							
 	cbi PORTB, 5
@@ -619,35 +574,97 @@ move_cursor_to_dc_addr_lcd:
 	out PORTC, r17
 	rcall lcd_strobe
 	rcall delay_100us
-	ldi r17, 0x05					        ; move cursor to position 5
+	ldi r17, 0x05		
 	out PORTC, r17
 	rcall lcd_strobe
 	rcall delay_1ms
 	sbi PORTB, 5
 	ret
 
-; move cursor to ddram 05 of lcd and display longer string (100.0%)
-pwm_full_speed:
-	inc r30
-	sts OCR2B, r30   
-	rcall move_cursor_to_dc_addr_lcd
-	ldi r16, 1
-	mov r2, r16
-	rcall write_char1
-	ldi r16, 0
-	mov r2, r16
-	rcall write_char1
-	rcall write_char1
-	rcall write_decimal
-	rcall write_char1
-	ldi r30,LOW(2 * suffix_string) 	  	 	  	 ; "%"
-	ldi r31,HIGH(2 * suffix_string)  			 ; obtain address of suffix string
-	rcall write_string_to_lcd
+write_char_to_lcd:
+	push r16
+	push r25
+  	
+	; upper nibble
+	andi r25, 0x0f
+	swap r25
+	out PORTC, r25
+	rcall lcd_strobe
+	rcall delay_100us
 
-	exit_full_speed:
-		ldi r16, 2
-		mov rpg_accumulator, r16
-		ret
+	; lower nibble
+	andi r25, 0x0f
+	swap r25
+	out PORTC, r25
+	rcall lcd_strobe
+	rcall delay_100us
+	
+	pop r25
+	pop r16
+    ret
+
+write_quotient_to_lcd:
+	push r16
+	push r25
+	push r15
+	push r14
+
+   ; check if the quotient is 100 (max dc)
+	mov r16, r15
+	cpi r16, 100
+	breq write_100
+	jmp write_2_digit_quotient
+
+	write_100:
+		ldi r25, 0x31         ; "1"
+		rcall write_char_to_lcd
+		ldi r25, 0x30         ; "0"
+		rcall write_char_to_lcd
+		ldi r25, 0x30         ; "0"
+		rcall write_char_to_lcd
+		jmp exit_write_quotient
+
+	write_2_digit_quotient:
+		ldi r25, 0x21
+		rcall write_char_to_lcd
+		ldi r25, 0x21
+		rcall write_char_to_lcd
+		jmp exit_write_quotient
+
+	exit_write_quotient:
+		pop r14
+		pop r15
+		pop r25
+		pop r16
+	ret
+
+write_remainder_to_lcd:
+	push r16
+	push r25
+	push r15
+	push r14
+
+	; only one digit for remainder, so we can just add the ascii value of the digit to 0x30
+	ldi r25, 0x30
+	add r25, r14
+	rcall write_char_to_lcd
+
+	pop r14
+	pop r15
+	pop r25
+	pop r16
+	ret
+
+write_period_to_lcd:
+	push r16
+	push r25
+
+	ldi r25, '.'
+	rcall write_char_to_lcd
+
+	pop r25
+	pop r16
+	ret
 
 ; move cursor to ddram 45 of lcd
 move_cursor_to_onoff_addr_lcd:
@@ -752,8 +769,8 @@ convert_dc_to_percentage:
 	;     - similarly, our remainder will always be less than 200, which fits within 8 bits
 
 	;save the value to R29:R28
-	mov r29, r16
-	mov r28, r14
+	mov r29, r16     ; quotient
+	mov r28, r14     ; remainder
 
     pop r31
 	pop r30
@@ -771,50 +788,7 @@ convert_dc_to_percentage:
 	pop r1
 	ret
 
-write_dc_to_lcd:
-	push r0
-	push r1
-	push r2
-	push r14
-	push r15
-	push r16
-	push r17
-	push r18
-	push r19
-	push r20
-	
-	; see convert_dc_to_percentage for explanation. 
-	; r29:r28 contains the quotient and remainder
-
-	rcall write_char1
-	rcall write_char2
-	rcall write_decimal
-	rcall write_char3
-	
-	ldi r30,LOW(2 * suffix_string) 			   ; "%"
-	ldi r31,HIGH(2 * suffix_string)	           ; obtain address of suffix string
-	rcall write_string_to_lcd;
-
-    ; this handles case where 100.0% and then decremented to some other value in form xx.x%
-	; this overwrites the "%" with a space
-	ldi r30,LOW(2 * space_string) 		       ; " "
-	ldi r31,HIGH(2 * space_string) 			   ; obtain address of space string
-	rcall write_string_to_lcd;
-
-	pop r20
-	pop r19
-	pop r18
-	pop r17
-	pop r16
-	pop r15
-	pop r14
-	pop r2
-	pop r1
-	pop r0
-	ret
-
 ; division code taken from ATMEL AVR200.asm
-; 
 div16u:	
 	clr	r14	;clear remainder Low byte
 	sub	r15, r15;clear remainder High byte and carry
