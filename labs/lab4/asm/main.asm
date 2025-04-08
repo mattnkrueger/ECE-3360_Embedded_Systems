@@ -1,6 +1,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;																								          ;
 ;                                     Lab 4: ECE:3360 Embedded Systems									  ;
-; 																										  ;	
+;																								          ;
 ;												 Authors:												  ;
 ; 	 									 Sage Marks & Matt Krueger 								          ;
 ; 																										  ;
@@ -8,7 +9,6 @@
 ; 					This AVR program controls a pwm cooling fan, LCD display,					  		  ;
 ; 					active-Low pushbutton, and RPG Encoder to create a fan monitoring system.		  	  ;
 ;																								          ;
-; 					Extra Credit achieved by using Tachometer to monitor the RPM of the fan.			  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 .include "m328pdef.inc"
@@ -135,7 +135,7 @@ configure_timer2:
 	;               -----------------------------------------------------        ---------------------------------
 	;
 	; Configuration:
-	;
+	; - Fast PWM mode with non-inverting output
 	;
 	;
 	ldi r16, (1 << COM2B1) | (1 << WGM21) | (1 << WGM20) 	  ; Fast pwm, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
@@ -169,9 +169,7 @@ configure_rpg_interrupt:
 configure_lcd:
     ; LCD power-up sequence
 	rcall delay_100ms						      ; wait >40ms
-
-	; set R/S to low (data transferred is treated as commands)
-	cbi PORTB, 5								  
+	cbi PORTB, 5								  ; set R/S to low (data transferred is treated as commands)
 
     ; set 8-bit mode by sending 0011 0000 3 times
 	rcall set_8_bit_mode						 
@@ -182,9 +180,7 @@ configure_lcd:
 	rcall delay_1ms								  ; subsequent delays >100us. 
 	rcall set_8_bit_mode
 	rcall lcd_strobe
-	
-	; delay between commands >100us
-	rcall delay_1ms
+	rcall delay_1ms 							; delay between commands >100us
 
 	; set 4-bit mode
 	set_4_bit_mode:
@@ -204,6 +200,18 @@ configure_lcd:
 		rcall lcd_strobe
 		rcall delay_1ms
 	; now 4 bit mode is set
+
+	rcall delay_10ms
+
+	; enable_display_cursor:
+	; 	ldi r17, 0x00;
+	; 	out PORTC, r17;
+	; 	rcall lcd_strobe;
+	; 	rcall delay_100us;		; not needed as it is overwritten by turn on display
+	; 	ldi r17, 0x08;			; delaying before next command to ensure not busy is sufficient
+	; 	out PORTC, r17;
+	; 	rcall lcd_strobe;
+	; 	rcall delay_10ms
 
 	; reset cursor to home
 	clear_home:
@@ -313,10 +321,11 @@ toggle_fan:
     in r17, SREG
     push r17
 
-	; debouncing
-	; code provided by Prof. Beichel after fan debugging doesn't alter anything for our board it seems...
-	rcall delay_100ms		
-	sbic PIND,2									; check if button is low (active low) -> if not, then exit.
+	;debouncing
+	rcall delay_100ms		;delay for pushbutton signal 
+	ldi r20, (1<< INTF0)
+	out EIFR, r20
+	sbic PIND,2					;ensure that the button was pressed and is low
 	rjmp exit_toggle
 
 	toggle_code:
@@ -752,7 +761,7 @@ pwm_display:
 	pop r0
 	ret
 
-;DIVISION CODE TAKEN FROM ATMEL AVR200.ASM
+; DIVISION CODE TAKEN FROM ATMEL AVR200.ASM
 div16u:	
 	clr	r14	;clear remainder Low byte
 	sub	r15, r15;clear remainder High byte and carry
