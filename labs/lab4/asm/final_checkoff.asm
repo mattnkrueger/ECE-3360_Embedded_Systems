@@ -706,20 +706,30 @@ convert_dc_to_percentage:
 	push r20
 	push r21
 	push r22
+	push r30
+	push r31
 	
 	; get ocr2b (holds dc quotient)
 	lds r16, low(OCR2B)					
 	lds r17, high(OCR2B)				
+
+	adiw r17:r16, 1
 	
 	; multiply by 100
 	ldi r18, low(100)					
 	ldi r19, high(100)					
-	rcall mpy16u						
+	rcall mpy16u						; 17:16
+
 
 	; divide by ocr2a (max pwm value, divisor)
 	ldi r18, low(199)					
 	ldi r19, high(199)					
-	rcall div16u						
+	rcall div16u					; 15:14 remainder	
+
+    ; save
+	mov r30, r16						
+	mov r31, r17					
+
 
 	; multiply remainder by 10 and divide again
 	mov r16, r14						
@@ -741,6 +751,8 @@ convert_dc_to_percentage:
 	add r28, r16						
 	adc r29, r17						
 
+    pop r31
+	pop r30
 	pop r22
 	pop r21
 	pop r20
