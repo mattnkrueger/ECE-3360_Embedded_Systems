@@ -460,9 +460,9 @@ clockwise:
     clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
     cpi r30, 198                                        ; check if newest turn reaches max dc
-    breq full_speed_call                                ; if at max, don't increment and exit
+    breq exit_rpg_update								; if at max, don't increment and exit
     cpi r30, 199
-    breq exit_rpg_isr
+    breq exit_rpg_update
     inc r30                                             ; increment
     sts OCR2B, r30                                      ; update ocr2b
     rjmp exit_rpg_update
@@ -486,9 +486,6 @@ exit_rpg_update:
     rcall convert_dc_to_percentage						; convert pwm to percent
     rcall write_dc_to_lcd								; display pwm
     rjmp exit_rpg_isr
-
-full_speed_call:
-	rcall pwm_full_speed
 
 exit_rpg_isr:
     pop r30
@@ -685,17 +682,18 @@ fan_off:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; because dc is displayed as a percentage, we need to multiply by 100. 
 ; even though registers are 8 bits and range from 0-255, multiplying 2 8-bit values results in a 16-bit value.
-;         					generally, b * b = 2b
-;
-; this is the highest resolution that we need for our application. Because we have valid dc divisor 
-; values from 0-200 our range of values will not exceed 65535 which is represented in 16-bits (2^16)
-;
+; 
+; we use the following subroutines to apply the 16-bit multiplication and division as AVR does not have support for these operations
 ; Application Note AN_0936 “AVR200: Multiply and Divide Routines”:
-; - mpy16u: r17:r16 <- r17:r16 * r19:r18
-; - div16u: r17:r16 <- r17:r16 / r19:r18
+; - mpy16u: 16-bit multiplication
+; - div16u: 16-bit division
+; 
+; example calc:
+;    let ocr2b = 98
+;    let ocr2a = 199
+;    -> (98 + 1) * 100 / (199 + 1) = 49.5%
+;
 convert_dc_to_percentage:
-	; operation:
-	;    				ocr2b / ocr2a * 100 = percentage
 	push r1
 	push r14
 	push r15			
@@ -709,47 +707,45 @@ convert_dc_to_percentage:
 	push r30
 	push r31
 	
-	; get ocr2b (holds dc quotient)
-	lds r16, low(OCR2B)					
-	lds r17, high(OCR2B)				
+	; timer counter is 0 indexed, so we need to add 1 to the ocr2b to get the actual dividend.
+	; additionally, we need to make this a 16-bit value to work with mpy/div subroutines
+	lds r24, OCR2B						
+	clr r25
+	adiw r25:r24, 1						; ocr2b + 1 
 
-	adiw r17:r16, 1
+	; multiply r19:r18 * r17:r16
+	ldi r18, 100				
+	clr r19
+	rcall mpy16u						; product in r17:r16
+
+	; now we have duty cycle dividend * 100  in 17:16.
+	; because our rpg change is half a percent per turn,
+	; this resolution should be more than enough (65535 representable values)
+	; lets say we have ocr2b of 98, which one turn less than 50% dc:
+	;                      (98 + 1) * 100 = 9900
+	;
+	;
+	; we now need to divide by duty cycle divisor to get the duty cycle percentage
+	; duty cycle divisor is ocr2a + 1, which is 199 + 1 = 200
+	;            9900 / (199 + 1) = 49 (quotient) . (implied decimal point) 5 (remainder)
+	; 			 = 49.5%
+
+	; timer counter is 0 indexed, so we need to add 1 to the ocr2a to get the actual divisor
+	lds r24, OCR2A
+	clr r25
+	adiw r25:r24, 1						; ocr2a + 1	
 	
-	; multiply by 100
-	ldi r18, low(100)					
-	ldi r19, high(100)					
-	rcall mpy16u						; 17:16
+	; divide r17:r16 / r19:r18
+	rcall div16u					; quotient in r17:r16 (but lives in r16 as quotient never exceeds 255), remainder in 15:14 (but lives in r14 as it never exceeds 255)
 
+	; because our resolution is so low, we can simply save quotient to upper byte and remainder to lower byte to send to write_dc_to_lcd
+	; why does this work? 
+	; our ocr2a is 200, so we can never represent a quotient greater than 200, which fits within 8 bits
+	; similarly, our remainder will always be less than 200, which fits within 8 bits
 
-	; divide by ocr2a (max pwm value, divisor)
-	ldi r18, low(199)					
-	ldi r19, high(199)					
-	rcall div16u					; 15:14 remainder	
-
-    ; save
-	mov r30, r16						
-	mov r31, r17					
-
-
-	; multiply remainder by 10 and divide again
-	mov r16, r14						
-	mov r17, r15
-	ldi r18, low(10)
-	ldi r19, high(10)
-	rcall mpy16u						
-		
 	;save the value to R29:R28
-	mov r29, r17
-	mov r28, r16
-
-	; divide by ocr2a (max pwm value, divisor)
-	ldi r18, low(199)	
-	ldi r19, high(199)	
-	rcall div16u						
-
-	; add quotient to r28 and add carry to r29 
-	add r28, r16						
-	adc r29, r17						
+	mov r29, r16
+	mov r28, r14
 
     pop r31
 	pop r30
@@ -777,20 +773,8 @@ write_dc_to_lcd:
 	push r19
 	push r20
 	
-	; get duty cycle
-	mov r16, dc_low
-	mov r17, dc_high
-
-	; divide by 10
-	ldi r18, low(10)
-	ldi r19, high(10)
-
-	rcall div16u								
-	mov r0, r14
-	rcall div16u
-	mov r1, r14
-	rcall div16u
-	mov r2, r14
+	; see convert_dc_to_percentage for explanation. 
+	; r29:r28 contains the quotient and remainder
 
 	rcall write_char1
 	rcall write_char2
@@ -820,6 +804,7 @@ write_dc_to_lcd:
 	ret
 
 ; division code taken from ATMEL AVR200.asm
+; 
 div16u:	
 	clr	r14	;clear remainder Low byte
 	sub	r15, r15;clear remainder High byte and carry
