@@ -92,6 +92,7 @@ setup_timer:
 	out TCNT0, count; load the timer counter register with pstart value (0x38 0011 1000 -> 56 decimal)
 	out TCCR0B, tmp1; load the timer control register with the pstart value (0x01 0000 001 -> 1 decimal) this ends timer configuration for timer0
 
+;LCD initialization with delays from slides
 initialize_LCD:
 	rcall timer_delay_100ms;
 	cbi PORTB, 5; set R/S to low (data transferred is treated as commands)
@@ -158,8 +159,8 @@ initialize_LCD:
 Dc_:_display:
 	;diplays DC :
 	sbi PORTB, 5;
-	ldi r30,LOW(2*prefix_string) ; Load Z register low
-	ldi r31,HIGH(2*prefix_string) ; Load Z register high
+	ldi r30,LOW(2*prefix_string)	; Load Z register low
+	ldi r31,HIGH(2*prefix_string)	; Load Z register high
 	rcall displayCString;
 
 
@@ -178,48 +179,47 @@ Cursor_2nd_Row:
 	rcall timer_delay_1ms;
 	sbi PORTB, 5;
 Initial_Fan_On_Dispaly:
-	ldi r30,LOW(2*fan_string) ; Load Z register low
-	ldi r31,HIGH(2*fan_string) ; Load Z register high
+	ldi r30,LOW(2*fan_string)		; Load Z register low
+	ldi r31,HIGH(2*fan_string)		; Load Z register high
 	rcall displayCString;
 	rcall timer_delay_1ms;
 	rcall fan_on;
 
 setup_rpg:
 	in rpg_previous_state, PINB;
-	andi rpg_previous_state, 0x03; mask (0000 0011) to get pins 5 (A) and 4 (B)
+	andi rpg_previous_state, 0x03	; mask (0000 0011) to get pins 5 (A) and 4 (B)
 
-	clr rpg_accumulator
+	clr rpg_accumulator				;initialize accumulator
 	ldi r16, 3
 	mov rpg_threshold, r16
 	clr r16
 
 setup_pwm:
-	; Fast PWM, non-inverting (COM0B1=1), TOP=OCR0A (Mode 7)
+	; Fast PWM, non-inverting (COM2B1=1), TOP=OCR0A (Mode 7)
 	ldi r16, (1 << COM2B1)| (1 << WGM21) | (1 << WGM20)
 	sts TCCR2A, r16
 
-	; Prescaler=1 (CS20=1), Fast PWM with TOP=OCR0A (WGM02=1)
+	; Prescaler=1 (CS20=1), Fast PWM with TOP=OCR2A (WGM22=1)
 	ldi r16, (1 << WGM22) | ( 1<< CS20)
 	sts TCCR2B, r16
 
-	; Set TOP for 25kHz (OCR0A = 79)
+	; Set TOP for 80kHz (OCR2A = 199)
 	ldi r16, 199
 	sts OCR2A, r16
 
-	; Set duty cycle (e.g., 50% = 40)
-	;initial duty cycle is 0%
-	ldi current_dc_q, 195 ; NOTE - alias for OCR2B r16 -> current_dc_q
-	sts OCR2B, current_dc_q  ; OCR2B controls duty cycle!
+	; Set duty cycle (e.g., 50% = 100)
+	ldi current_dc_q, 100			; NOTE - alias for OCR2B r16 -> current_dc_q
+	sts OCR2B, current_dc_q			; OCR2B controls duty cycle!
 
 	;initial fan state is on
 	mov prev_dc_q, current_dc_q;
 	ldi fan_state, 0xff
 
 initial_state:
-	sbi PORTD, 5; turn off LED initially
-	cbi PORTD, 2; disable internal pullup resistor
+	sbi PORTD, 5					; turn off LED initially
+	cbi PORTD, 2					; disable internal pullup resistor
 	sei
-
+									;initial PWM calculation & display
 	rcall pwm_cursor
 	rcall pwm_to_percent
 	rcall pwm_display
@@ -264,14 +264,14 @@ toggle_fan:
 	update_pwm:
 		sts OCR2B, r17           ; Update PWM register with the stored value
 	update_fan_display:
-		tst fan_state
+		tst fan_state			 ;if off break to display on
 		brne display_on
-		rcall On_Off_Cursor_2nd_Row;
-		rcall fan_off;
+		rcall On_Off_Cursor_2nd_Row; set cursor address to 2nd row
+		rcall fan_off;				;write fan off and set pwm to 0
 		rjmp exit_toggle;
 		display_on:
-		rcall On_Off_Cursor_2nd_Row;
-		rcall fan_on
+		rcall On_Off_Cursor_2nd_Row;set cursor address to 2nd row
+		rcall fan_on				;display fan on
 	exit_toggle:
 		pop r17
 		out SREG, r17
@@ -286,7 +286,7 @@ rpg_change:
     push r17
     push r30
     
-    rcall timer_delay_100us
+    rcall timer_delay_100us		;debounce delay
     tst fan_state
     breq exit_rpg_isr           ; IF the state is off do not update RPG
     
@@ -357,7 +357,7 @@ counter_clockwise:
     sts OCR2B, r30              ; Update PWM register
 	rjmp exit_rpg_update
 
-exit_rpg_update:
+exit_rpg_update:			;updates the pwm percentage
     rcall PWM_cursor
     rcall pwm_to_percent
     rcall pwm_display
@@ -417,7 +417,7 @@ pwm_to_percent:
 	ldi r18, low(199)	;divisor low byte (divide by OCR2A)
 	ldi r19, high(199)	;divisor high byte (divide by OCR2A)
 	rcall div16u		;result in r17:r16 (third digit is here)
-	add r28, r16
+	add r28, r16		;get final result in 0-999
 	adc r29, r1
 
 	pop r22
@@ -447,20 +447,20 @@ pwm_display:
 	
 	mov r16, dc_low
 	mov r17, dc_high
-	ldi r18, low(10)
+	ldi r18, low(10)		;divide by 10 to get the decimal place
 	ldi r19, high(10)
 	rcall div16u			;result in r17:r16
 							;remainder in r15:r14
 	mov r0, r14
-	rcall div16u
+	rcall div16u			;divide by 10 to get the ones place
 	mov r1, r14
-	rcall div16u
+	rcall div16u			;divide by 10 to get the tens place
 	mov r2, r14
 
-	rcall display_char1
-	rcall display_char2
-	rcall display_decimal
-	rcall display_char3
+	rcall display_char1		;display 10's
+	rcall display_char2		;display 1's
+	rcall display_decimal	;display decimal
+	rcall display_char3		;display decimal place
 
 	
 	ldi r30,LOW(2*suffix_string) ; Load Z register low
@@ -531,9 +531,9 @@ mpy16u:
 		mov r17, r19
 		ret
 
-PWM_cursor:
-	cbi PORTB, 5
-	ldi r17, 0x08 
+PWM_cursor:				;sets the cursor for writing the PWM percentage
+	cbi PORTB, 5		;Toggle R/S line for commands
+	ldi r17, 0x08		;sets after the DC = 
 	out PORTC, r17
 	rcall LCDStrobe;
 	rcall timer_delay_100us
@@ -544,7 +544,7 @@ PWM_cursor:
 	sbi PORTB, 5;
 	ret
 
-pwm_full_speed:
+pwm_full_speed:			;displays 100.0% and sets accumulator so one ccw turn gets back to below 100
 	inc r30
 	sts OCR2B, r30    ; Set OCR2B = OCR2A
 	rcall pwm_cursor
