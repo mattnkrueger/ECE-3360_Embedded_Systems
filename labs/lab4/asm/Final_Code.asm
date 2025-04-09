@@ -147,7 +147,7 @@ configure_timer2:
 	sts TCCR2B, r16
 	ldi r16, 199           
 	sts OCR2A, r16
-	ldi current_dc_divisor, 100      									; initial duty cycle is 195/200 = 97.5%
+	ldi current_dc_divisor, 195      									; initial duty cycle is 195/200 = 97.5%
 	sts OCR2B, current_dc_divisor   
 	ret
 
@@ -283,6 +283,15 @@ configure_lcd:
 	rcall delay_1ms										
 	ret
 
+	set_rpg_accumulator:								;Sets the value of the rpg accumulator to 0
+		push r16										;sets the threshold to 4
+		ldi r16, 0;										;This way each rpg turn only increments OCR2B one time (checking for intermediate states)
+		mov rpg_accumulator, r16;
+		ldi r16, 4;
+		mov rpg_threshold, r16
+		pop r16		
+	ret	
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            MAIN CODE                                                    ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -295,6 +304,7 @@ reset:
 	rcall configure_pushbutton_interrupt   
 	rcall configure_rpg_interrupt         
 	rcall configure_lcd
+	rcall set_rpg_accumulator
 
 	; read initial rpg state
 	in rpg_previous_state, PINB
@@ -309,7 +319,7 @@ reset:
 	sbi PORTD, 5
 	cbi PORTD, 7
 	; enable global interrupts
-	sei											
+	sei						
 
 	; display initial pwm value
 	rcall move_cursor_to_dc_addr_lcd
@@ -648,7 +658,7 @@ pwm_full_speed:
 	rcall write_string_to_lcd
 
 	exit_full_speed:
-		ldi r16, 2
+		ldi r16, 3
 		mov rpg_accumulator, r16
 		ret
 
@@ -690,68 +700,75 @@ fan_off:
 ; this is the highest resolution that we need for our application. Because we have valid dc divisor 
 ; values from 0-200 our range of values will not exceed 65535 which is represented in 16-bits (2^16)
 ;
-; Application Note AN_0936 ‚ÄúAVR200: Multiply and Divide Routines‚Äù:
+; Application Note AN_0936 ìAVR200: Multiply and Divide Routinesî:
 ; - mpy16u: r17:r16 <- r17:r16 * r19:r18
 ; - div16u: r17:r16 <- r17:r16 / r19:r18
 convert_dc_to_percentage:
-	; operation:
-	;    				ocr2b / ocr2a * 100 = percentage
-	push r1
-	push r14
-	push r15			
-	push r16
-	push r17
-	push r18
-	push r19
-	push r20
-	push r21
-	push r22
-	
-	; get ocr2b (holds dc quotient)
-	lds r16, low(OCR2B)					
-	lds r17, high(OCR2B)				
-	
-	; multiply by 100
-	ldi r18, low(100)					
-	ldi r19, high(100)					
-	rcall mpy16u						
+    ; operation:
+    ;                ocr2b / ocr2a * 100 = percentage
+    push r1
+    push r14
+    push r15            
+    push r16
+    push r17
+    push r18
+    push r19
+    push r20
+    push r21
+    push r22
+    
+	lds r16, low(OCR2B)                    
+    lds r17, high(OCR2B)                
+	inc r16
+    
+    ; multiply by 100
+    ldi r18, low(100)                    
+    ldi r19, high(100)                    
+    rcall mpy16u                        ; r17:r16 = (OCR2B+1) * 100
 
-	; divide by ocr2a (max pwm value, divisor)
-	ldi r18, low(199)					
-	ldi r19, high(199)					
-	rcall div16u						
+    ; divide by ocr2a + 1 (max pwm value plus 1, divisor)
+    ldi r18, low(200)                    
+    ldi r19, high(200)                    
+    rcall div16u                    ; r17:r16 = quotient, r15:r14 = remainder
 
-	; multiply remainder by 10 and divide again
-	mov r16, r14						
-	mov r17, r15
+    ; save quotient for display
 	ldi r18, low(10)
 	ldi r19, high(10)
-	rcall mpy16u						
-		
-	;save the value to R29:R28
-	mov r29, r17
-	mov r28, r16
+	rcall mpy16u            
 
-	; divide by ocr2a (max pwm value, divisor)
-	ldi r18, low(199)	
-	ldi r19, high(199)	
-	rcall div16u						
+	mov dc_low, r16
+	mov dc_high, r17
 
-	; add quotient to r28 and add carry to r29 
-	add r28, r16						
-	adc r29, r17						
+    ; multiply remainder by 10 and divide again for decimal place
+    mov r16, r14                        
+    mov r17, r15
+    ldi r18, low(10)
+    ldi r19, high(10)
+    rcall mpy16u                        ; r17:r16 = remainder * 10
 
-	pop r22
-	pop r21
-	pop r20
-	pop r19
-	pop r18								
-	pop r17
-	pop r16
-	pop r15
-	pop r14
-	pop r1
-	ret
+    ; divide by 200 again to get decimal place
+    ldi r18, low(200)
+    ldi r19, high(200)
+    rcall div16u                    ; r17:r16 = decimal place
+
+	add dc_low, r16
+	adc dc_high, r1
+
+    ; r16 now has our decimal digit
+    mov dc_low, r28                ; store integer part
+    mov dc_high, r29
+    
+    pop r22
+    pop r21
+    pop r20
+    pop r19
+    pop r18                                
+    pop r17
+    pop r16
+    pop r15
+    pop r14
+    pop r1
+    ret
 
 write_dc_to_lcd:
 	push r0
