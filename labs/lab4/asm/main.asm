@@ -16,7 +16,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                           Register Aliases                                              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.def dc_high			 = r29					   ; Y reg
+.def dc_high			 = r29 					   ; Y reg
 .def dc_low 			 = r28 					   ; Y reg
 .def tmp2                = r24                     ; temporary register 
 .def tmp1                = r23                     ; temporary register
@@ -26,9 +26,8 @@
 .def fan_state           = r19                     ; boolean flag for fan on/off
 .def previous_dc_divisor = r18                     ; tracks previous duty cycle divisor
 .def current_dc_divisor  = r17                     ; tracks current duty cycle divisor
-.def max_dc_reached      = r8
-.def rpg_accumulator     = r5 					   ; accumulator for our rpg <1% change per turn
-.def rpg_threshold 		 = r4 					   ; max for accumulator
+.def rpg_accumulator     = r2
+.def rpg_threshold       = r3
 
 .cseg
 .org 0x0000
@@ -116,7 +115,7 @@ configure_timer0:
 	;             					256 - 56 = 200 ticks before overflow,
 	;             					200 ticks * 0.5us = 100us	
 	;			this means that timer overflows every 100us, yeilding a delay of 100us
-    ;
+	;
 	; - *important note* because we are passing a count into the tcnt0 register, tcnt0 resets at turnover.
 	;    Therefore, we must reload at every overflow (see delay section for details)
 	ldi count, 0x38
@@ -260,7 +259,7 @@ configure_lcd:
 		sbi PORTB, 5									
 		ldi r30, LOW(2 * prefix_string) 				; "DC = "
 		ldi r31, HIGH(2 * prefix_string)   				; obtain address of prefix string
-		rcall write_lut_string_to_lcd
+		rcall write_string_to_lcd
 
 	;move the cursor to the second row
 	move_cursor_to_second_row:
@@ -279,7 +278,7 @@ configure_lcd:
 		sbi PORTB, 5
 		ldi r30, LOW(2 * fan_string) 					; "Fan: "
 		ldi r31, HIGH(2 * fan_string)				    ; obtain address of fan string
-		rcall write_lut_string_to_lcd
+		rcall write_string_to_lcd
 	
 	rcall delay_1ms										
 	ret
@@ -301,30 +300,19 @@ reset:
 	in rpg_previous_state, PINB
 	andi rpg_previous_state, 0x03				; mask to get pins 5 (A) and 4 (B)
 
-	; initialize max_dc_reached to 0
-	ldi r16, 0
-	mov max_dc_reached, r16
-
 	; initialie fan to on with current duty cycle quotient set in configuration subroutine
 	mov previous_dc_divisor, current_dc_divisor
 	ldi fan_state, 0xff							; set fan state to on (1)
-	
-	; initialize rpg_accumulator to 2
-	ldi r16, 2
-	mov rpg_accumulator, r16
 	rcall fan_on
 
 	; initial LED indicators used on circuit
 	sbi PORTD, 5
 	cbi PORTD, 7
-
 	; enable global interrupts
 	sei											
 
-	; display initial pwm value
-	rcall move_cursor_to_dc_addr_lcd
-	rcall convert_dc_to_percentage
-	rcall write_dc_to_lcd
+	; display initial dc value
+	rcall update_lcd_display
 
 ; program loop. because this is an interrupt-driven program, nothing is in main loop
 main:
@@ -462,27 +450,14 @@ rpg_change:
     rjmp exit_rpg_isr
     
 clockwise:
-    inc rpg_accumulator                                 ; increment accumulator and compare with threshold
-    mov r30, rpg_accumulator                            
-    cp r30, rpg_threshold                               
-    brne exit_rpg_isr                                   ; if threshold not reached, skip OCR2B update
-    
-    clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
-    cpi r30, 199                                        ; check if newest turn reaches max dc
-    breq exit_rpg_isr                                ; if at max, don't increment and exit
-
+    cpi r30, 199
+    breq exit_rpg_isr
     inc r30                                             ; increment
     sts OCR2B, r30                                      ; update ocr2b
     rjmp exit_rpg_update
     
 counter_clockwise:
-    inc rpg_accumulator                                 ; increment the accumulator
-    mov r30, rpg_accumulator                            ; use r30 as temporary register
-    cp r30, rpg_threshold                               ; compare with threshold
-    brne exit_rpg_isr                                   ; if not reached threshold, skip OCR2B update
-    
-    clr rpg_accumulator                                 ; reset accumulator
     lds r30, OCR2B                                      ; get current duty cycle
     cpi r30, 2                                          ; check if at min (2 or 1%)
     breq exit_rpg_isr                                   ; if at min, don't decrement
@@ -491,9 +466,7 @@ counter_clockwise:
     rjmp exit_rpg_update
 
 exit_rpg_update:
-    rcall move_cursor_to_dc_addr_lcd				    ; move cursor to dc address
-    rcall convert_dc_to_percentage						; convert pwm to percent
-    rcall write_dc_to_lcd								; display pwm
+    rcall update_lcd_display
     rjmp exit_rpg_isr
 
 exit_rpg_isr:
@@ -524,7 +497,64 @@ lcd_strobe:
 		cbi PORTB, 2                 ; set E to low (end of data transfer)
 		ret
 
-write_lut_string_to_lcd:
+update_lcd_display:
+	rcall move_cursor_to_dc_addr_lcd
+	rcall convert_dc_to_percentage
+	rcall write_dc_to_lcd
+	ret
+
+write_dc_to_lcd:
+	push r0
+	push r1
+	push r2
+	push r14
+	push r15
+	push r16
+	push r17
+	push r18
+	push r19
+	push r20
+	push r28
+	push r29
+
+	; quotient & remainder
+	mov r15, r29
+	mov r14, r28
+
+    ; write duty cycle "__._"
+	mov r25, r15
+	rcall write_quotient_to_lcd 		       
+
+	; write period
+	ldi r25, '.'
+	rcall write_char_to_lcd
+
+	; write remainder
+	mov r25, r13
+	ldi r16, 0x30        ; Use consistent method - load 0x30 into register
+	add r25, r16         ; Add ASCII offset to remainder digit
+	rcall write_char_to_lcd
+
+    ; write suffix "%  "
+	ldi r30,LOW(2 * suffix_string) 			   ; "%  "
+	ldi r31,HIGH(2 * suffix_string)	           ; obtain address of suffix string
+	rcall write_string_to_lcd
+
+    pop r29
+	pop r28
+	pop r20
+	pop r19
+	pop r18
+	pop r17
+	pop r16
+	pop r15
+	pop r14
+	pop r2
+	pop r1
+	pop r0
+	ret
+
+write_string_to_lcd:
 	lpm r0,Z+                        ; start of loaded memory address
 	tst r0                           ; check for terminating character 
 	breq done                        ; if done, exit
@@ -534,42 +564,8 @@ write_lut_string_to_lcd:
 	swap r0                          ; lower nibble in place
 	out PORTC,r0                     ; send lower nibble out
 	rcall lcd_strobe                 ; latch nibble
-	rjmp write_lut_string_to_lcd         ; continue until done
+	rjmp write_string_to_lcd         ; continue until done
 done:
-	ret
-
-write_char_to_lcd:
-	push r16
-	push r25
-
-	; r14 contains chars to write. moved to r16 for easier comparison
-	mov r16, r14
-	cpi r16, '.'
-	breq write_period
-
-    write_digit:
-		ldi r25, 0x30 				; 0x30 is '0' in ascii, adding contents of remainder digit (0-9) in r16 provides offset to wanted ascii
-		add r25, r16				; r25 now contains ascii of wanted digit
-		jmp send_char
-
-	write_period:
-		mov r25, r16
-		jmp send_char
-
-    send_char:
-		swap r25						; send upper nibble first
-		out PORTC, r25 
-		rcall lcd_strobe 
-		rcall delay_100us
-
-		swap r25						; send lower nibble by masking
-		andi r25, 0x0f
-		out PORTC, r25 
-		rcall lcd_strobe
-		rcall delay_100us
-
-	pop r25
-	pop r16
 	ret
 
 ; move cursor to ddram 05 of lcd
@@ -579,11 +575,87 @@ move_cursor_to_dc_addr_lcd:
 	out PORTC, r17
 	rcall lcd_strobe
 	rcall delay_100us
-	ldi r17, 0x05					        ; move cursor to position 5
+	ldi r17, 0x05		
 	out PORTC, r17
 	rcall lcd_strobe
 	rcall delay_1ms
 	sbi PORTB, 5
+	ret
+
+write_char_to_lcd:
+	push r16
+	push r25
+
+	; save full character to reference
+	mov r16, r25
+  	
+	; upper nibble
+	swap r16
+	andi r16, 0x0f
+	out PORTC, r16
+	rcall lcd_strobe
+	rcall delay_100us
+
+	; lower nibble
+	mov r16, r25
+	andi r16, 0x0f
+	out PORTC, r16
+	rcall lcd_strobe
+	rcall delay_100us
+	
+	pop r25
+	pop r16
+    ret
+
+write_quotient_to_lcd:
+	push r16
+	push r25
+	push r15
+	push r14
+
+   ; check if the quotient is 100 (max dc)
+	mov r16, r15
+	cpi r16, 100
+	breq write_100
+	jmp write_2_digit_quotient
+
+	write_100:
+		ldi r25, 0x31         ; "1"
+		rcall write_char_to_lcd
+		ldi r25, 0x30         ; "0"
+		rcall write_char_to_lcd
+		ldi r25, 0x30         ; "0"
+		rcall write_char_to_lcd
+		jmp exit_write_quotient
+
+	write_2_digit_quotient:
+		; Extract tens digit
+		mov r16, r15                  ; Copy quotient to r16
+		ldi r25, 10                   ; Divisor = 10
+		clr r14                       ; Clear remainder
+		div10:                        ; Simple division by 10 for single byte
+			inc r14                   ; Increment quotient
+			subi r16, 10              ; Subtract 10
+			brcc div10                ; Branch if result still positive
+			dec r14                   ; Fix overcount
+			subi r16, -10             ; Fix remainder (add back 10)
+		
+		; Convert tens digit to ASCII and write
+		mov r25, r14
+		subi r25, -0x30       ; Add ASCII offset
+		rcall write_char_to_lcd
+		
+		; Convert ones digit to ASCII and write
+		mov r25, r16
+		subi r25, -0x30       ; Add ASCII offset
+		rcall write_char_to_lcd
+		jmp exit_write_quotient
+
+	exit_write_quotient:
+		pop r14
+		pop r15
+		pop r25
+		pop r16
 	ret
 
 ; move cursor to ddram 45 of lcd
@@ -604,14 +676,14 @@ move_cursor_to_onoff_addr_lcd:
 fan_on:
 	ldi r30,LOW(2 * on_string) 
 	ldi r31,HIGH(2 * on_string)
-	rcall write_lut_string_to_lcd
+	rcall write_string_to_lcd
 	ret
 
 ; load address of "OFF" in mem for display
 fan_off:
 	ldi r30,LOW(2 * off_string) 
 	ldi r31,HIGH(2 * off_string)
-	rcall write_lut_string_to_lcd
+	rcall write_string_to_lcd
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -619,17 +691,18 @@ fan_off:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; because dc is displayed as a percentage, we need to multiply by 100. 
 ; even though registers are 8 bits and range from 0-255, multiplying 2 8-bit values results in a 16-bit value.
-;         					generally, b * b = 2b
-;
-; this is the highest resolution that we need for our application. Because we have valid dc divisor 
-; values from 0-200 our range of values will not exceed 65535 which is represented in 16-bits (2^16)
-;
+; 
+; we use the following subroutines to apply the 16-bit multiplication and division as AVR does not have support for these operations
 ; Application Note AN_0936 “AVR200: Multiply and Divide Routines”:
-; - mpy16u: r17:r16 <- r17:r16 * r19:r18
-; - div16u: r17:r16 <- r17:r16 / r19:r18
+; - mpy16u: 16-bit multiplication
+; - div16u: 16-bit division
+; 
+; example calc:
+;    let ocr2b = 98
+;    let ocr2a = 199
+;    -> (98 + 1) * 100 / (199 + 1) = 49.5%
+;
 convert_dc_to_percentage:
-	; operation:
-	;    				ocr2b / ocr2a * 100 = percentage
 	push r1
 	push r14
 	push r15			
@@ -640,112 +713,75 @@ convert_dc_to_percentage:
 	push r20
 	push r21
 	push r22
+	push r24
+	push r25
+	push r30
+	push r31
 	
-	; get ocr2b (holds dc quotient)
-	lds r16, low(OCR2B)					
-	lds r17, high(OCR2B)				
-	
-	; multiply by 100
-	ldi r18, low(100)					
-	ldi r19, high(100)					
-	rcall mpy16u						
+	; r24:r25 = OCR2B + 1 (dividend)
+	lds r24, OCR2B						
+	clr r25
+	adiw r24, 1							; r25:r24 = ocr2b + 1 
+	mov r16, r24
+	mov r17, r25
 
-	; divide by ocr2a (max pwm value, divisor)
-	ldi r18, low(199)					
-	ldi r19, high(199)					
-	rcall div16u						
+	; r18:r19 = 100
+	ldi r18, 100				
+	clr r19
+	rcall mpy16u						; r17:r16 = (ocr2b + 1) * 100
 
-	; multiply remainder by 10 and divide again
-	mov r16, r14						
-	mov r17, r15
-	ldi r18, low(10)
-	ldi r19, high(10)
-	rcall mpy16u						
-		
-	;save the value to dc_high:dc_low
-	mov dc_high, r17
-	mov dc_low, r16
+	; r24:r25 = OCR2A + 1 (divisor)
+	lds r24, OCR2A
+	clr r25
+	adiw r24, 1							; r25:r24 = ocr2a + 1
+	mov r18, r24
+	mov r19, r25
 
-	; divide by ocr2a (max pwm value, divisor)
-	ldi r18, low(199)	
-	ldi r19, high(199)	
-	rcall div16u						
+	; r17:r16 / r19:r18
+	rcall div16u						; quotient in r16, remainder in r14
 
-	; add quotient to dc_low and add carry to dc_high 
-	add dc_low, r16						
-	adc dc_high, r17						
+	; Store results
+	mov r29, r16     ; quotient to r29
+	mov r28, r14     ; remainder to r28 (tenths digit)
 
+	; Now compute tenths = (remainder * 10) / divisor
+	; Save divisor r18:r19 temporarily
+	mov r20, r18
+	mov r21, r19
+
+	; remainder in r14 → r24
+	mov r24, r14
+	clr r25
+	ldi r18, 10
+	clr r19
+	rcall mpy16u						; (remainder * 10) in r17:r16
+
+	; Restore divisor into r18:r19
+	mov r18, r20
+	mov r19, r21
+	mov r24, r16
+	mov r25, r17
+	rcall div16u						; r16 = tenths digit
+	mov r13, r16						; tenths to r30 if needed
+
+
+	; Optionally you could now have r29 = whole %, r30 = tenths of %
+	; e.g., 49.5% = r29 = 49, r30 = 5
+
+	pop r31
+	pop r30
+	pop r25
+	pop r24
 	pop r22
 	pop r21
 	pop r20
 	pop r19
-	pop r18								
+	pop r18												
 	pop r17
 	pop r16
 	pop r15
 	pop r14
 	pop r1
-	ret
-
-write_dc_to_lcd:
-	push r0
-	push r1
-	push r2
-	push r14
-	push r15
-	push r16
-	push r17
-	push r18
-	push r19
-	push r20
-	
-	; get duty cycle and coninuously divide by 10 to get wanted digits
-	; div16u gives remainder in *r14*. so if we keep calling div16u, we can get all the digits
-	mov r16, dc_low
-	mov r17, dc_high
-	ldi r18, low(10)
-	ldi r19, high(10)    			
-
-	; digits 1, 2
-	rcall div16u							   
-	rcall write_char_to_lcd
-	rcall div16u
-	rcall write_char_to_lcd
-
-	; check for max. if max then have a fourth digit written, else just 3.
-	tst max_dc_reached
-	brne add_additional_digit
-	jmp continue_writing_dc
-
-	add_additional_digit:
-		rcall div16u
-		rcall write_char_to_lcd
-	
-	continue_writing_dc:
-		; write period. 
-	    ldi r16, '.'
-		mov r14, r16
-		rcall write_char_to_lcd
-
-		; write the last digit
-		rcall div16u
-		rcall write_char_to_lcd
-
-		; finish with "%  "
-		ldi r30,LOW(2 * suffix_string) 			   ; "%   "
-		ldi r31,HIGH(2 * suffix_string)	           ; obtain address of suffix string
-		rcall write_lut_string_to_lcd;
-
-	pop r20
-	pop r19
-	pop r18
-	pop r17
-	pop r16
-	pop r15
-	pop r14
-	pop r2
-	pop r1
-	pop r0
 	ret
 
 ; division code taken from ATMEL AVR200.asm
