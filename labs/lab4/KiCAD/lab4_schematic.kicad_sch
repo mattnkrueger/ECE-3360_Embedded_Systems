@@ -5944,7 +5944,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "d24a537a-6363-4972-9aa4-8b2abbc74ba4")
 		(property "Reference" "#PWR010"
 			(at 95.25 142.24 0)
@@ -5955,12 +5954,13 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "VCC"
-			(at 95.25 133.35 0)
+		(property "Value" "Vin"
+			(at 93.726 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" ""
