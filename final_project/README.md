@@ -1,4 +1,5 @@
 # Final Project - Embedded Systems
+## TODO Description
 ## TODO IMAGE
 ## TODO KiCad
 ## TODO Demo pictures
@@ -6,7 +7,6 @@
 
 ## Understanding the Libraries
 To drive our LED Matrix, we utilized the following __Awesome__ libraries. We suggest you use these as well. There are other libraries that also achieve 
-
 
 #### Under each section, there are two links:
 - our usage & understanding of the library
@@ -29,4 +29,4 @@ To drive our LED Matrix, we utilized the following __Awesome__ libraries. We sug
 - [Local Documentation](doc/Understanding_FastLED.md)
 - [GitHub Repository](https://github.com/FastLED/FastLED)
 
-
+## TODO Parts list
