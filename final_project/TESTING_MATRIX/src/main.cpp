@@ -7,18 +7,10 @@
 #define PANEL_RES_Y 64  
 #define PANEL_CHAIN 1    
 
-/* ESP32 UART Configuration
- * ESP32 has 3 hardware UART interfaces (0, 1, 2):
- * - UART0: Typically used for programming/debugging via USB
- * - UART1/UART2: Available for your application
- *
- * HardwareSerial(uart_num, rx_buffer_size, tx_buffer_size, uart_queue_size)
- * Default buffer sizes are usually sufficient for most applications
- */
-// Using UART1 with non-conflicting pins
-#define ESP_TX_PIN 2  // GPIO2 for TX
-#define ESP_RX_PIN 4  // GPIO4 for RX
-HardwareSerial MySerial(1); // Use UART1
+// esp 32 UART
+#define ESP_TX_PIN 17  
+#define ESP_RX_PIN 16
+HardwareSerial MySerial(1); 
 
 // NOT SURE
 MatrixPanel_I2S_DMA *dma_display = nullptr;
@@ -204,9 +196,6 @@ void setup() {
   // fill a violet circle
   dma_display->fillCircle(32, 32, 10, dma_display->color444(15, 0, 15));
   delay(500);
-
-  // fill the screen with 'black'
-  dma_display->fillScreen(myBLACK);
 }
 
 // Function to test UART communication
@@ -220,15 +209,6 @@ void testUART() {
 
 uint8_t wheelval = 0;
 void loop() {
-  dma_display->fillScreen(myBLACK);
-  for (int y = 0; y < 64; y += 8) {
-    for (int x = 0; x < 64; x += 8) {
-      if ((x/8 + y/8) % 2 == 0) {
-        dma_display->fillRect(x, y, 8, 8, colorWheel((x+y) % 255));
-      }
-    }
-  }
-  
   // Test UART periodically
   testUART();
   
