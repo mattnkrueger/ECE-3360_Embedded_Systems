@@ -9,13 +9,11 @@
 
 #include "communication/UARTCom.h"
 
-// constructor
 UARTCom::UARTCom(int channel) : uart(channel) {
     Serial.print("Selected Channel: ");
     Serial.println(channel);
 }
 
-// initialize
 void UARTCom::initialize(unsigned long baud, SerialConfig config, uint8_t channel) {
     uint8_t tx_pin;
     uint8_t rx_pin;
@@ -39,14 +37,32 @@ void UARTCom::initialize(unsigned long baud, SerialConfig config, uint8_t channe
     Serial.printf("ESP32 UART configuration:\nbaud rate: %u\nformat: %u\nchannel: %u (tx=%u, rx=%u)\n", baud, config, channel, tx_pin, rx_pin);
 }
 
-// receive (interrupt driven in HardwareSerial)
-String UARTCom::receive() { 
+JsonDocument UARTCom::receive() { 
     // TODO-
-    // complete
+    // receive bytestream from uart
+    // this should be of type char* (pointer of chars -- essentially a string.)
+    // utilize the HardwareSerial for this so it is interrupt based.
+    
+    // should look something like this
+    const char* msg =  "{\"origin\":\"user\", \"mode\":\"game\", \"command\":\"move cursor right\", \"status\":\"msg\"}";
+    JsonDocument doc;
+    deserializeJson(doc, msg);
+    return doc;
 }
 
-// transmit
 void UARTCom::transmit(String origin, String mode, String command, bool status) {
-    // TODO-
-    // complete
+    // build
+    JsonDocument doc;
+    doc["origin"]  = origin;
+    doc["mode"]    = mode;
+    doc["command"] = command;
+    doc["status"]  = status;
+
+    // serialize
+    char msg[256];               
+    serializeJson(doc, msg);
+
+    // transmit & test
+    uart.write(msg);
+    Serial.printf(">> ESP32 TX -> Arduino:\norigin: %s\nmode: %s\ncommand: %s\nstatus: %d", origin, mode, command, status);
 }

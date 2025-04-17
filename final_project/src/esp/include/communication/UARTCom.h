@@ -8,10 +8,11 @@
  *
  */
 
- #ifndef UARTCom_H
- #define UARTCom_H
+#ifndef UARTCom_H
+#define UARTCom_H
 
- #include <HardwareSerial.h>
+#include <HardwareSerial.h>
+#include <ArduinoJson.h>
 
  /*
   * Class UARTCom:
@@ -56,10 +57,9 @@
      * JSON serialized, which is then parsed and returned for downstream analysis.
      *
      * @param none
-     * @return String: JSON string received at RX port
+     * @return JsonDocument: deserialized JSON message
      */
-    String receive();
-
+    JsonDocument receive();
 
     /* @brief transmit data at TX
      * 
