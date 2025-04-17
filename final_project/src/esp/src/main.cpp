@@ -25,7 +25,7 @@
  * 
  */
 
-#include "uart/UARTCom.h"
+#include "communication/UARTCom.h"
 #include "ui/LayoutManager.h"
 #include "pages/HomePage.h"
 #include "pages/DevPage.h"
@@ -33,7 +33,6 @@
 #include "pages/SettingsPage.h"
 
 /*
-
 TODO - 
 this file should combine much of the classes used above. It is the entry point hence the setup() and loop()
 
@@ -52,7 +51,6 @@ json_example = {
 }
 
 - Basically, we can have a json being sent from the user on the arduino on -every- interaction. We can then treat these as control signals/logic to map wanted outcome
-
 */
 
 /*
