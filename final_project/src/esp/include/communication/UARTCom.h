@@ -16,8 +16,8 @@
  /*
   * Class UARTCom:
   *
-  * This class simply wraps HarwareSerial for simplified UART. This file is class is intended to be used by both the Arduino UNO and by the ESP32, 
-  * thus it hardcodes necessary communication configurations.
+  * This class simply wraps HarwareSerial for simplified UART. This file class is intended to be used by the ESP32 
+  * and uses some user config and hardcoded configuration to aid development. HardwareSerial data reception is input driven.
   * 
   * Constructor
   * - UARTcom(): initialize the UART channel. We have our board as 1
