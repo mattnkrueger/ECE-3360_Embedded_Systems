@@ -4,11 +4,8 @@ design our commands to be formatted in JSON for ease of use.
 
 format = {
             origin: string, 
-            
             mode: string,
-            
             command: string,
-            
             status: bool
         }
 
