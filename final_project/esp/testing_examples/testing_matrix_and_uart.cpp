@@ -1,46 +1,71 @@
-// Example sketch which shows how to display content
+// Example sketch which shows how to display content. This is an altered version of Example from ESP32 HUB75 LED Matrix Panel DMA Display library.
+// tests UART communication with ESP32
+
 // on a 64x64 LED matrix with ESP32
+
+// UART for ESP32
 #include <HardwareSerial.h>
 
+// Include the header file for the ESP32 HUB75 LED Matrix Panel DMA Display library
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+
+// Define the panel resolution in the X direction (width) as 64 pixels
 #define PANEL_RES_X 64 
+
+// Define the panel resolution in the Y direction (height) as 64 pixels
 #define PANEL_RES_Y 64  
+
+// Define the number of panels chained together as 1 (WE ONLY HAVE ONE PANEL)
 #define PANEL_CHAIN 1    
 
 // esp 32 UART
 #define ESP_TX_PIN 17  
 #define ESP_RX_PIN 16
-HardwareSerial MySerial(1); 
+HardwareSerial MySerial(1); // specify which UART to use, we use UART1 as UART0 isnt as easy to use... 
 
-// NOT SURE
-MatrixPanel_I2S_DMA *dma_display = nullptr;
+// MatrixPanel_I2S_DMA is a class that handles the matrix panel
+MatrixPanel_I2S_DMA *dma_display = nullptr;                 
+
+// Define the colors used
 uint16_t myBLACK, myWHITE, myRED, myGREEN, myBLUE;
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-// From: https://gist.github.com/davidegironi/3144efdc6d67e5df55438cc3cba613c8
+/*
+ * Input a value 0 to 255 to get a color value.
+ * The colours are a transition r - g - b - back to r.
+ * From: https://gist.github.com/davidegironi/3144efdc6d67e5df55438cc3cba613c8
+ */
 uint16_t colorWheel(uint8_t pos) {
   if(pos < 85) {
+    // First third: RED → GREEN (pos: 0-84)
     return dma_display->color565(pos * 3, 255 - pos * 3, 0);
   } else if(pos < 170) {
+    // Second third: GREEN → BLUE (pos: 85-169)
     pos -= 85;
     return dma_display->color565(255 - pos * 3, 0, pos * 3);
   } else {
+    // Final third: BLUE → RED (pos: 170-255)
     pos -= 170;
     return dma_display->color565(0, pos * 3, 255 - pos * 3);
   }
 }
 
+/*
+ * Draws text on the matrix panel
+ * colorWheelOffset is used to rotate the color wheel
+ */
 void drawText(int colorWheelOffset)
 {
-  // Clear the screen before drawing new text
+  // clear the screen
   dma_display->fillScreen(myBLACK);
-  
-  // draw text with a rotating colour
-  dma_display->setTextSize(1);     // size 1 == 8 pixels high
-  dma_display->setTextWrap(false); // Don't wrap at end of line - will do ourselves
 
-  dma_display->setCursor(5, 5);    // start at top left, with 5 pixel of spacing
+  // set the text size and wrap mode
+  dma_display->setTextSize(1);     
+  dma_display->setTextWrap(false); 
+
+  // set the cursor position
+  dma_display->setCursor(5, 5);   
+  
+  // draw the text
   uint8_t w = 0;
   const char *str = "ESP32 DMA";
   for (w=0; w<strlen(str); w++) {
@@ -48,12 +73,14 @@ void drawText(int colorWheelOffset)
     dma_display->print(str[w]);
   }
 
+  // draw the stars
   dma_display->setCursor(5, 15);
   for (w=0; w<9; w++) {
     dma_display->setTextColor(colorWheel((w*32)+colorWheelOffset));
     dma_display->print("*");
   }
   
+  // draw the LED MATRIX! text
   dma_display->setCursor(5, 25);
   dma_display->setTextColor(dma_display->color444(15,15,15));
   dma_display->println("LED MATRIX!");
@@ -85,26 +112,18 @@ void drawText(int colorWheelOffset)
   dma_display->println("*");
 }
 
-void setup() {
-  // Initialize default Serial for debugging via USB (UART0)
-  Serial.begin(115200);
-  Serial.println("ESP32 LED Matrix Demo starting...");
-  
-  /* UART Configuration explanation:
+void test_setup() {
+  /* UART: 
    * begin(baud_rate, data_config, rx_pin, tx_pin, invert)
    * - baud_rate: Communication speed (115200 is standard)
    * - data_config: Format of each data unit
    *   SERIAL_8N1 = 8 data bits, No parity, 1 stop bit
    * - rx_pin: GPIO pin number for receiving data
    * - tx_pin: GPIO pin number for transmitting data
+   * USES MySerial as UART1
    */
   MySerial.begin(115200, SERIAL_8N1, ESP_RX_PIN, ESP_TX_PIN);
-  Serial.printf("UART1 initialized on pins TX:%d RX:%d\n", ESP_TX_PIN, ESP_RX_PIN);
-  
-  // Test UART by sending a message
-  MySerial.println("UART1 test message");
-  Serial.println("Test message sent to UART1");
-
+  MySerial.println("TEST");
   delay(1000);
 
   // Module configuration
@@ -114,8 +133,7 @@ void setup() {
     PANEL_CHAIN    // Chain length
   );
 
-  // ESP32 DEVKITV1 HUB75E
-  // hub75e -> gpi0 pinout
+  // ESP32 DEVKITV1 -> HUB75E 
   //
   //             +----------+-----------+
   // r1:         | R1 (25)  | G1  (26)  |
@@ -153,7 +171,7 @@ void setup() {
   mxconfig.gpio.oe  = 15;     // OE
 
   // Potentially need to adjust these for 64x64 panels
-  mxconfig.clkphase = false;
+  mxconfig.clkphase = true;
   mxconfig.driver = HUB75_I2S_CFG::FM6126A;
 
   // Display Setup
@@ -170,11 +188,11 @@ void setup() {
   dma_display->clearScreen();
 
   // Define colors
-  myBLACK = dma_display->color565(0, 0, 0);
+  myBLACK = dma_display->color565(0, 0, 0);    
   myWHITE = dma_display->color565(255, 255, 255);
-  myRED = dma_display->color565(255, 0, 0);
+  myRED   = dma_display->color565(255, 0, 0);  
   myGREEN = dma_display->color565(0, 255, 0);
-  myBLUE = dma_display->color565(0, 0, 255);
+  myBLUE  = dma_display->color565(0, 0, 255);
   
   // Startup sequence
   dma_display->fillScreen(myBLACK);
@@ -198,19 +216,18 @@ void setup() {
   delay(500);
 }
 
-// Function to test UART communication
+/*
+ * Test UART Communication
+ */
 void testUART() {
-  // Send a message over UART1
-  MySerial.println("LED Matrix UART1 Test");
-  
-  // Debug message to default Serial
-  Serial.println("Message sent to UART1");
+  MySerial.println("TESTING");
+  Serial.println("test sent");
 }
 
-uint8_t wheelval = 0;
-void loop() {
-  // Test UART periodically
+/*
+ * Main loop, test UART Communication 
+ */
+void test_loop() {
   testUART();
-  
   delay(500);
 }
