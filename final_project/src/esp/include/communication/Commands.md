@@ -3,9 +3,12 @@ As we are humans and 115200 baud rate will never cause a perceivable delay to ou
 design our commands to be formatted in JSON for ease of use.
 
 format = {
-            origin: string 
-            mode: string
-            command: string
+            origin: string, 
+            
+            mode: string,
+            
+            command: string,
+            
             status: bool
         }
 
