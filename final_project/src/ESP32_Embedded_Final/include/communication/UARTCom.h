@@ -66,9 +66,14 @@
      * This function formats a user specified command into JSON, then sends it over the UART TX
      * port to be received by the Arduino UNO. Comprehensive use of integers here should speed
      * the overall UART transmission/reception time as char streams require more marks/spaces.
-     * 
-     * See Commands.md for required format and commands used
      *
+     *                            doc = {
+     *                                      origin:  string,
+     *                                      mode:    string,
+     *                                      command: string,
+     *                                      status:  bool
+     *                                  }
+     * 
      * @param origin: command origin - did this come from user (development mode), player1 or player2 (game mode)
      * @param mode: location to execute command - location to take action. some modes may consist of different commands
      * @param command: executable - action to execute: cursor/general movements, mode specific commands, etc

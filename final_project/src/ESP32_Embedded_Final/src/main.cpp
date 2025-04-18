@@ -25,12 +25,8 @@
  * 
  */
 
+#include <Arduino.h>
 #include "communication/UARTCom.h"
-#include "ui/LayoutManager.h"
-#include "pages/HomePage.h"
-#include "pages/DevPage.h"
-#include "pages/GamePage.h"
-#include "pages/SettingsPage.h"
 
 /*
 TODO - 
