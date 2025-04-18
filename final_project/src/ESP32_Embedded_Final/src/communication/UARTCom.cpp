@@ -41,8 +41,7 @@ void UARTCom::initialize(unsigned long baud, SerialConfig config, uint8_t channe
     Serial.printf("ESP32 UART configuration:\nbaud rate: %lu\nformat: %u\nchannel: %u (tx=%u, rx=%u)\n", baud, config, channel, tx_pin, rx_pin);
 }
 
-JsonDocument UARTCom::receive() { 
-    JsonDocument doc;
+String UARTCom::receive() { 
     char msg_rx[256];                   // using instead of string as char on stack. better for mem
     uint8_t i = 0; 
     while (uart.available() > 0) {
@@ -50,46 +49,21 @@ JsonDocument UARTCom::receive() {
             msg_rx[i] = uart.read();
             i++;
         } else {        // if 255 -> add \0
-            msg_rx[i];
-            Serial.printf("msg_rx filled!, i: %u", i);
+            msg_rx[i] = '\0';
+            break;
         }
     }
 
-    if (msg_rx > 0) {
+    if (i > 0) {
+        msg_rx[i] = '\0'; // ensure null terminated
         Serial.println("RECEIVED!!");
-        Serial.println("message:\n|_ msg = %s");
-        Serial.println("parsing...");
-        deserializeJson(doc, msg_rx);
-        Serial.println("JSON:");
-
-        // testing unpack
-        char* origin  = doc["origin"];
-        char* mode    = doc["mode"];
-        char* command = doc["command"];
-        char* status  = doc["status"];
-
-        Serial.println(origin);
-        Serial.println(mode);
-        Serial.println(command);
-        Serial.println(status);
+        Serial.printf("message:\n|_ msg = %s", msg_rx);
     }
 
-    return doc;
+    return String(msg_rx);
 }
 
-void UARTCom::transmit(String origin, String mode, String command, bool status) {
-    // build
-    JsonDocument doc;
-    doc["origin"]  = origin;
-    doc["mode"]    = mode;
-    doc["command"] = command;
-    doc["status"]  = status;
-
-    // serialize
-    char msg[256];               
-    serializeJson(doc, msg);
-
-    // transmit & test
-    uart.write(msg);
-    Serial.printf(">> ESP32 TX -> Arduino:\norigin: %s\nmode: %s\ncommand: %s\nstatus: %d", origin, mode, command, status);
+void UARTCom::transmit() {
+    //TODO-
+    // send a message. 
 }

@@ -28,52 +28,47 @@
 #include <Arduino.h>
 #include "communication/UARTCom.h"
 
-/*
-TODO - 
-this file should combine much of the classes used above. It is the entry point hence the setup() and loop()
+const int SEND_LED_PIN = 2;         
+const int RECEIVE_LED_PIN = 21;
+const int BUTTON_PIN = 34;
 
-Potential Workflow:
-- interrupt from UART
-- map interrupt to wanted function
-- we are a bit limited on how we can use the esp, so the bulk of this will be mapping the RX signal to corresponding 
+// UART PINS & Mode 
+HardwareSerial SerialPort(2);
+const int TX_PIN = 17;
+const int RX_PIN = 16;
 
-- JSON should be able to be used for UART as it is a serial data structure
-- json is a really user friendly data structure:
+// initial state
+int buttonState = HIGH;
 
-json_example = {
-    message1 : "this is valid",
-    message2 : 12376, 
-    message3 : [serializable object]
-}
-
-- Basically, we can have a json being sent from the user on the arduino on -every- interaction. We can then treat these as control signals/logic to map wanted outcome
-*/
-
-/*
- * microcontroller setup (Arduino Style C++)
- */
 void setup() {
-    /*
-    TODO -
-    1. call led matrix initializer of the Matrix class
-    2. blocking function for uart initialization. Some sort of handshake should be implemented here
-    3. starting sequence: 
-        a) loading screen (display during blocking function) 
-        b) loading screen animation -> home screen
-        c) land at home screen 
-        d) enable listening for the UART signals
-    4. exit setup
-    */
+  SerialPort.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);           // set to 9600 for Uno coms
+  pinMode(SEND_LED_PIN, OUTPUT);
+  pinMode(RECEIVE_LED_PIN, OUTPUT);  // Configure the receive LED pin
+  pinMode(BUTTON_PIN, INPUT);
+  digitalWrite(SEND_LED_PIN, LOW);
+  digitalWrite(RECEIVE_LED_PIN, LOW);  // Initialize the receive LED as off
 }
 
-/*
- * main loop (Arduino Style C++)
- */
 void loop() {
-    /*
-    TODO - INTERRUPT DRIVEN
-    1. blocking function for UART
-    2. map to wanted function
-    3. update the screen
-    */
+  buttonState = digitalRead(BUTTON_PIN);
+  
+  if (buttonState == LOW) {  
+    digitalWrite(SEND_LED_PIN, HIGH);
+    SerialPort.println("ESP32 TX");  
+    delay(1000);
+  } else {
+    digitalWrite(SEND_LED_PIN, LOW);
+  }
+  
+  // Check for incoming message
+  if (SerialPort.available() > 0) {
+    String incomingMessage = SerialPort.readStringUntil('\n');
+    incomingMessage.trim();  // Remove any whitespace
+    
+    if (incomingMessage == "arduino tx") {
+      digitalWrite(RECEIVE_LED_PIN, HIGH);
+      delay(1000); 
+      digitalWrite(RECEIVE_LED_PIN, LOW);
+    }
+  }
 }

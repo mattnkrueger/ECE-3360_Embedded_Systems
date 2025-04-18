@@ -12,7 +12,6 @@
 #define UARTCom_H
 
 #include <HardwareSerial.h>
-#include <ArduinoJson.h>
 
  /*
   * Class UARTCom:
@@ -57,9 +56,9 @@
      * JSON serialized, which is then parsed and returned for downstream analysis.
      *
      * @param none
-     * @return JsonDocument: deserialized JSON message
+     * @return TBD
      */
-    JsonDocument receive();
+    String receive();
 
     /* @brief transmit data at TX
      * 
@@ -67,20 +66,10 @@
      * port to be received by the Arduino UNO. Comprehensive use of integers here should speed
      * the overall UART transmission/reception time as char streams require more marks/spaces.
      *
-     *                            doc = {
-     *                                      origin:  string,
-     *                                      mode:    string,
-     *                                      command: string,
-     *                                      status:  bool
-     *                                  }
-     * 
-     * @param origin: command origin - did this come from user (development mode), player1 or player2 (game mode)
-     * @param mode: location to execute command - location to take action. some modes may consist of different commands
-     * @param command: executable - action to execute: cursor/general movements, mode specific commands, etc
-     * @param status: reception status - did the receiver get the message?
+     * @param TBD
      * @return void
      */
-    void transmit(String origin, String mode, String command, bool status);
+    void transmit();
 
   private:
     /*
