@@ -22,7 +22,7 @@ Our implementation of chess on a 64x64 LED Matrix uses a hierarchy of objects fo
 
 ## 4: Piece (struct):
 - **no behavior; just a definition of a piece belonging to a square**
-- type: PieceType (enum) king, queen, rook, bishop, knight, pawno
+- type: PieceType (enum) king, queen, rook, bishop, knight, pawn
 - color: white or black (or user defined)
 
 
