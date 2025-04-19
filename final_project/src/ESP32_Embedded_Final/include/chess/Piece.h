@@ -12,6 +12,11 @@
 
 #include "../ui/Matrix.h"
 
+/*
+ * Enum PieceType
+ *
+ * This enumerates the possible pieces in chess
+ */
 enum class PieceType {
     King,
     Queen, 
@@ -21,6 +26,13 @@ enum class PieceType {
     Pawn
 };
 
+/*
+ * Struct Piece
+ *
+ * This defines a piece. 
+ * Each piece as a type and color 
+ *
+ */
 struct Piece {
     PieceType piece;
     Color color;

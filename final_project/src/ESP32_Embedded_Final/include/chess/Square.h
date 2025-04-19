@@ -29,8 +29,7 @@ class Square {
          * @param backgroundColor: white, black, ...
          * @return void 
          */
-        Square(Piece piece, LedColor backgroundColor);
-
+        Square(LedColor backgroundColor, Piece piece);
 
         /* @brief remove piece
          * 
@@ -45,15 +44,13 @@ class Square {
          * Adds piece to Square. This is called immediately if moving to an empty square 
          * or after remove piece if moving to a occupied square.
          *
+         * @param newPiece: piece to move into the square
          * @return void 
          */
         void addPiece(Piece newPiece);
 
-        // setters: not needed for backgroundColor (this will not change during game). piece is handled by addPiece
-        
-        // getters
-        Piece getPiece();
-        LedColor getColor(); 
+        Piece getPiece() const;           // simple getters
+        LedColor getColor() const; 
 
     private:
         Piece piece;                     // Piece belonging to the Square
