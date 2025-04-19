@@ -35,5 +35,18 @@ The object ChessDriver handles this by providing methods to draw the current boa
 
 ![Chess Hierarchy](img/Chess_Hierarchy.png)
 
+## Resolution of Pieces
+Because we are limited by the number of LEDs on our matrix, we must keep the resolution of the pieces very minimal. Here is how we are sectioning the board:
+- there are 4096 pixels on the board
+- there are 64 squares on a chess board (8x8)
+- there are 64 rows/cols on the matrix
+- we make a square 8x8
+8x8x64 = 4096 
+
+Therefore, we have a square that is 8x8. To include a cursor, we must have padding around the piece. This way, an outline of a square can be drawn at the current player's cursor position. We make the resolution of each piece 6x6.
+
+![Pawn](img/Led_Piece.png)
+![Cursor on Pawn](img/Led_Cursor.jpg)
+
 ## Img Attribution
 Screenshots taken (and altered using Figma) from [Britannica](https://www.britannica.com/topic/chess)
