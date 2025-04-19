@@ -20,7 +20,7 @@
   * and uses some user config and hardcoded configuration to aid development. HardwareSerial data reception is input driven.
   * 
   * Constructor
-  * - UARTcom(): initialize the UART channel. We have our board as 1
+  * - empty
   *
   * Methods:
   * - initialize(): configures UART baudrate, frame format, and pins
@@ -29,31 +29,27 @@
   */
  class UARTCom {
  public:
-    /* @brief constructor for wrapper class
+    /* @brief initalize serial communication 
      * 
-     * Sets the wanted TX/RX channel on the ESP32 board. This is used downstream when using the HardwareSerial object.
+     * Initializes the HardwareSerial object on channel 2.
      *
-     * @param channel: TX/RX channel. ESP32 includes 0, 1, 2 
+     * @return void 
      */
-    UARTCom(int channel);
+    UARTCom() : uart(2) {}
+
 
     /* @brief initalize serial communication 
      * 
-     * Initializes the UART Protocol on respective channel pins. Using the user
-     * specified channel via the constructor, the ESP32 UART Protol is configured.
-     * This is done by wrapping HardwareSerial's begin() method
+     * configure uart for esp32. all config is hardcoded in .cpp
      *
-     * @param baud: baudrate (default 115200 ESP32)
-     * @param config: protocol config (default SERIAL_8N1)
-     * @param channel: TX/RX channel (default 1) 
+     * @param none 
      * @return void 
      */
-    void initialize(unsigned long baud = 115200, SerialConfig config = SERIAL_8E1, uint8_t channel = 2);
+    void initialize();
 
     /* @brief receive data at RX (interrupt)
      * 
-     * This interrupt listens for data on the RX line of the UART channel. The message is 
-     * JSON serialized, which is then parsed and returned for downstream analysis.
+     * receive data 
      *
      * @param none
      * @return TBD
@@ -62,14 +58,12 @@
 
     /* @brief transmit data at TX
      * 
-     * This function formats a user specified command into JSON, then sends it over the UART TX
-     * port to be received by the Arduino UNO. Comprehensive use of integers here should speed
-     * the overall UART transmission/reception time as char streams require more marks/spaces.
+     * send data
      *
-     * @param TBD
+     * @param String
      * @return void
      */
-    void transmit();
+    void transmit(String msg);
 
   private:
     /*

@@ -8,12 +8,12 @@ const int BUTTON_PIN = 2;
 int buttonState = HIGH;
 
 void setup() {
-  Serial.begin(9600);          
+  Serial.begin(9600);           // set to 9600 for ESP32 coms
   pinMode(SEND_LED_PIN, OUTPUT);
-  pinMode(RECEIVE_LED_PIN, OUTPUT);  
+  pinMode(RECEIVE_LED_PIN, OUTPUT);  // Configure the receive LED pin
   pinMode(BUTTON_PIN, INPUT);
   digitalWrite(SEND_LED_PIN, LOW);
-  digitalWrite(RECEIVE_LED_PIN, LOW);  
+  digitalWrite(RECEIVE_LED_PIN, LOW);  // Initialize the receive LED as off
 }
 
 void loop() {
