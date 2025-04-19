@@ -1,7 +1,5 @@
 # Chess Implementation
-Our implementation of chess on a 64x64 LED Matrix uses a hierarchy of objects for robust logic and interaction with the user via the arduino.
-
-![Chess Hierarchy](img/Chess_Hierarchy.png)
+Our implementation of chess on a 64x64 LED Matrix uses a hierarchy of objects for robust logic and interaction with the user via the arduino. 
 
 ## 1. Game (class):
 - **manages game logic**
