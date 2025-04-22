@@ -1,1 +1,4 @@
-{"avrDevice":null}
+{
+  "avrDevice": null,
+  "isAssembly": false
+}

@@ -28,7 +28,7 @@ class ChessCursor {
          *
          * @return void 
          */
-        ChessCursor(LedColor color, int row, int col, bool selected = false);       
+        ChessCursor(LedColor color, int row, int col, String player, bool selected = false);       
 
         /* @brief move cursor to the left
          * 
@@ -99,7 +99,7 @@ class ChessCursor {
          */
         void setColor(LedColor color);    
 
-        // simple setters           note movement methods handle row/col.
+        // simple setters           
         void setSelectedRow(int row);              
         void setSelectedCol(int col);              
 
@@ -109,24 +109,22 @@ class ChessCursor {
         int getCursorRow() const;
         int getCursorCol() const;
 
+        String getPlayer() const;
+
         int getSelectedRow() const;
         int getSelectedCol() const;
         Piece getSelectedPiece() const;
         bool hasSelection() const;
 
     private:
-        // color of the cursor
-        LedColor color;     
-         
-        // current cursor 
-        int row;          
-        int col;         
-        
-        // selected cursor. 
-        int selectedRow;
-        int selectedCol;
-        Piece selectedPiece;
-        bool selected;
+        LedColor color;      // color of the cursor
+        int row;             // current cursor row
+        int col;             // current cursor col
+        int selectedRow;     // selected cursor row
+        int selectedCol;     // selected cursor col
+        Piece selectedPiece; // selected piece
+        bool selected;       // boolean for if a piece is selected
+        String player;
 }
 
 #endif CHESSCURSOR_H
