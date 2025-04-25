@@ -1,130 +1,53 @@
-/*
- *  Cursor.h
- * 
- *  Project: Embedded Systems Final Project
- *  Authors: Matt Krueger and Sage Marks
- * 
- *  This file contains the definition of a player cursor for the chess board.
- */
-
-#ifndef CHESSCURSOR_H
-#define CHESSCURSOR_H
+#ifndef CURSOR_H
+#define CURSOR_H
 
 #include "../ui/Matrix.h"
 #include "./Piece.h"
+#include "./Square.h"
 
-/*
- * Class ChessCursor
- *
- * This defines the UI interaction for chess game
- * Player moves around using the cursor and the color is changed depending on valid move.
- * 
- */
-class ChessCursor {
+class Cursor{
     public:
-        /* @brief initialize chess cursor
-         * 
-         * sets the color, and location of the cursor
-         *
-         * @return void 
-         */
-        ChessCursor(LedColor color, int row, int col, String player, bool selected = false);       
+        Cursor(int row, int col, bool selected = false);       
 
-        /* @brief move cursor to the left
-         * 
-         * moves the cursor one location to the left on the chessboard
-         *
-         * @return void 
-         */
-        void moveLeft();
+        // movement 
+        void moveLeft(Square board[]);
+        void moveRight(Square board[]);
+        void moveUp(Square board[]);
+        void moveDown(Square board[]);
 
-        /* @brief move cursor to the right
-         * 
-         * moves the cursor one location to the right on the chessboard
-         *
-         * @return void 
-         */
-        void moveRight();
-
-        /* @brief move cursor up
-         * 
-         * moves the cursor one location up on the chessboard
-         *
-         * @return void 
-         */
-        void moveUp();
-
-        /* @brief move cursor down
-         * 
-         * moves the cursor one location down on the chessboard
-         *
-         * @return void 
-         */
-        void moveDown();
-        
-        /* @brief selects piece inside of cursor
-         * 
-         * selects the piece inside of the cursor, saving it to currentlySelected
-         *
-         * @return void 
-         */
+        // sel/del
         void selectPiece();
-
-        /* @brief removes current selection 
-         * 
-         * cursor selection of piece is removed. 
-         *
-         * @return void 
-         */
         void deselectPiece();
 
-        /* @brief place piece onto cursor row/col
-         * 
-         * piece currently selected is moved to the current cursor's row/col.
-         * checks for validity of move. ex knight cannot move one square forward. 
-         * if the user tries to move to an invalid square then the move is not registered.
-         *
-         * @return void 
-         */
+        // make move
         void placePiece();
-
-        /* @brief set color of cursor
-         * 
-         * sets the color of the cursor depending on:
-         * - player (ex: yellow/blue)
-         * - valid move (ex: green/red)
-         * - selected cursor (ex: pink)
-         *
-         * @return void 
-         */
-        void setColor(LedColor color);    
 
         // simple setters           
         void setSelectedRow(int row);              
         void setSelectedCol(int col);              
 
-        // simple getters
-        LedColor getColor() const;
-
+        // get current position
         int getCursorRow() const;
         int getCursorCol() const;
 
-        String getPlayer() const;
-
+        // get position of selected piece
         int getSelectedRow() const;
         int getSelectedCol() const;
+
+        // get selected piece from the board 
         Piece getSelectedPiece() const;
+
+        // check if there is a selection
         bool hasSelection() const;
 
     private:
-        LedColor color;      // color of the cursor
-        int row;             // current cursor row
-        int col;             // current cursor col
-        int selectedRow;     // selected cursor row
-        int selectedCol;     // selected cursor col
-        Piece selectedPiece; // selected piece
-        bool selected;       // boolean for if a piece is selected
-        String player;
-}
+        int row;            
+        int col;            
+        int selectedRow;     
+        int selectedCol;     
+        Piece selectedPiece; 
+        bool selected;       
+        bool moveMade;          // altered after place piece if valid square
+};
 
-#endif CHESSCURSOR_H
+#endif 
