@@ -4,7 +4,7 @@
 // trivial getters already implemented inside of Piece.h
 
 // constructor
-Piece::Piece(char* color) : color(color) {};
+Piece::Piece(char* color) : color(color),  {};
 
 // set position of piece
 void Piece::setPosition(int row, int col) {
@@ -28,7 +28,7 @@ void Piece::calculateDelta(int fromRow, int fromCol, int toRow, int toCol, int& 
 // start
 // during
 // capture
-bool Pawn::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
+bool Pawn::isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const {
     // Check if the move is within the board bounds
     if (!moveInBounds(toRow, toCol)) {
         return false;
@@ -48,15 +48,14 @@ bool Pawn::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
         return true;
     }
 
-    // case 3: capture 
+    // case 3: capture diagonal and forward by one
     if (deltaC == 1 && abs(deltaR) == 1) {
         return true;
     }
-
 }
 
 // lat and longitudally
-bool Rook::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
+bool Rook::isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const {
     // Check if the move is within the board bounds
     if (!moveInBounds(toRow, toCol)) {
         return false;
@@ -74,7 +73,7 @@ bool Rook::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
 }
 
 // L shape, 2 in first direction, then 1 in the other. can be 1 then 2 as well. 
-bool Knight::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
+bool Knight::isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const {
     // Check if the move is within the board bounds
     if (!moveInBounds(toRow, toCol)) {
         return false;
@@ -87,7 +86,7 @@ bool Knight::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
 }
 
 // diagonal: slope = 1, i.e delta r == delta c
-bool Bishop::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
+bool Bishop::isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const {
     // Check if the move is within the board bounds
     if (!moveInBounds(toRow, toCol)) {
         return false;
@@ -100,7 +99,7 @@ bool Bishop::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
     return abs(deltaR) == abs(deltaC);
 }
 
-bool Queen::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
+bool Queen::isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const {
     // Check if the move is within the board bounds
     if (!moveInBounds(toRow, toCol)) {
         return false;
@@ -125,7 +124,7 @@ bool Queen::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
 }
 
 // king moves in any direction by 1 square
-bool King::isValidMove(int fromRow, int fromCol, int toRow, int toCol) const {
+bool King::isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const {
     // Check if the move is within the board bounds
     if (!moveInBounds(toRow, toCol)) {
         return false;

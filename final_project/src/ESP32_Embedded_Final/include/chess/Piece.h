@@ -40,10 +40,11 @@ class Piece {
          * @param fromCol 
          * @param toRow 
          * @param toCol 
+         * @param occupiedBoard - this is used for detecting pieces on the board instead of passing Square squares[]... should be less overhead
          * @return true 
          * @return false 
          */
-        virtual bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const = 0;
+        virtual bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const = 0;
         
         /**
          * @brief Set the Position object
@@ -90,8 +91,8 @@ class Piece {
          * @param fromCol Starting column
          * @param toRow Ending row
          * @param toCol Ending column
-         * @param deltaR Reference to store row delta
-         * @param deltaC Reference to store column delta
+         * @param deltaR Referenced value for change
+         * @param deltaC Referenced value for change
          */
         void calculateDelta(int fromRow, int fromCol, int toRow, int toCol, int& deltaR, int& deltaC) const;
 
@@ -112,7 +113,7 @@ class Piece {
 class Pawn : public Piece {
     public:
         Pawn(char* color, bool atStart = true);
-        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const override;
+        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const override;
 };
 
 /**
@@ -123,7 +124,7 @@ class Pawn : public Piece {
 class Rook : public Piece {
     public:
         Rook(char* color);
-        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const override;
+        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const override;
 };
 
 /**
@@ -134,7 +135,7 @@ class Rook : public Piece {
 class Knight : public Piece {
     public:
         Knight(char* color);
-        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const override;
+        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const override;
 };
 
 /**
@@ -145,7 +146,7 @@ class Knight : public Piece {
 class Bishop : public Piece {
     public:
         Bishop(char* color);
-        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const override;
+        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const override;
 };
 
 /**
@@ -156,7 +157,7 @@ class Bishop : public Piece {
 class Queen : public Piece {
     public:
         Queen(char* color);
-        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const override;
+        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const override;
 };
 
 /**
@@ -168,7 +169,7 @@ class Queen : public Piece {
 class King : public Piece {
     public:
         King(char* color);
-        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol) const override;
+        bool isValidMove(int fromRow, int fromCol, int toRow, int toCol, bool occupiedBoard[]) const override;
 };
 
 
