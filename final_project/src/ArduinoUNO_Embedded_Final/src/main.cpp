@@ -6,10 +6,10 @@
 // ------------------------------------------ HARDWIRED PINS ------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RPG Definitions 
-// const uint8_t RPG2_B = 13;              // PB5      
-// const uint8_t RPG2_A = 12;              // PB4
-// const uint8_t RPG1_B = 11;              // PB3
-// const uint8_t RPG1_A = 10;              // PB2
+const uint8_t RPG2_B = 13;              // PB5      
+const uint8_t RPG2_A = 12;              // PB4
+const uint8_t RPG1_B = 11;              // PB3
+const uint8_t RPG1_A = 10;              // PB2
 
 // System Buttons
 // const uint8_t BTN_UP_ARROW   = 4;       // PD4
@@ -139,8 +139,8 @@ ISR(PCINT0_vect) {
    prevRPG1B = currRPG1B;
 
    // check RPG 2                                                                        here we perform a similar process to our Lab5, combining both A and B.
-   uint8_t currRPG2A = (pinB & (1 << PB4)) ? 1 : 0;                                   // We shift left by one to make space for rpg1b.
-   uint8_t currRPG2B = (pinB & (1 << PB5)) ? 1 : 0;                                   // Then we combine this with the previous & use codes to determine the rotation.
+   uint8_t currRPG2A = (pinB & (1 << PB5)) ? 1 : 0;                                   // We shift left by one to make space for rpg1b.
+   uint8_t currRPG2B = (pinB & (1 << PB4)) ? 1 : 0;                                   // Then we combine this with the previous & use codes to determine the rotation.
    uint8_t currRPG2       = (currRPG2A << 1) | currRPG2B;                             // now a 2 bit AB 00, 01, 10, 11 value
    uint8_t transitionRPG2 = (prevRPG2A << 3) | (prevRPG2B << 2) | (currRPG2);         // now a 4 bit ABAB value, with cases below
  
@@ -278,10 +278,10 @@ void enableButtonInterrupts() {
 void setup() {
   Serial.begin(115200);
 
-  // pinMode(RPG1_A, INPUT);
-  // pinMode(RPG1_B, INPUT);
-  // pinMode(RPG2_A, INPUT);
-  // pinMode(RPG2_B, INPUT);
+  pinMode(RPG1_A, INPUT);
+  pinMode(RPG1_B, INPUT);
+  pinMode(RPG2_A, INPUT);
+  pinMode(RPG2_B, INPUT);
   // pinMode(BTN_UP_ARROW, INPUT_PULLUP);
   // pinMode(BTN_DOWN_ARROW, INPUT_PULLUP);
   pinMode(BTN_CTRL_1A, INPUT_PULLUP);
@@ -324,23 +324,23 @@ void loop() {
     Serial.print("controller1A: ");
     Serial.println((portB_flags & (1 << 1)) != 0 ? "1" : "0");
 
-    // Serial.print("RPG1Clockwise: ");
-    // Serial.println((portB_flags & (1 << 2)) != 0 ? "1" : "0");
+    Serial.print("RPG1Clockwise: ");
+    Serial.println((portB_flags & (1 << 2)) != 0 ? "1" : "0");
 
-    // Serial.print("RPG1CounterClockwise: ");
-    // Serial.println((portB_flags & (1 << 3)) != 0 ? "1" : "0");
+    Serial.print("RPG1CounterClockwise: ");
+    Serial.println((portB_flags & (1 << 3)) != 0 ? "1" : "0");
 
-    // Serial.print("RPG2Clockwise: ");
-    // Serial.println((portB_flags & (1 << 4)) != 0 ? "1" : "0");
+    Serial.print("RPG2Clockwise: ");
+    Serial.println((portB_flags & (1 << 4)) != 0 ? "1" : "0");
 
-    // Serial.print("RPG2CounterClockwise: ");
-    // Serial.println((portB_flags & (1 << 5)) != 0 ? "1" : "0");
+    Serial.print("RPG2CounterClockwise: ");
+    Serial.println((portB_flags & (1 << 5)) != 0 ? "1" : "0");
 
-    // Serial.print("Reserved6: ");
-    // Serial.println((portB_flags & (1 << 6)) != 0 ? "1" : "0");
+    Serial.print("Reserved6: ");
+    Serial.println((portB_flags & (1 << 6)) != 0 ? "1" : "0");
 
-    // Serial.print("Reserved7: ");
-    // Serial.println((portB_flags & (1 << 7)) != 0 ? "1" : "0");
+    Serial.print("Reserved7: ");
+    Serial.println((portB_flags & (1 << 7)) != 0 ? "1" : "0");
   }
 
   // if (portD_dirty) {
