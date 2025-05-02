@@ -2,24 +2,27 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ HARDWIRED PINS ------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RPG Definitions 
-const uint8_t RPG2_B = 13;              // PB5
+const uint8_t RPG2_B = 13;              // PB5      
 const uint8_t RPG2_A = 12;              // PB4
 const uint8_t RPG1_B = 11;              // PB3
 const uint8_t RPG1_A = 10;              // PB2
 
 // System Buttons
-const uint8_t BTN_DOWN_ARROW = 9;       // PB1
-const uint8_t BTN_UP_ARROW   = 8;       // PB0
-const uint8_t BTN_HOME       = 7;       // PD7
+const uint8_t BTN_UP_ARROW   = 4;       // PD4
+const uint8_t BTN_HOME       = 3;       // PD3
+const uint8_t BTN_DOWN_ARROW = 2;       // PD2
 
 // Controller Buttons
-const uint8_t BTN_CTRL_1A = 6;          // PD6
-const uint8_t BTN_CTRL_1B = 5;          // PD5
-const uint8_t BTN_CTRL_2A = 4;          // PD4
-const uint8_t BTN_CTRL_2B = 3;          // PD3
+const uint8_t BTN_CTRL_1A = 9;          // PB1
+const uint8_t BTN_CTRL_1B = 8;          // PB0
+const uint8_t BTN_CTRL_2A = 7;          // PD7
+const uint8_t BTN_CTRL_2B = 6;          // PD6
 
-// Joystick Definitions 
+// Controller Joysticks (analog)
 const uint8_t JOYSTICK_1X = A0;         // A0
 const uint8_t JOYSTICK_1Y = A1;         // A1
 const uint8_t JOYSTICK_2X = A2;         // A2
@@ -29,7 +32,10 @@ const uint8_t JOYSTICK_2Y = A3;         // A3
 const uint8_t BTN_POWER_1 = A4;         // A4
 const uint8_t BTN_POWER_2 = A5;         // A5
 
-// GLOBAL VARIABLES FOR PCINT REGISTERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ Global Variables ------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// store previous pinchanges @ port B & D 
 volatile uint8_t prevStateB = 0;
 volatile uint8_t prevStateD = 0;
 
@@ -47,17 +53,22 @@ volatile bool portB_dirty = false;
 volatile uint8_t portD_flags = 0;
 volatile bool portD_dirty = false;
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ Interrupts Service Routines ------------------------------------------ //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Construct a new ISR object for PCINT[0..7] (port b)
  * 
- * PCINT0 (PB0): BTN_UP_ARROW
- * PCINT1 (PB1): BTN_DOWN_ARROW
- * PCINT2 (PB2): RPG1_A
- * PCINT3 (PB3): RPG1_B
- * PCINT4 (PB4): RPG2_A
- * PCINT5 (PB5): RPG2_B
- * PCINT6: not used
- * PCINT7: not used
+ * PCINT0 (PB0): BTN_CONTROLLER_1B
+ * PCINT1 (PB1): BTN_CONTROLLER_1A
+ * PCINT2 (PB2): RPG_1A
+ * PCINT3 (PB3): RPG_1B
+ * PCINT4 (PB4): RPG_2A
+ * PCINT5 (PB5): RPG_2B
+ * PCINT6: none
+ * PCINT7: none
  * 
  * Because these are pin changes and we have buttons, the interrupt will be called twice for all buttons - which is not ideal.
  * To combat this, we track the previous state of the pins and mask each button.
@@ -71,21 +82,21 @@ ISR(PCINT0_vect) {
   uint8_t pinB                = PINB;         // all pins to be masked below...
 
   // boolean values to build a payload for message
-  bool isUpArrowClicked       = false;
-  bool isDownArrowClicked     = false;
+  bool isController1BClicked  = false;
+  bool isController1AClicked  = false;
   bool isRPG1Clockwise        = false;
   bool isRPG1CounterClockwise = false;
   bool isRPG2Clockwise        = false;
   bool isRPG2CounterClockwise = false;
 
-  // check BTN_UP_ARROW (PB0)
+  // check controller 1 B
   if (!(pinB & (1 << PB0) && (prevStateB & (1 << PB0)))) {
-    isUpArrowClicked = true;
+    isController1AClicked = true;
   }
 
-  // check BTN_DOWN_ARROW (PB1) 
+  // check controller 1 A
   if (!(pinB & (1 << PB1) && (prevStateB & (1 << PB1)))) {
-    isDownArrowClicked = true;
+    isController1AClicked = true;
   }
 
    // check RPG 1                                                                        here we perform a similar process to our Lab5, combining both A and B.
@@ -151,62 +162,61 @@ ISR(PCINT0_vect) {
    prevStateB = pinB;
 }
 
-
 /**
  * @brief Construct a new ISR object for PCINT[16..23] (port d)
  * 
- * PCINT16 (PD0): none
- * PCINT17 (PD1): none
- * PCINT18 (PD2): none
- * PCINT19 (PD3): BTN_CTRL_2B
- * PCINT20 (PD4): BTN_CTRL_2A
- * PCINT21 (PD5): BTN_CTRL_1B
- * PCINT22 (PD6): BTN_CTRL_1A
- * PCINT23 (PD7): BTN_HOME
+ * PCINT16 (PD0): none (uart rx)
+ * PCINT17 (PD1): none (uart tx)
+ * PCINT18 (PD2): BTN_DOWN_ARROW
+ * PCINT19 (PD3): BTN_HOME
+ * PCINT20 (PD4): BTN_UP_ARROW
+ * PCINT21 (PD5): none 
+ * PCINT22 (PD6): BTN_CTRL_2B
+ * PCINT23 (PD7): BTN_CTRL_2A
  * 
  */
 ISR(PCINT2_vect) {
   uint8_t pinD = PIND;        // all pins to be masked below...
 
   // boolean values to build a payload for message
-  bool isController2AClicked   = false;
-  bool isController2BClicked   = false;
-  bool isController1AClicked   = false;
-  bool isController1BClicked   = false;
+  bool isDownArrowClicked      = false;
   bool isHomeClicked           = false;
+  bool isUpArrowClicked        = false;
+  bool isController2BClicked   = false;
+  bool isController2AClicked   = false;
 
-  // check controller2 button B
+  // check down arrow
+  if (!(pinD & (1 << PD2) && (prevStateD & (1 << PD2)))) {
+    isDownArrowClicked = true;
+  }
+
+  // check home
   if (!(pinD & (1 << PD3) && (prevStateD & (1 << PD3)))) {
-    isController2AClicked = true;
+    isHomeClicked = true;
   }
 
-  // check controller2 button A
+  // check down arrow
   if (!(pinD & (1 << PD4) && (prevStateD & (1 << PD4)))) {
-    isController2AClicked = true;
+    isUpArrowClicked = true;
   }
 
   // check controller2 button B
-  if (!(pinD & (1 << PD5) && (prevStateD & (1 << PD5)))) {
-    isController1AClicked = true;
+  if (!(pinD & (1 << PD6) && (prevStateD & (1 << PD6)))) {
+    isController2BClicked = true;
   }
 
   // check controller2 button A
-  if (!(pinD & (1 << PD5) && (prevStateD & (1 << PD5)))) {
-    isController1AClicked = true;
-  }
-
-  // check home button
-  if (!(pinD & (1 << PD6) && (prevStateD & (1 << PD6)))) {
-    isController1AClicked = true;
+  if (!(pinD & (1 << PD7) && (prevStateD & (1 << PD7)))) {
+    isController2AClicked = true;
   }
 
   // now, we build the flags to send over UART                                 Flags       
-  uint8_t flags = 0;                                                           // b0..2: 0 
-  flags |= isController1AClicked << 3;                                         // b3: controller 1 'A' clicked
-  flags |= isController1BClicked << 4;                                         // b4: controller 1 'B' clicked
-  flags |= isController2AClicked << 5;                                         // b5: controller 2 'B' clicked
-  flags |= isController2BClicked << 6;                                         // b6: controller 2 'B' clicked
-  flags |= isHomeClicked << 4;                                                 // b7: home button clicked 
+  uint8_t flags = 0;                                                           // b0..1: 0 
+  flags |= isDownArrowClicked << 2;                                            // b2: down arrow clicked
+  flags |= isHomeClicked << 3;                                                 // b3: home clicked
+  flags |= isUpArrowClicked << 4;                                              // b4: up arrow clicked 
+  flags |= isController2BClicked << 6;                                         // b6: controller 'B' clicked
+  flags |= isController2AClicked << 7;                                         // b7: controller 'A' clicked
 
   // no flags 6 and 7 as these are not connected to anything on the board.   // b6,b7: 0
   // update flags and set dirty
@@ -231,6 +241,10 @@ void enableButtonInterrupts() {
   PCMSK1 |= 0x00;                                        // NONE PCINT[8..14]
   PCMSK2 |= 0xFF;                                        // PCINT[16..23] (port d)
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ Main Program ------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief initialize pin modes for all I/O peripherals
