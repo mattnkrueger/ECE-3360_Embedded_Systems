@@ -147,17 +147,20 @@ ISR(PCINT0_vect) {
 
    // now, we build the flags to send over UART                                 Flags       
    uint8_t flags = 0;                                                         
-   flags |= isUpArrowClicked << 0;                                            // b0: UP ARROW clicked
-   flags |= isDownArrowClicked << 1;                                          // b1: DOWN ARROW clicked
+   flags |= isController1BClicked << 0;                                       // b0: controller 1 'B'
+   flags |= isController1AClicked << 1;                                       // b1: controller 1 'A'
    flags |= isRPG1Clockwise << 2;                                             // b2: RPG1 cw
    flags |= isRPG1CounterClockwise << 3;                                      // b3: RPG1 ccw (these are mutually exclusive)
    flags |= isRPG2Clockwise << 4;                                             // b4: RPG2 cw
    flags |= isRPG2CounterClockwise << 5;                                      // b5: RPG2 ccw (again, these are mutually exclusive)
-   // no flags 6 and 7 as these are not connected to anything on the board.   // b6,b7: 0
+   flags |= (0 << 6) | ( 0 << 7);                                             // b6,7: 0
 
    // update flags and set dirty
    portB_flags = flags;
-   portB_dirty = true;
+
+   if (flags != 0) { 
+    portB_dirty = true;
+   }
 
    prevStateB = pinB;
 }
@@ -218,10 +221,12 @@ ISR(PCINT2_vect) {
   flags |= isController2BClicked << 6;                                         // b6: controller 'B' clicked
   flags |= isController2AClicked << 7;                                         // b7: controller 'A' clicked
 
-  // no flags 6 and 7 as these are not connected to anything on the board.   // b6,b7: 0
   // update flags and set dirty
   portB_flags = flags;
-  portB_dirty = true;
+
+  if (flags != 0) {
+    portB_dirty = true;
+  }
 
   prevStateD = pinD;
 }
@@ -293,9 +298,59 @@ void setup() {
 void loop() {
   if (portB_dirty) {
     Serial.write(portB_flags);
+    portB_dirty = false;
+
+    // decoding
+    Serial.print("controller1B: ");
+    Serial.println((portB_flags & (1 << 0)) != 0 ? "1" : "0");
+
+    Serial.print("controller1A: ");
+    Serial.println((portB_flags & (1 << 1)) != 0 ? "1" : "0");
+
+    Serial.print("RPG1Clockwise: ");
+    Serial.println((portB_flags & (1 << 2)) != 0 ? "1" : "0");
+
+    Serial.print("RPG1CounterClockwise: ");
+    Serial.println((portB_flags & (1 << 3)) != 0 ? "1" : "0");
+
+    Serial.print("RPG2Clockwise: ");
+    Serial.println((portB_flags & (1 << 4)) != 0 ? "1" : "0");
+
+    Serial.print("RPG2CounterClockwise: ");
+    Serial.println((portB_flags & (1 << 5)) != 0 ? "1" : "0");
+
+    Serial.print("Reserved6: ");
+    Serial.println((portB_flags & (1 << 6)) != 0 ? "1" : "0");
+
+    Serial.print("Reserved7: ");
+    Serial.println((portB_flags & (1 << 7)) != 0 ? "1" : "0");
   }
 
   if (portD_dirty) {
     Serial.write(portD_flags);
+    portD_dirty = false;
+  
+    // debugging
+    Serial.print("DownArrowClicked: ");
+    Serial.println((portD_flags & (1 << 2)) != 0 ? "1" : "0");
+
+    Serial.print("HomeClicked: ");
+    Serial.println((portD_flags & (1 << 3)) != 0 ? "1" : "0");
+
+    Serial.print("UpArrowClicked: ");
+    Serial.println((portD_flags & (1 << 4)) != 0 ? "1" : "0");
+
+    Serial.print("Controller2BClicked: ");
+    Serial.println((portD_flags & (1 << 6)) != 0 ? "1" : "0");
+
+    Serial.print("Controller2AClicked: ");
+    Serial.println((portD_flags & (1 << 7)) != 0 ? "1" : "0");
+
+    Serial.print("Reserved0: ");
+    Serial.println((portD_flags & (1 << 0)) != 0 ? "1" : "0");
+
+    Serial.print("Reserved1: ");
+    Serial.println((portD_flags & (1 << 1)) != 0 ? "1" : "0");
   }
+
 }
