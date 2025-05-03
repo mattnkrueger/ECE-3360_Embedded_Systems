@@ -1,3 +1,18 @@
+/**
+ * @file main.cpp
+ * @author Matt Krueger & Sage Marks
+ * @brief Arduino Sketch for Embedded Systems Final Project
+ * @version 0.1
+ * @date 2025-05-02
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ * This is a veryyyy long file. Included in this file is all I/O Pin definitions, methods, ISRs, and UART communication with the ESP32.
+ * The functionality of the Arduino is simply a dummy terminal - converting actions made by the user (button click, rpg turn, joystick flick, etc) 
+ * into a command that can be mapped to a function. This is sent over the UART channel to the ESP32 for processing.
+ * 
+ */
+
 #include <Arduino.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -12,9 +27,9 @@ const uint8_t RPG1_B = 11;              // PB3
 const uint8_t RPG1_A = 10;              // PB2
 
 // System Buttons
-// const uint8_t BTN_UP_ARROW   = 4;       // PD4
-// const uint8_t BTN_HOME       = 3;       // PD3
-// const uint8_t BTN_DOWN_ARROW = 2;       // PD2
+const uint8_t BTN_UP_ARROW   = 4;       // PD4
+const uint8_t BTN_HOME       = 3;       // PD3
+const uint8_t BTN_DOWN_ARROW = 2;       // PD2
 
 // Controller Buttons
 const uint8_t BTN_CTRL_1A = 9;          // PB1
@@ -23,45 +38,59 @@ const uint8_t BTN_CTRL_2A = 7;          // PD7
 const uint8_t BTN_CTRL_2B = 6;          // PD6
 
 // Controller Joysticks (analog)
-// const uint8_t JOYSTICK_1X = A0;         // A0
-// const uint8_t JOYSTICK_1Y = A1;         // A1
-// const uint8_t JOYSTICK_2X = A2;         // A2
-// const uint8_t JOYSTICK_2Y = A3;         // A3
+const uint8_t JOYSTICK_1X = A0;         // A0
+const uint8_t JOYSTICK_1Y = A1;         // A1
+const uint8_t JOYSTICK_2X = A2;         // A2
+const uint8_t JOYSTICK_2Y = A3;         // A3
 
 // Power Button pins 
-// const uint8_t BTN_POWER_1 = A4;         // A4
-// const uint8_t BTN_POWER_2 = A5;         // A5
+const uint8_t POWER_PIN  = A4;         // A4
+const uint8_t BTN_POWER = A5;         // A5
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------ Global Variables ------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// store previous pinchanges @ port B & D 
+// store previous pinchanges 
 volatile uint8_t prevStateB = 0;
+volatile uint8_t prevStateC = 0;
 volatile uint8_t prevStateD = 0;
 
-// GLOBAL VARIABLES FOR RPG CHANGES
+// rpg changes
 volatile uint8_t prevRPG1A = 0;
 volatile uint8_t prevRPG1B = 0;
 volatile uint8_t prevRPG2A = 0;
 volatile uint8_t prevRPG2B = 0;
 
-// we are sending data as flags for both B and D pinchanges, these store the current flags. (8 bits as there are only 8 bits in these regs. works out nicely)
+// dirty and data flags 
 volatile uint8_t portB_flags = 0;
 volatile bool portB_dirty = false;
-
-// same for D. We do not use C register pin changes (analog joysticks & power button not needed)
 volatile uint8_t portD_flags = 0;
 volatile bool portD_dirty = false;
 
+// status of the system
+volatile bool powerON = true;
 
+volatile bool prevHomeBTN = false;
+
+// status of controllers. This is depending on the current context of the system. Controllers enabled for Chess
+volatile bool controller1Enabled = true;
+volatile bool controller2Enabled = false;
+
+bool prevHomeState = HIGH;
+unsigned long homeStartPress = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------ Button States ------------------------------------------ //
+// ------------------------------------------ Button Timing ------------------------------------------ //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // debouncing for the buttons
 const int DEBOUNCE_MS = 50;
-const int HOLD_TIME_MS = 1000;
-const int MIN_ON_TIME_MS = 2000;
+const int HOLD_TIME_MS = 1000;                // hold timing timing for power & home button
+const int MIN_ON_TIME_MS = 2000; 
+
+// Global variables for power management
+volatile bool power_state = true;
+volatile uint32_t hold_counter = 0;
+volatile bool button_was_pressed = false;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------ Interrupts Service Routines ------------------------------------------ //
@@ -101,6 +130,7 @@ ISR(PCINT0_vect) {
   if ((prevStateB & (1 << PB0)) && !(pinB & (1 << PB0))) {
     _delay_ms(DEBOUNCE_MS);
 
+    pinB = PINB;
     if ((prevStateB & (1 << PB0)) && !(pinB & (1 << PB0))) {
       isController1BClicked = true;
     }
@@ -110,6 +140,7 @@ ISR(PCINT0_vect) {
   if ((prevStateB & (1 << PB1)) && !(pinB & (1 << PB1))) {
     _delay_ms(DEBOUNCE_MS);
     
+    pinB = PINB;
     if ((prevStateB & (1 << PB1)) && !(pinB & (1 << PB1))) {
       isController1AClicked = true;
     }
@@ -163,8 +194,8 @@ ISR(PCINT0_vect) {
 
    // now, we build the flags to send over UART                                 Flags       
    uint8_t flags = 0;                                                         
-   flags |= isController1BClicked << 0;                                          // b0: controller 1 'B'
-   flags |= isController1AClicked << 1;                                          // b1: controller 1 'A'
+   flags |= isController1BClicked << 0;                                       // b0: controller 1 'B'
+   flags |= isController1AClicked << 1;                                       // b1: controller 1 'A'
    flags |= isRPG1Clockwise << 2;                                             // b2: RPG1 cw
    flags |= isRPG1CounterClockwise << 3;                                      // b3: RPG1 ccw (these are mutually exclusive)
    flags |= isRPG2Clockwise << 4;                                             // b4: RPG2 cw
@@ -186,7 +217,7 @@ ISR(PCINT0_vect) {
  * PCINT16 (PD0): none (uart rx)
  * PCINT17 (PD1): none (uart tx)
  * PCINT18 (PD2): BTN_DOWN_ARROW
- * PCINT19 (PD3): BTN_HOME
+ * PCINT19 (PD3): none
  * PCINT20 (PD4): BTN_UP_ARROW
  * PCINT21 (PD5): none 
  * PCINT22 (PD6): BTN_CTRL_2B
@@ -197,42 +228,58 @@ ISR(PCINT2_vect) {
   uint8_t pinD = PIND;        // all pins to be masked below...
 
   // boolean values to build a payload for message
-  // bool isDownArrowClicked      = false;
-  // bool isHomeClicked           = false;
-  // bool isUpArrowClicked        = false;
+  bool isDownArrowClicked      = false;
+  bool isUpArrowClicked        = false;
   bool isController2BClicked   = false;
   bool isController2AClicked   = false;
 
-  // // check down arrow
-  // if (!(pinD & (1 << PD2) && (prevStateD & (1 << PD2)))) {
-  //   isDownArrowClicked = true;
-  // }
+  // check down arrow
+  if ((prevStateD & (1 << PD2)) && !(pinD & (1 << PD2))) {
+    _delay_ms(DEBOUNCE_MS);
 
-  // // check home
-  // if (!(pinD & (1 << PD3) && (prevStateD & (1 << PD3)))) {
-  //   isHomeClicked = true;
-  // }
+    pinD = PIND;
+    if ((prevStateD & (1 << PD2)) && !(pinD & (1 << PD2))) {
+      isDownArrowClicked = true;
+    }
+  }
 
-  // // check down arrow
-  // if (!(pinD & (1 << PD4) && (prevStateD & (1 << PD4)))) {
-  //   isUpArrowClicked = true;
-  // }
+  // check up arrow 
+  if ((prevStateD & (1 << PD4)) && !(pinD & (1 << PD4))) {
+    _delay_ms(DEBOUNCE_MS);
 
-  // check controller2 button B
+    pinD = PIND;
+    if ((prevStateD & (1 << PD4)) && !(pinD & (1 << PD4))) {
+      isUpArrowClicked = true;
+    }
+  }
+
+  // check controller 2 B
   if ((prevStateD & (1 << PD6)) && !(pinD & (1 << PD6))) {
-    _delay_ms(21);
-    isController2BClicked = true;
+    _delay_ms(DEBOUNCE_MS);
+
+    pinD = PIND;
+    if ((prevStateD & (1 << PD6)) && !(pinD & (1 << PD6))) {
+      isController2BClicked = true;
+    }
   }
 
-  // check controller2 button A
+  // check controller 2 A
   if ((prevStateD & (1 << PD7)) && !(pinD & (1 << PD7))) {
-    isController2AClicked = true;
+    _delay_ms(DEBOUNCE_MS);
+
+    pinD = PIND;
+    if ((prevStateD & (1 << PD7)) && !(pinD & (1 << PD7))) {
+      isController2AClicked = true;
+    }
   }
+
   // now, we build the flags to send over UART                                 Flags       
-  uint8_t flags = 0;                                                           // b0..1: 0 
-  // flags |= isDownArrowClicked << 2;                                            // b2: down arrow clicked
-  // flags |= isHomeClicked << 3;                                                 // b3: home clicked
-  // flags |= isUpArrowClicked << 4;                                              // b4: up arrow clicked 
+  uint8_t flags = 0;                                                           // b0: none 
+  flags |= (0 << 0) | (0 << 1);                                                // b1: none
+  flags |= isDownArrowClicked << 2;                                            // b2: down arrow clicked
+  flags |= (0 << 3);                                                           // b3: home clicked
+  flags |= isUpArrowClicked << 4;                                              // b4: up arrow clicked 
+  flags |= (0 << 5);                                                           // b5: none
   flags |= isController2BClicked << 6;                                         // b6: controller 'B' clicked
   flags |= isController2AClicked << 7;                                         // b7: controller 'A' clicked
 
@@ -248,17 +295,243 @@ ISR(PCINT2_vect) {
 /**
  * @brief enable pin change interrupts
  * 
- * enable PCINT for all buttons
- *
- * PCINTs:
- *    5, 4, 3, 2, 1, 0, 23, 22, 21, 20, 19, 18, 17, 16
+ * enable PCINT for ALL buttons connected to the Arduino
  * 
  */
 void enableButtonInterrupts() {
   PCICR  |= (1 << PCIE0) | (1 << PCIE1) | (1 << PCIE2);  // turn on pcint for b, c, and d ports
   PCMSK0 |= 0b00111111;                                  // PCINT[0..5] (port b)
-  PCMSK1 |= 0x00;                                        // NONE PCINT[8..14]
-  PCMSK2 |= 0xFF;                                        // All portd PCINT[16..23] (port d)
+  PCMSK1 |= 0x00;                                        // NONE of pinchange 1 (port C)
+  PCMSK2 |= 0xFF;                                        // ALL portd PCINT[16..23] (port d)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ Power Button ------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief handle safe power toggling
+ * 
+ * We are limited to using polling for multifunctionality buttons as we cannot check for a press and hold inside of interrupt. Maybe you can? we struggled to 
+ *
+ * programmed for two signals: 
+ * 1. press > 1 second ---> turn off
+ * 2. press < 1 second ---> turn on 
+ * 
+ */
+// Handle power state toggling - safe to call from main loop
+void handle_power_toggle(void) {
+}
+
+/**
+ * @brief handle power button
+ * 
+ */
+void checkPowerBTN(void) {
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ Home Button ------------------------------------------ //
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief handle home button click  
+ * 
+ * We are limited to using polling for multifunctionality buttons as we cannot check for a press and hold inside of interrupt. Maybe you can? we struggled to 
+ * 
+ * programmed for two signals: 
+ * 1. press > 1 second
+ * 2. press < 1 second
+ * 
+ * These commands are processed by the ESP32, completely abstracted away from the Arduino. 
+ * The functionality of the command is dependent on the current context displayed on the LED Matrix
+ * 
+ */
+void checkHomeBTN(void) {
+  cli();
+  bool currHomeState = digitalRead(BTN_HOME);
+
+  // press detected. start 'stopwatch'
+  if (prevHomeState == HIGH && currHomeState == LOW) {
+    _delay_ms(DEBOUNCE_MS);
+    if (digitalRead(BTN_HOME) == LOW) {
+      homeStartPress = millis();
+    }
+  }
+
+  // release detected, end 'stopwatch'
+  if (prevHomeState == LOW && currHomeState == HIGH) {
+    _delay_ms(DEBOUNCE_MS);
+    if (digitalRead(BTN_HOME) == HIGH) {
+      unsigned long duration = millis() - homeStartPress;
+      if (duration < 1000) {
+        // Serial.write(0x02);             // short press: select
+        Serial.println("btnHomeClick");
+      } else {
+        // Serial.write(0x03);             // long press: exit
+        Serial.println("btnHomeHold");
+      }
+    }
+  }
+
+  prevHomeState = currHomeState;
+  sei(); 
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ Joystick Modules ------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief read the controller deadzone
+ * 
+ * both controllers have same circuit, so we read and pass a deadzone to reduce noisy incorrect movements
+ * 
+ * @param controllerNumber 
+ * @param deadzone 
+ */
+void checkControllerJoystick(int controllerNumber, int deadzone) {
+  // pick the right pins
+  int xPin = (controllerNumber == 1) ? JOYSTICK_1X : JOYSTICK_2X;
+  int yPin = (controllerNumber == 1) ? JOYSTICK_1Y : JOYSTICK_2Y;
+
+  int x = analogRead(xPin);
+  int y = analogRead(yPin);
+
+  // threshholds for deadzone
+  int lowThreshold  = deadzone;       
+  int highThreshold = 1023 - deadzone; 
+
+  String direction;
+
+  if (x < lowThreshold)              direction = "right";
+  else if (x > highThreshold)        direction = "left";
+  else if (y < lowThreshold)         direction = "up";
+  else if (y > highThreshold)        direction = "down";
+
+  // MAP TO MESSAGE 
+  // uint8_t code = 0xFF;
+  String code = "NONE";
+  if (controllerNumber == 1) {
+    if (direction == "up") {
+        // code = 0x07; 
+        code = "joystick1UP";
+    } else if (direction == "down") {
+        // code = 0x08;  
+        code = "joystick1DOWN";
+    } else if (direction == "left") {
+        // code = 0x09;  
+        code = "joystick1LEFT";
+    } else if (direction == "right") {
+        // code = 0x0A; 
+        code = "joystick1RIGHT";
+    }
+  } else {  // controller 2
+    if (direction == "up") {
+        // code = 0x0D; 
+        code = "joystick2UP";
+    } else if (direction == "down") {
+        // code = 0x0E; 
+        code = "joystick2DOWN";
+    } else if (direction == "left") {
+        // code = 0x0F;
+        code = "joystick2LEFT";
+    } else if (direction == "right") {
+        // code = 0x10;  
+        code = "joystick2RIGHT";
+    }
+  }
+
+// only send if actual movement
+// if (code != 0xFF) {
+//   Serial.write(code);
+// }
+if (code != "NONE") {
+  Serial.println(code);
+}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------ UART Processing ------------------------------------------ //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief handle incoming messages from the ESP32
+ * 
+ * checks for messages to enable or disable the controllers
+ * 
+ * *** SEE README FOR COMMANDS ***
+ * 
+ */
+void processESP32Message() {
+  while (Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();  // remove whitespace + newline characters
+
+    if (command == "enableController1") {
+      controller1Enabled = true;
+    } 
+    else if (command == "enableController2") {
+      controller2Enabled = true;
+    } else {
+      // debugging
+      Serial.print("CURRENT STATE: ");
+      Serial.print(command);
+    }
+  }
+}
+
+/**
+ * @brief send pinchange results to ESP32
+ * 
+ * @param flags 
+ * @param port 
+ */
+void sendCommandFromFlags(uint8_t flags, char port) {
+  if (port == 'B') {
+    if (flags & (1 << 0)) {     // isController1BClicked
+      // Serial.write(0x06);  
+      Serial.println("controller1B");
+    }
+    if (flags & (1 << 1)) {     // isController1AClicked
+      // Serial.write(0x05);  
+      Serial.println("controller1A");
+    }
+    if (flags & (1 << 2)) {     // isRPG1Clockwise
+      // Serial.write(0x11);  
+      Serial.println("rpg1CW");
+    }
+    if (flags & (1 << 3)) {      // isRPG1CounterClockwise
+      // Serial.write(0x12);  
+      Serial.println("rpg1CCW");
+    }
+    if (flags & (1 << 4)) {      // isRPG2Clockwise
+      // Serial.write(0x13);  
+      Serial.println("rpg2CW");
+    }
+    if (flags & (1 << 5)) {      // isRPG2CounterClockwise
+      // Serial.write(0x14);  
+      Serial.println("rpg2CCW");
+    }
+  } 
+  else if (port == 'D') {
+    if (flags & (1 << 2)) {     // isDownArrowClicked
+      // Serial.write(0x01);  
+      Serial.println("btnDownArrow"); 
+    }
+    if (flags & (1 << 4)) {     // isUpArrowClicked
+      // Serial.write(0x00);  
+      Serial.println("btnUpArrow");
+    }
+    if (flags & (1 << 6)) {     // isController2BClicked
+      // Serial.write(0x0C);  
+      Serial.println("controller2B");
+    }
+    if (flags & (1 << 7)) {     // isController2AClicked
+      // Serial.write(0x0B);  
+      Serial.println("controller2A");
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -278,22 +551,25 @@ void enableButtonInterrupts() {
 void setup() {
   Serial.begin(115200);
 
+  // inputs (rpgs, buttons, joysticks)
   pinMode(RPG1_A, INPUT);
   pinMode(RPG1_B, INPUT);
   pinMode(RPG2_A, INPUT);
   pinMode(RPG2_B, INPUT);
-  // pinMode(BTN_UP_ARROW, INPUT_PULLUP);
-  // pinMode(BTN_DOWN_ARROW, INPUT_PULLUP);
+  pinMode(BTN_UP_ARROW, INPUT_PULLUP);
+  pinMode(BTN_DOWN_ARROW, INPUT_PULLUP);
   pinMode(BTN_CTRL_1A, INPUT_PULLUP);
   pinMode(BTN_CTRL_1B, INPUT_PULLUP);
-  // pinMode(BTN_CTRL_2A, INPUT_PULLUP);
-  // pinMode(BTN_CTRL_2B, INPUT_PULLUP);
-  // pinMode(BTN_POWER_1, INPUT_PULLUP);
-  // pinMode(BTN_POWER_2, INPUT_PULLUP);
-  // pinMode(JOYSTICK_1X, INPUT);
-  // pinMode(JOYSTICK_1Y, INPUT);
-  // pinMode(JOYSTICK_2X, INPUT);
-  // pinMode(JOYSTICK_2Y, INPUT);
+  pinMode(BTN_CTRL_2A, INPUT_PULLUP);
+  pinMode(BTN_CTRL_2B, INPUT_PULLUP);
+  pinMode(BTN_POWER, INPUT_PULLUP);
+  pinMode(JOYSTICK_1X, INPUT);
+  pinMode(JOYSTICK_1Y, INPUT);
+  pinMode(JOYSTICK_2X, INPUT);
+  pinMode(JOYSTICK_2Y, INPUT);
+
+  // output (voltage for power circuit)
+  pinMode(POWER_PIN, OUTPUT);
 
   enableButtonInterrupts();
   sei();
@@ -306,67 +582,36 @@ void setup() {
  * If a dirty flag is set, then the pinchange flags (see ISR as pinchange edge trigger cannot be specified)
  * are sent over UART to the ESP32
  * 
- * Additionally, the 
+ * For the power and the home button, these have different functions depending on the duration of the press. 
+ * This makes interrupts not an option for these, so this loop polls them. Additionally, the joysticks are polled 
+ * if the current context requires joysticks. 
  * 
  */
 void loop() {
-  if (portB_dirty) {
-    Serial.write("\n");
-    Serial.write("NEW: \n");
+  // POLL BUTTONS
+  handle_power_toggle();
+  checkHomeBTN();
 
-    Serial.write(portB_flags);
-    portB_dirty = false;
-
-    // decoding
-    Serial.print("controller1B: ");
-    Serial.println((portB_flags & (1 << 0)) != 0 ? "1" : "0");
-
-    Serial.print("controller1A: ");
-    Serial.println((portB_flags & (1 << 1)) != 0 ? "1" : "0");
-
-    Serial.print("RPG1Clockwise: ");
-    Serial.println((portB_flags & (1 << 2)) != 0 ? "1" : "0");
-
-    Serial.print("RPG1CounterClockwise: ");
-    Serial.println((portB_flags & (1 << 3)) != 0 ? "1" : "0");
-
-    Serial.print("RPG2Clockwise: ");
-    Serial.println((portB_flags & (1 << 4)) != 0 ? "1" : "0");
-
-    Serial.print("RPG2CounterClockwise: ");
-    Serial.println((portB_flags & (1 << 5)) != 0 ? "1" : "0");
-
-    Serial.print("Reserved6: ");
-    Serial.println((portB_flags & (1 << 6)) != 0 ? "1" : "0");
-
-    Serial.print("Reserved7: ");
-    Serial.println((portB_flags & (1 << 7)) != 0 ? "1" : "0");
+  // CHECK FOR ENABLE/DISABLE MSGs
+  void processESP32Message();
+  
+  // READ joysticks if enabled
+  if (controller1Enabled) {
+    checkControllerJoystick(1, 30);
   }
 
-  // if (portD_dirty) {
-  //   Serial.write(portD_flags);
-  //   portD_dirty = false;
-  
-  //   // debugging
-  //   Serial.print("DownArrowClicked: ");
-  //   Serial.println((portD_flags & (1 << 2)) != 0 ? "1" : "0");
+  if (controller2Enabled) {
+    checkControllerJoystick(2, 30);
+  }
 
-  //   Serial.print("HomeClicked: ");
-  //   Serial.println((portD_flags & (1 << 3)) != 0 ? "1" : "0");
+  // CHECK PINCHANGE
+  if (portB_dirty) {
+    sendCommandFromFlags(portB_flags, 'B');
+    portB_dirty = false;
+  }
 
-  //   Serial.print("UpArrowClicked: ");
-  //   Serial.println((portD_flags & (1 << 4)) != 0 ? "1" : "0");
-
-  //   Serial.print("Controller2BClicked: ");
-  //   Serial.println((portD_flags & (1 << 6)) != 0 ? "1" : "0");
-
-  //   Serial.print("Controller2AClicked: ");
-  //   Serial.println((portD_flags & (1 << 7)) != 0 ? "1" : "0");
-
-  //   Serial.print("Reserved0: ");
-  //   Serial.println((portD_flags & (1 << 0)) != 0 ? "1" : "0");
-
-  //   Serial.print("Reserved1: ");
-  //   Serial.println((portD_flags & (1 << 1)) != 0 ? "1" : "0");
-  // }
+  if (portD_dirty) {
+    sendCommandFromFlags(portD_flags, 'D');
+    portD_dirty = false;
+  }
 }
