@@ -1,6 +1,6 @@
 #include "Color_Select_Screen.h"
 
-//Pointer (dma_display_cs to the MatrixPanel_I2S_DMA object initialized
+
 MatrixPanel_I2S_DMA* dma_display_cs = nullptr;
 
 //Make an array of pointers for all possible drawing colors
