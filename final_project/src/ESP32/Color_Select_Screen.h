@@ -13,7 +13,7 @@ void initColorSelector(MatrixPanel_I2S_DMA* display);
 void drawColorSelector(uint16_t colorValues[]);
 void nextColor();
 void prevColor();
-uint16_t getCurrentColor();  // <-- ADD THIS
+uint16_t getCurrentColor();
 
 
 #endif
