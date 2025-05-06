@@ -11,7 +11,7 @@
  * 
  */
 
-#include "ImageViewProgram/PackersLogo.h"
+#include "ImageView/PackersLogo.h"
 
 // Map character to RGB565 color
 uint16_t getColorForChar(char c, MatrixPanel_I2S_DMA* display) {

@@ -17,7 +17,7 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <Arduino.h>
 
-void initEtchASketch(MatrixPanel_I2S_DMA* disp, uint16_t color);
+void initSketch(MatrixPanel_I2S_DMA* disp, uint16_t color);
 void handleEtchCommand(const String& cmd);
 void nextEtchColor();
 void prevEtchColor();

@@ -11,9 +11,6 @@
  * The functionality of the Arduino is simply a dummy terminal - converting actions made by the user (button click, rpg turn, joystick flick, etc) 
  * into a command that can be mapped to a function. This is sent over the UART channel to the ESP32 for processing.
  * 
- * From our understanding of how the Arduino flavored C works, it is necessary to have -most- of the code (ISR, Declaratiosn, etc) here. 
- * A future iteration would separate into different files. For now, this works and makes sense.
- * 
  */
 
  #include <Arduino.h>
@@ -659,7 +656,7 @@
    // CHECK FOR ENABLE/DISABLE MSGs
    processESP32Message();
    
-   // READ joysticks if enabled (buttons always enabled, but restricting the poll of the joysticks cleans the uart channel)
+   // READ joysticks if enabled
    if (controller1Enabled) {
      checkControllerJoystick(1, 30);
    }

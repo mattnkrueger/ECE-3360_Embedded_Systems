@@ -37,7 +37,7 @@ static int etchColorIndex = 0;
  * @param disp matrix object to draw on
  * @param color current color in use
  */
-void initEtchASketch(MatrixPanel_I2S_DMA* disp, uint16_t color) {
+void initSketch(MatrixPanel_I2S_DMA* disp, uint16_t color) {
   display = disp;
   drawColor = color;
   
