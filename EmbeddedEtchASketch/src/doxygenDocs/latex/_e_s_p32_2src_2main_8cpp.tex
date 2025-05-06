@@ -1,0 +1,162 @@
+\doxysection{/\+Users/matthewkrueger/uiowa/jr/2/es/\+Embedded\+Etch\+ASketch/src/\+ESP32/src/main.cpp File Reference}
+\hypertarget{_e_s_p32_2src_2main_8cpp}{}\label{_e_s_p32_2src_2main_8cpp}\index{/Users/matthewkrueger/uiowa/jr/2/es/EmbeddedEtchASketch/src/ESP32/src/main.cpp@{/Users/matthewkrueger/uiowa/jr/2/es/EmbeddedEtchASketch/src/ESP32/src/main.cpp}}
+
+
+ESP32 driver code.  
+
+
+{\ttfamily \#include $<$ESP32-\/\+HUB75-\/\+Matrix\+Panel-\/\+I2\+S-\/\+DMA.\+h$>$}\newline
+{\ttfamily \#include "{}Pixel\+Art/\+Pixel\+Art.\+h"{}}\newline
+{\ttfamily \#include "{}Etch\+ASketch/\+Color\+Select\+Screen.\+h"{}}\newline
+{\ttfamily \#include "{}Etch\+ASketch/\+Etch\+ASketch.\+h"{}}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a6ae393e0896d156a3697d7cbc944eb67}\label{_e_s_p32_2src_2main_8cpp_a6ae393e0896d156a3697d7cbc944eb67} 
+\#define {\bfseries PANEL\+\_\+\+WIDTH}~64
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_ad94f97286bd6f40f75df2736a63ac899}\label{_e_s_p32_2src_2main_8cpp_ad94f97286bd6f40f75df2736a63ac899} 
+\#define {\bfseries PANEL\+\_\+\+HEIGHT}~64
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_ae10291d12ecb8730af0e48d9ca3cdffd}\label{_e_s_p32_2src_2main_8cpp_ae10291d12ecb8730af0e48d9ca3cdffd} 
+\#define {\bfseries PANELS\+\_\+\+NUMBER}~1
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a4dff99a6b9f11aabd559fe678de6333a}\label{_e_s_p32_2src_2main_8cpp_a4dff99a6b9f11aabd559fe678de6333a} 
+\#define {\bfseries RXD2}~16
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_ae453884d4d2c4ae593a322b2892c5dc5}\label{_e_s_p32_2src_2main_8cpp_ae453884d4d2c4ae593a322b2892c5dc5} 
+\#define {\bfseries TXD2}~17
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a5fc5d61fa8521ce5476183998579fa9b}\label{_e_s_p32_2src_2main_8cpp_a5fc5d61fa8521ce5476183998579fa9b} 
+enum {\bfseries Screen\+State} \{ {\bfseries HOME}
+, {\bfseries COLOR\+\_\+\+SELECT}
+, {\bfseries Etch\+ASketch}
+, {\bfseries LOGO\+\_\+\+DISPLAY}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_aeb665b81a3ab0b5a618739df320e1c35}\label{_e_s_p32_2src_2main_8cpp_aeb665b81a3ab0b5a618739df320e1c35} 
+Hardware\+Serial {\bfseries my\+Serial} (2)
+\item 
+void \mbox{\hyperlink{_e_s_p32_2src_2main_8cpp_abb0c7f997d59bdba32582b304ba11cb6}{draw\+Arrow}} (int y)
+\begin{DoxyCompactList}\small\item\em draws arrow for menu selection \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_e_s_p32_2src_2main_8cpp_a1946154d8e9e6dd415476d3378b98ff1}{draw\+Home\+Screen}} ()
+\begin{DoxyCompactList}\small\item\em draws the current home screen \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_e_s_p32_2src_2main_8cpp_a4fc01d736fe50cf5b977f755b675f11d}{setup}} ()
+\begin{DoxyCompactList}\small\item\em initialize the ESP32 system \end{DoxyCompactList}\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_afe461d27b9c48d5921c00d521181f12f}\label{_e_s_p32_2src_2main_8cpp_afe461d27b9c48d5921c00d521181f12f} 
+void {\bfseries loop} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_add3160ceb607cf0cb2e2fccf2bd35533}\label{_e_s_p32_2src_2main_8cpp_add3160ceb607cf0cb2e2fccf2bd35533} 
+Matrix\+Panel\+\_\+\+I2\+S\+\_\+\+DMA \texorpdfstring{$\ast$}{*} {\bfseries dma\+\_\+display} = nullptr
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_ab01846706bd96f285fa86127afe43de2}\label{_e_s_p32_2src_2main_8cpp_ab01846706bd96f285fa86127afe43de2} 
+uint16\+\_\+t {\bfseries my\+BLACK}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_abb199f209324d346e5f46428d3140e71}\label{_e_s_p32_2src_2main_8cpp_abb199f209324d346e5f46428d3140e71} 
+uint16\+\_\+t {\bfseries yellow}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_aad75e25cdb1808ee55f885655f1069d5}\label{_e_s_p32_2src_2main_8cpp_aad75e25cdb1808ee55f885655f1069d5} 
+uint16\+\_\+t {\bfseries white}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_abac4ecfa11c19dd5fd0d17b906d0cb31}\label{_e_s_p32_2src_2main_8cpp_abac4ecfa11c19dd5fd0d17b906d0cb31} 
+uint16\+\_\+t {\bfseries brown}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a7629db0b24ad6d01ab58b74badd5d558}\label{_e_s_p32_2src_2main_8cpp_a7629db0b24ad6d01ab58b74badd5d558} 
+uint16\+\_\+t {\bfseries green}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a3d6ff9a69bfb95fc471912290d4d840c}\label{_e_s_p32_2src_2main_8cpp_a3d6ff9a69bfb95fc471912290d4d840c} 
+bool {\bfseries in\+Etch\+Mode} = false
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a0339af2ff81bb0bfe7bd170311861fd7}\label{_e_s_p32_2src_2main_8cpp_a0339af2ff81bb0bfe7bd170311861fd7} 
+uint16\+\_\+t {\bfseries selected\+Color}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a477ea6363106d20b974ef84a74df01d3}\label{_e_s_p32_2src_2main_8cpp_a477ea6363106d20b974ef84a74df01d3} 
+const char \texorpdfstring{$\ast$}{*} {\bfseries menu\+Items} \mbox{[}$\,$\mbox{]} = \{ "{}Sketch"{}, "{}Images"{} \}
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_aa5e521b170c046e2ee1808c68363b599}\label{_e_s_p32_2src_2main_8cpp_aa5e521b170c046e2ee1808c68363b599} 
+const int {\bfseries num\+Menu\+Items} = 2
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a5f2aae412632381629b489d93eca1bcc}\label{_e_s_p32_2src_2main_8cpp_a5f2aae412632381629b489d93eca1bcc} 
+int {\bfseries selected\+Index} = 0
+\item 
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a2caafc6fa523ff103cdc972c16e0a12c}\label{_e_s_p32_2src_2main_8cpp_a2caafc6fa523ff103cdc972c16e0a12c} 
+Screen\+State {\bfseries current\+Screen} = HOME
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+ESP32 driver code. 
+
+\begin{DoxyAuthor}{Author}
+Matt Krueger \& Sage Marks 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+0.\+1 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+May 7th, 2025
+\end{DoxyDate}
+\begin{DoxyCopyright}{Copyright}
+Copyright (c) 2025
+\end{DoxyCopyright}
+This sketch serves as the state machine for the system, reading in new actions from the user over UART connected to IO of Arduino to perform an action on the current program selected. This is a proof of concept for our system as we developed this as part of ECE-\/3360 Embedded Systems course at the University of Iowa. Because of this, our code is not designed all too well.
+
+Currently Programmed\+:
+\begin{DoxyItemize}
+\item Etch\+ASketch\+: draw in colors using rotary dials like the original Etch\+ASketch
+\item Pixel Art\+: displays slideshow of pixel art images
+\end{DoxyItemize}
+
+Further iterations will improve the modularity to more easily extend the system to whatever we want to display. 
+
+\doxysubsection{Function Documentation}
+\Hypertarget{_e_s_p32_2src_2main_8cpp_abb0c7f997d59bdba32582b304ba11cb6}\index{main.cpp@{main.cpp}!drawArrow@{drawArrow}}
+\index{drawArrow@{drawArrow}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{drawArrow()}{drawArrow()}}
+{\footnotesize\ttfamily \label{_e_s_p32_2src_2main_8cpp_abb0c7f997d59bdba32582b304ba11cb6} 
+void draw\+Arrow (\begin{DoxyParamCaption}\item[{int}]{y}{}\end{DoxyParamCaption})}
+
+
+
+draws arrow for menu selection 
+
+
+\begin{DoxyParams}{Parameters}
+{\em y} & column location to start the arrow \\
+\hline
+\end{DoxyParams}
+\Hypertarget{_e_s_p32_2src_2main_8cpp_a1946154d8e9e6dd415476d3378b98ff1}\index{main.cpp@{main.cpp}!drawHomeScreen@{drawHomeScreen}}
+\index{drawHomeScreen@{drawHomeScreen}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{drawHomeScreen()}{drawHomeScreen()}}
+{\footnotesize\ttfamily \label{_e_s_p32_2src_2main_8cpp_a1946154d8e9e6dd415476d3378b98ff1} 
+void draw\+Home\+Screen (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+draws the current home screen 
+
+Redraws with current selection. Arrows depict the currently selected menu item. \Hypertarget{_e_s_p32_2src_2main_8cpp_a4fc01d736fe50cf5b977f755b675f11d}\index{main.cpp@{main.cpp}!setup@{setup}}
+\index{setup@{setup}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{setup()}{setup()}}
+{\footnotesize\ttfamily \label{_e_s_p32_2src_2main_8cpp_a4fc01d736fe50cf5b977f755b675f11d} 
+void setup (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+initialize the ESP32 system 
+
+Configure\+:
+\begin{DoxyItemize}
+\item uart
+\item led matrix
+\item display the home screen 
+\end{DoxyItemize}

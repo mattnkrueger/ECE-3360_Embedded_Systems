@@ -1,0 +1,331 @@
+\doxysection{/\+Users/matthewkrueger/uiowa/jr/2/es/\+Embedded\+Etch\+ASketch/src/\+ATMega328\+P/src/main.cpp File Reference}
+\hypertarget{_a_t_mega328_p_2src_2main_8cpp}{}\label{_a_t_mega328_p_2src_2main_8cpp}\index{/Users/matthewkrueger/uiowa/jr/2/es/EmbeddedEtchASketch/src/ATMega328P/src/main.cpp@{/Users/matthewkrueger/uiowa/jr/2/es/EmbeddedEtchASketch/src/ATMega328P/src/main.cpp}}
+
+
+Arduino Sketch for Embedded Systems Final Project.  
+
+
+{\ttfamily \#include $<$Arduino.\+h$>$}\newline
+{\ttfamily \#include $<$avr/io.\+h$>$}\newline
+{\ttfamily \#include $<$avr/interrupt.\+h$>$}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_aa64c6dce15e9de9105b4ae9533c9a267}{ISR}} (PCINT0\+\_\+vect)
+\begin{DoxyCompactList}\small\item\em Construct a new ISR object for PCINT\mbox{[}0..7\mbox{]} (port b) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_a9c4665742c6b6eb1f0bb9dde41f7cba3}{ISR}} (PCINT2\+\_\+vect)
+\begin{DoxyCompactList}\small\item\em Construct a new ISR object for PCINT\mbox{[}16..23\mbox{]} (port d) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_afa37c6ed713a8bfb036a1e9063bd6cf2}{enable\+Button\+Interrupts}} ()
+\begin{DoxyCompactList}\small\item\em enable pin change interrupts \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_aa5bcb644333df27057c4ba3d6b2e0c07}{check\+Power\+BTN}} (void)
+\begin{DoxyCompactList}\small\item\em handle safe power toggling \end{DoxyCompactList}\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_adb160edd7852f91be2581fca0ca52f3a}\label{_a_t_mega328_p_2src_2main_8cpp_adb160edd7852f91be2581fca0ca52f3a} 
+void {\bfseries handle\+\_\+power\+\_\+toggle} (void)
+\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_a1b87e75b302fa2643106d87e9d2764e3}{check\+Home\+BTN}} (void)
+\begin{DoxyCompactList}\small\item\em handle home button click \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_a716bb6591c57664b6fc3bf922b4ead30}{check\+Controller\+Joystick}} (int controller\+Number, int deadzone)
+\begin{DoxyCompactList}\small\item\em read the controller deadzone \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_adb03fb56f595a0d91da2957cfd5913a4}{process\+ESP32\+Message}} ()
+\begin{DoxyCompactList}\small\item\em handle incoming messages from the ESP32 \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_af9b5115d50f982dbda86793807ccd85d}{send\+Command\+From\+Flags}} (uint8\+\_\+t flags, char port)
+\begin{DoxyCompactList}\small\item\em send pinchange results to ESP32 \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_a4fc01d736fe50cf5b977f755b675f11d}{setup}} ()
+\begin{DoxyCompactList}\small\item\em initialize pin modes for all I/O peripherals \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_a_t_mega328_p_2src_2main_8cpp_afe461d27b9c48d5921c00d521181f12f}{loop}} ()
+\begin{DoxyCompactList}\small\item\em main loop for Arduino Program \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_ac3dac2f7d5aca1efc3d819d22a4ed099}\label{_a_t_mega328_p_2src_2main_8cpp_ac3dac2f7d5aca1efc3d819d22a4ed099} 
+const uint8\+\_\+t {\bfseries RPG2\+\_\+B} = 13
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_ab77df457bc8d49579c3e204e7a3a35e2}\label{_a_t_mega328_p_2src_2main_8cpp_ab77df457bc8d49579c3e204e7a3a35e2} 
+const uint8\+\_\+t {\bfseries RPG2\+\_\+A} = 12
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a5da3cff35df217adb9bf55638e3f421e}\label{_a_t_mega328_p_2src_2main_8cpp_a5da3cff35df217adb9bf55638e3f421e} 
+const uint8\+\_\+t {\bfseries RPG1\+\_\+B} = 11
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_abcc3c1d9d8f79cea6495fd8ed2e9ab56}\label{_a_t_mega328_p_2src_2main_8cpp_abcc3c1d9d8f79cea6495fd8ed2e9ab56} 
+const uint8\+\_\+t {\bfseries RPG1\+\_\+A} = 10
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a1da72928da6f7892288bda94bcd0062f}\label{_a_t_mega328_p_2src_2main_8cpp_a1da72928da6f7892288bda94bcd0062f} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+UP\+\_\+\+ARROW} = 4
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a6f21e813923ab8e02e4def225a24c9f7}\label{_a_t_mega328_p_2src_2main_8cpp_a6f21e813923ab8e02e4def225a24c9f7} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+HOME} = 3
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a19a6ceeea5873830151dbc503f063bfb}\label{_a_t_mega328_p_2src_2main_8cpp_a19a6ceeea5873830151dbc503f063bfb} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+DOWN\+\_\+\+ARROW} = 2
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_ab6abfcb528b2ae2357b1876db288f2b2}\label{_a_t_mega328_p_2src_2main_8cpp_ab6abfcb528b2ae2357b1876db288f2b2} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+CTRL\+\_\+1A} = 9
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_afee466d4cb83bc84f5534888e3375e4b}\label{_a_t_mega328_p_2src_2main_8cpp_afee466d4cb83bc84f5534888e3375e4b} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+CTRL\+\_\+1B} = 8
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a2cabe5fc32b1d63177c2ccd92eed9b6e}\label{_a_t_mega328_p_2src_2main_8cpp_a2cabe5fc32b1d63177c2ccd92eed9b6e} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+CTRL\+\_\+2A} = 7
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a58a2a6b37f18cf67c348c0003a6680ec}\label{_a_t_mega328_p_2src_2main_8cpp_a58a2a6b37f18cf67c348c0003a6680ec} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+CTRL\+\_\+2B} = 6
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a81b46f41d7092b72b8853e6326b67a0b}\label{_a_t_mega328_p_2src_2main_8cpp_a81b46f41d7092b72b8853e6326b67a0b} 
+const uint8\+\_\+t {\bfseries JOYSTICK\+\_\+1X} = A0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a5db8c23641ebabe6130b96e87fe34d4b}\label{_a_t_mega328_p_2src_2main_8cpp_a5db8c23641ebabe6130b96e87fe34d4b} 
+const uint8\+\_\+t {\bfseries JOYSTICK\+\_\+1Y} = A1
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a7c295ae262addec56c5dcaae5d544da6}\label{_a_t_mega328_p_2src_2main_8cpp_a7c295ae262addec56c5dcaae5d544da6} 
+const uint8\+\_\+t {\bfseries JOYSTICK\+\_\+2X} = A2
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a8248d65940e209535baa8cac8990bf36}\label{_a_t_mega328_p_2src_2main_8cpp_a8248d65940e209535baa8cac8990bf36} 
+const uint8\+\_\+t {\bfseries JOYSTICK\+\_\+2Y} = A3
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a54787a0d394df901895f3fa1344d4754}\label{_a_t_mega328_p_2src_2main_8cpp_a54787a0d394df901895f3fa1344d4754} 
+const uint8\+\_\+t {\bfseries POWER\+\_\+\+PIN} = A4
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a466fad204ab686dc81f4660ede2e36ec}\label{_a_t_mega328_p_2src_2main_8cpp_a466fad204ab686dc81f4660ede2e36ec} 
+const uint8\+\_\+t {\bfseries BTN\+\_\+\+POWER} = A5
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a709bc30c48bebf0650eadcdd393d8423}\label{_a_t_mega328_p_2src_2main_8cpp_a709bc30c48bebf0650eadcdd393d8423} 
+volatile uint8\+\_\+t {\bfseries prev\+StateB} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a3cafb3052213bd63aa231b79792698d5}\label{_a_t_mega328_p_2src_2main_8cpp_a3cafb3052213bd63aa231b79792698d5} 
+volatile uint8\+\_\+t {\bfseries prev\+StateC} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a8835b05d6e89af0ee2fa3128a79e06a7}\label{_a_t_mega328_p_2src_2main_8cpp_a8835b05d6e89af0ee2fa3128a79e06a7} 
+volatile uint8\+\_\+t {\bfseries prev\+StateD} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a31176de6879b25e0a4985fc535109572}\label{_a_t_mega328_p_2src_2main_8cpp_a31176de6879b25e0a4985fc535109572} 
+volatile uint8\+\_\+t {\bfseries prev\+RPG1A} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a46ec63e81450e0ec99e4f51edea2e8c0}\label{_a_t_mega328_p_2src_2main_8cpp_a46ec63e81450e0ec99e4f51edea2e8c0} 
+volatile uint8\+\_\+t {\bfseries prev\+RPG1B} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a72e693536ca64487713d83850aadb0f8}\label{_a_t_mega328_p_2src_2main_8cpp_a72e693536ca64487713d83850aadb0f8} 
+volatile uint8\+\_\+t {\bfseries prev\+RPG2A} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a431e48821290ad460f90533c6ccb9f08}\label{_a_t_mega328_p_2src_2main_8cpp_a431e48821290ad460f90533c6ccb9f08} 
+volatile uint8\+\_\+t {\bfseries prev\+RPG2B} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a59cae588e5b1834697a541431f36349b}\label{_a_t_mega328_p_2src_2main_8cpp_a59cae588e5b1834697a541431f36349b} 
+volatile uint8\+\_\+t {\bfseries port\+B\+\_\+flags} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a001921ec9e10f1548fe4507df0961c00}\label{_a_t_mega328_p_2src_2main_8cpp_a001921ec9e10f1548fe4507df0961c00} 
+volatile bool {\bfseries port\+B\+\_\+dirty} = false
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a617ee809d9c399191f255644e3b418c3}\label{_a_t_mega328_p_2src_2main_8cpp_a617ee809d9c399191f255644e3b418c3} 
+volatile uint8\+\_\+t {\bfseries port\+D\+\_\+flags} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a92e871ec4fbbe1283abdc337313ee96d}\label{_a_t_mega328_p_2src_2main_8cpp_a92e871ec4fbbe1283abdc337313ee96d} 
+volatile bool {\bfseries port\+D\+\_\+dirty} = false
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a2cd0b323a3dd2765363bdacf664bd98b}\label{_a_t_mega328_p_2src_2main_8cpp_a2cd0b323a3dd2765363bdacf664bd98b} 
+volatile bool {\bfseries power\+ON} = true
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a7986efd6e6ec77c16f1cf8a830a6281c}\label{_a_t_mega328_p_2src_2main_8cpp_a7986efd6e6ec77c16f1cf8a830a6281c} 
+volatile bool {\bfseries prev\+Home\+BTN} = false
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a4a2b819a1a78b09014a91cb8ff564d85}\label{_a_t_mega328_p_2src_2main_8cpp_a4a2b819a1a78b09014a91cb8ff564d85} 
+volatile bool {\bfseries controller1\+Enabled} = false
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a1afb6da17c1e2a24c08fe0454e279a62}\label{_a_t_mega328_p_2src_2main_8cpp_a1afb6da17c1e2a24c08fe0454e279a62} 
+volatile bool {\bfseries controller2\+Enabled} = false
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a0e5f50922dae594c3219efee44e0d1f0}\label{_a_t_mega328_p_2src_2main_8cpp_a0e5f50922dae594c3219efee44e0d1f0} 
+bool {\bfseries prev\+Home\+State} = HIGH
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a257283dcf99d8154204c0eeb019d1667}\label{_a_t_mega328_p_2src_2main_8cpp_a257283dcf99d8154204c0eeb019d1667} 
+unsigned long {\bfseries home\+Start\+Press} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a4bc610631b3f6f9a9b86b7757017cf8e}\label{_a_t_mega328_p_2src_2main_8cpp_a4bc610631b3f6f9a9b86b7757017cf8e} 
+const int {\bfseries DEBOUNCE\+\_\+\+MS} = 50
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a51c35526659f803dae3ea2041fbed473}\label{_a_t_mega328_p_2src_2main_8cpp_a51c35526659f803dae3ea2041fbed473} 
+const int {\bfseries HOLD\+\_\+\+TIME\+\_\+\+MS} = 1000
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a50301e146875b328e348cd7e7dde3253}\label{_a_t_mega328_p_2src_2main_8cpp_a50301e146875b328e348cd7e7dde3253} 
+const int {\bfseries MIN\+\_\+\+ON\+\_\+\+TIME\+\_\+\+MS} = 2000
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a07aa31367cb596f1be7c3d85480dc096}\label{_a_t_mega328_p_2src_2main_8cpp_a07aa31367cb596f1be7c3d85480dc096} 
+volatile bool {\bfseries power\+\_\+state} = true
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a19abde4b43b8014ee98a909489051a8b}\label{_a_t_mega328_p_2src_2main_8cpp_a19abde4b43b8014ee98a909489051a8b} 
+volatile uint32\+\_\+t {\bfseries hold\+\_\+counter} = 0
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_ac55f00341a626d22a60a49745d4f6221}\label{_a_t_mega328_p_2src_2main_8cpp_ac55f00341a626d22a60a49745d4f6221} 
+volatile bool {\bfseries button\+\_\+was\+\_\+pressed} = false
+\item 
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a064d40286919985f4471ee1640cdc236}\label{_a_t_mega328_p_2src_2main_8cpp_a064d40286919985f4471ee1640cdc236} 
+volatile unsigned long {\bfseries power\+\_\+button\+\_\+press\+\_\+start} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Arduino Sketch for Embedded Systems Final Project. 
+
+\begin{DoxyAuthor}{Author}
+Matt Krueger \& Sage Marks 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+0.\+2 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+2025-\/05-\/03
+\end{DoxyDate}
+\begin{DoxyCopyright}{Copyright}
+Copyright (c) 2025
+\end{DoxyCopyright}
+Included in this file is all I/O Pin definitions, methods, ISRs, and UART communication with the ESP32. The functionality of the Arduino is simply a dummy terminal -\/ converting actions made by the user (button click, rpg turn, joystick flick, etc) into a command that can be mapped to a function. This is sent over the UART channel to the ESP32 for processing.
+
+This file is very long, however, it is necessary that the ISR \& UART communication (the main functionality of the Arduino device) be on the main.\+cpp to avoid any issues.
+
+No internal libraries were included and no external libraries were used. All functionality extended from Arduino AVR C built-\/in libraries 
+
+\doxysubsection{Function Documentation}
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a716bb6591c57664b6fc3bf922b4ead30}\index{main.cpp@{main.cpp}!checkControllerJoystick@{checkControllerJoystick}}
+\index{checkControllerJoystick@{checkControllerJoystick}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{checkControllerJoystick()}{checkControllerJoystick()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_a716bb6591c57664b6fc3bf922b4ead30} 
+void check\+Controller\+Joystick (\begin{DoxyParamCaption}\item[{int}]{controller\+Number}{, }\item[{int}]{deadzone}{}\end{DoxyParamCaption})}
+
+
+
+read the controller deadzone 
+
+both controllers have same circuit, so we read and pass a deadzone to reduce noisy incorrect movements
+
+
+\begin{DoxyParams}{Parameters}
+{\em controller\+Number} & \\
+\hline
+{\em deadzone} & \\
+\hline
+\end{DoxyParams}
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a1b87e75b302fa2643106d87e9d2764e3}\index{main.cpp@{main.cpp}!checkHomeBTN@{checkHomeBTN}}
+\index{checkHomeBTN@{checkHomeBTN}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{checkHomeBTN()}{checkHomeBTN()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_a1b87e75b302fa2643106d87e9d2764e3} 
+void check\+Home\+BTN (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+handle home button click 
+
+We are limited to using polling for multifunctionality buttons as we cannot check for a press and hold inside of interrupt. Maybe you can? we struggled to
+
+programmed for two signals\+:
+\begin{DoxyEnumerate}
+\item press \texorpdfstring{$>$}{>} 1 second
+\item press \texorpdfstring{$<$}{<} 1 second
+\end{DoxyEnumerate}
+
+These commands are processed by the ESP32, completely abstracted away from the Arduino. The functionality of the command is dependent on the current context displayed on the LED Matrix \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_aa5bcb644333df27057c4ba3d6b2e0c07}\index{main.cpp@{main.cpp}!checkPowerBTN@{checkPowerBTN}}
+\index{checkPowerBTN@{checkPowerBTN}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{checkPowerBTN()}{checkPowerBTN()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_aa5bcb644333df27057c4ba3d6b2e0c07} 
+void check\+Power\+BTN (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+handle safe power toggling 
+
+We are limited to using polling for multifunctionality buttons as we cannot check for a press and hold inside of interrupt.
+
+programmed for two signals\+:
+\begin{DoxyEnumerate}
+\item press \texorpdfstring{$>$}{>} 1 second -\/-\/-\/\texorpdfstring{$>$}{>} turn off
+\item press \texorpdfstring{$<$}{<} 1 second -\/-\/-\/\texorpdfstring{$>$}{>} turn on
+\end{DoxyEnumerate}
+
+handle power button
+
+Implements power control logic from the second code sample Uses debouncing, hold detection, and power state management \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_afa37c6ed713a8bfb036a1e9063bd6cf2}\index{main.cpp@{main.cpp}!enableButtonInterrupts@{enableButtonInterrupts}}
+\index{enableButtonInterrupts@{enableButtonInterrupts}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{enableButtonInterrupts()}{enableButtonInterrupts()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_afa37c6ed713a8bfb036a1e9063bd6cf2} 
+void enable\+Button\+Interrupts (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+enable pin change interrupts 
+
+enable PCINT for ALL buttons connected to the Arduino \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_aa64c6dce15e9de9105b4ae9533c9a267}\index{main.cpp@{main.cpp}!ISR@{ISR}}
+\index{ISR@{ISR}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{ISR()}{ISR()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_aa64c6dce15e9de9105b4ae9533c9a267} 
+ISR (\begin{DoxyParamCaption}\item[{PCINT0\+\_\+vect}]{}{}\end{DoxyParamCaption})}
+
+
+
+Construct a new ISR object for PCINT\mbox{[}0..7\mbox{]} (port b) 
+
+PCINT0 (PB0)\+: BTN\+\_\+\+CONTROLLER\+\_\+1B PCINT1 (PB1)\+: BTN\+\_\+\+CONTROLLER\+\_\+1A PCINT2 (PB2)\+: RPG\+\_\+1A PCINT3 (PB3)\+: RPG\+\_\+1B PCINT4 (PB4)\+: RPG\+\_\+2A PCINT5 (PB5)\+: RPG\+\_\+2B PCINT6\+: none PCINT7\+: none
+
+Because these are pin changes and we have buttons, the interrupt will be called twice for all buttons -\/ which is not ideal. To combat this, we track the previous state of the pins and mask each button. If there is a change then we update the current state to reflect this. The entire current state of pin is then sent over UART
+
+Yes, this is not a \textquotesingle{}short\textquotesingle{} ISR, but as we have all GPIO pins attached it is necessary that the ISR is more involved \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a9c4665742c6b6eb1f0bb9dde41f7cba3}\index{main.cpp@{main.cpp}!ISR@{ISR}}
+\index{ISR@{ISR}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{ISR()}{ISR()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_a9c4665742c6b6eb1f0bb9dde41f7cba3} 
+ISR (\begin{DoxyParamCaption}\item[{PCINT2\+\_\+vect}]{}{}\end{DoxyParamCaption})}
+
+
+
+Construct a new ISR object for PCINT\mbox{[}16..23\mbox{]} (port d) 
+
+PCINT16 (PD0)\+: none (uart rx) PCINT17 (PD1)\+: none (uart tx) PCINT18 (PD2)\+: BTN\+\_\+\+DOWN\+\_\+\+ARROW PCINT19 (PD3)\+: none PCINT20 (PD4)\+: BTN\+\_\+\+UP\+\_\+\+ARROW PCINT21 (PD5)\+: none PCINT22 (PD6)\+: BTN\+\_\+\+CTRL\+\_\+2B PCINT23 (PD7)\+: BTN\+\_\+\+CTRL\+\_\+2A \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_afe461d27b9c48d5921c00d521181f12f}\index{main.cpp@{main.cpp}!loop@{loop}}
+\index{loop@{loop}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{loop()}{loop()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_afe461d27b9c48d5921c00d521181f12f} 
+void loop (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+main loop for Arduino Program 
+
+Interrupt driven, listens for change at inputs which alter diry flags If a dirty flag is set, then the pinchange flags (see ISR as pinchange edge trigger cannot be specified) are sent over UART to the ESP32
+
+For the power and the home button, these have different functions depending on the duration of the press. This makes interrupts not an option for these, so this loop polls them. Additionally, the joysticks are polled if the current context requires joysticks. \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_adb03fb56f595a0d91da2957cfd5913a4}\index{main.cpp@{main.cpp}!processESP32Message@{processESP32Message}}
+\index{processESP32Message@{processESP32Message}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{processESP32Message()}{processESP32Message()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_adb03fb56f595a0d91da2957cfd5913a4} 
+void process\+ESP32\+Message (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+handle incoming messages from the ESP32 
+
+checks for messages to enable or disable the controllers
+
+\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*} SEE README FOR COMMANDS \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*} \Hypertarget{_a_t_mega328_p_2src_2main_8cpp_af9b5115d50f982dbda86793807ccd85d}\index{main.cpp@{main.cpp}!sendCommandFromFlags@{sendCommandFromFlags}}
+\index{sendCommandFromFlags@{sendCommandFromFlags}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{sendCommandFromFlags()}{sendCommandFromFlags()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_af9b5115d50f982dbda86793807ccd85d} 
+void send\+Command\+From\+Flags (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{flags}{, }\item[{char}]{port}{}\end{DoxyParamCaption})}
+
+
+
+send pinchange results to ESP32 
+
+
+\begin{DoxyParams}{Parameters}
+{\em flags} & \\
+\hline
+{\em port} & \\
+\hline
+\end{DoxyParams}
+\Hypertarget{_a_t_mega328_p_2src_2main_8cpp_a4fc01d736fe50cf5b977f755b675f11d}\index{main.cpp@{main.cpp}!setup@{setup}}
+\index{setup@{setup}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{setup()}{setup()}}
+{\footnotesize\ttfamily \label{_a_t_mega328_p_2src_2main_8cpp_a4fc01d736fe50cf5b977f755b675f11d} 
+void setup (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+initialize pin modes for all I/O peripherals 
+
+Initializes RPG 1 \& 2 Initializes Button inputs Initializes Joystick inputs Initializes Power Circuit inputs
+
+Additionally, the serial communication with the ESP32 is setup here. 

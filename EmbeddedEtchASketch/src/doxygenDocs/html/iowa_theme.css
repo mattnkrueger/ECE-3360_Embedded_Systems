@@ -1,0 +1,19 @@
+/* Iowa theming for all components. Code blocks have black background, but other than that, divs are white & text gold */ 
+
+body {
+    background-color: white;
+    color: yellow;
+}
+
+div, p, span, td, th, li, a, h1, h2, h3, h4, h5, h6 {
+    color: yellow !important;
+}
+
+a:link, a:visited {
+    color: gold !important;
+}
+
+pre, code {
+    background-color: #222 !important;
+    color: yellow !important;
+}

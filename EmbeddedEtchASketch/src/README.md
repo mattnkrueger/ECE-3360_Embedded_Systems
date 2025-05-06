@@ -5,8 +5,8 @@ This project showcases our learning from the Embedded Systems course in which we
 
 Our project goal was to build something that wont be thrown away - or stripped down to preserve parts - after the class ends. The LED Matrix (and game system) sufficed; it allows for various programs, unique displays, and extendability beyond this course. Because of the ESP32, this system can be iterated on to support user I/O via a web application. However, that would be more of an IoT project than Embedded Systems... just our thinking. As we are roomates, this system is currently being held in our living room. The Hawkeye themed system compliments the room nicely haha.
 
-Currently programmed is 'EtchASketch' and a Pixel Art image viewer. The 'EtchASketch' program is controlled by two dials attached to the front of the system. This works identically to the original game and extends it further with the RGB capability of the LED Matrix. To navigate colors, the user can press buttons on the side of the system (similar to a tv) to select wanted color.
-The Pixel Art image has meticulously drawn pixel art images which can be cycled through using the navigation controls on the side of the system.
+Currently programmed is an extended 'EtchASketch' program and a pixel art image viewer. The 'EtchASketch' program is controlled by two dials attached to the front of the system. This works identically to the original game and extends it further with the RGB capability of the LED Matrix. To navigate colors, the user can press buttons on the side of the system (similar to a tv) to select wanted color.
+The Pixel Art image viewer cycles through meticulously hand drawn pixel art via the user navigation buttons.
 
 To navigate between programs, the home button (has home icon) can be clicked to bring up a navigation screen. 
 
@@ -24,10 +24,17 @@ ADD KICAD DESIGN
 ADD LINK TO DEMO VIDEO 
 
 ## Source Code
-TODO ADD README FOR CODE
+TODO 
 
+## Documentaion
+This project uses Doxygen to generate a local html file that can be viewed. Inside of this file is all documentation for the project. To view the file (macos/linux):
+```
+$ cd path_to_this_src_dir/doxygenDocs/
+$ open html/index.html
+```
 
-#### Libraries Utilized:
+#### Libraries:
+These are the libraries that we utilized for our project
 
 ### Adafruit BusIO
 - [GitHub Repository](https://github.com/adafruit/Adafruit_BusIO)
@@ -59,4 +66,4 @@ total cost: **~$60**
 
 Additionally, the final product was built using 3D printed parts. All parts were 'hand' made, and the STL files included in this repository.
 
-[3D Models & Cost Breakdown](./3d_models/README.md)
+[3D Models & Cost Breakdown](./3d_models/3d_printing.md)
