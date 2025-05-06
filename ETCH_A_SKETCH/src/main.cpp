@@ -3,7 +3,7 @@
 *Separate different functionality into separate cpp files and respective headers
 */
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include "packers_logo.h"
+#include "images.h"
 #include "Color_Select_Screen.h"
 #include "EtchASketch.h"
 
@@ -32,8 +32,8 @@ uint16_t yellow, white, brown, green;
 
 //Configure Menu Options
 //Array of pointer characters
-const char* menuItems[] = { "Sketch", "Games", "Image" };
-const int numMenuItems = 3;
+const char* menuItems[] = { "Sketch", "Images" };
+const int numMenuItems = 2;
 int selectedIndex = 0;
 
 //Screen state enumeration
@@ -126,9 +126,8 @@ void drawHomeScreen() {
                 dma_display->color565(148, 0, 211)    //violet
             };
             color = rainbowColors[j % 7];
-        } else if (strcmp(label, "Games") == 0) {
-            color = (j % 2 == 0) ? brown : white;
-        } else {
+        } 
+        else {
             color = yellow;
         }
         dma_display->setTextColor(color);
@@ -230,11 +229,11 @@ void loop() {
           drawColorSelector(colorValues);
         }
         //Home button click on the Image window
-        else if (strcmp(menuItems[selectedIndex], "Image") == 0) {
+        else if (strcmp(menuItems[selectedIndex], "Images") == 0) {
           //current screen update
           currentScreen = LOGO_DISPLAY;
-          //Draw the logo by passing the matrix object
-          drawLogo(dma_display);
+          //Draw the current image using our new function
+          drawCurrentImage(dma_display);
         }
       }
     }
@@ -278,11 +277,26 @@ void loop() {
         handleEtchCommand(cmd);
       }
     }
-    //Home button hold on the logo display screen takes you back to home page
+    //In the logo/image display screen
     else if (currentScreen == LOGO_DISPLAY) {
+      //Home button hold on the logo display screen takes you back to home page
       if (cmd == "btnHomeHold") {
         currentScreen = HOME;
         drawHomeScreen();
+      }
+      //Up arrow shows previous image
+      else if (cmd == "btnUpArrow") {
+        prevImage();
+        drawCurrentImage(dma_display);
+      }
+      //Down arrow shows next image
+      else if (cmd == "btnDownArrow") {
+        nextImage();
+        drawCurrentImage(dma_display);
+      }
+      //Home button click can be used to refresh current image
+      else if (cmd == "btnHomeClick") {
+        drawCurrentImage(dma_display);
       }
     }
   }
