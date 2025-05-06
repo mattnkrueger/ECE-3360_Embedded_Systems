@@ -1,0 +1,9 @@
+# Source Headers
+Currently supported programs (@ time of submission of Embedded Systems Final Project ('Embedded EtchASketch') )
+
+### Etch A Sketch: 
+- ColorSelectScreen.h: landing page for EtchASketch program, giving user options for colors to begin drawing with
+- EtchASketch.h: program driver for EtchASketch program. User action from Arduino over UART deciphered and mapped to action in program.
+
+### Pixel Art
+- PixelArt.h: program driver for Pixel Art slideshow image viewer. 
