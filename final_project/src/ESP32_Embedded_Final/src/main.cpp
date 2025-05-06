@@ -15,6 +15,9 @@
 
 #include <HardwareSerial.h>
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+#include "ImageViewProgram/PackersLogo.h"
+#include "Sketch/ColorSelectScreen.h"
+#include "Sketch/SketchProgram.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------ Matrix Definitions ------------------------------------------ //
@@ -60,29 +63,31 @@ void initializeUART() {
  * 
  * Command table:
 
- *                                  | Byte Value | String Value        
- *                                  |------------|--------------------------|
- *                                  | 0x00       | btnUpArrow            
- *                                  | 0x01       | btnDownArrow         
- *                                  | 0x02       | btnHomeClick 
- *                                  | 0x03       | btnHomeHold
- *                                  | 0x04       | btnPowerClick     
- *                                  | 0x05       | btnController1A   
- *                                  | 0x06       | btnController1B   
- *                                  | 0x07       | joystick1UP       
- *                                  | 0x08       | joystick1DOWN     
- *                                  | 0x09       | joystick1LEFT    
- *                                  | 0x0A       | joystick1RIGHT   
- *                                  | 0x0B       | btnController2A  
- *                                  | 0x0C       | btnController2B  
- *                                  | 0x0D       | joystick2UP      
- *                                  | 0x0E       | joystick2DOWN  
- *                                  | 0x0F       | joystick2LEFT  
- *                                  | 0x10       | joystick2RIGHT
- *                                  | 0x11       | rpg1CW        
- *                                  | 0x12       | rpg1CCW       
- *                                  | 0x13       | rpg2CW        
- *                                  | 0x14       | rpg2CCW       
+ *                                  Byte Value  | String Value        
+ *                                  ------------|-------------------
+ *                                  0x00        | btnUpArrow            
+ *                                  0x01        | btnDownArrow         
+ *                                  0x02        | btnHomeClick 
+ *                                  0x03        | btnHomeHold
+ *                                  0x04        | btnPowerClick     
+ *                                  0x05        | btnController1A   
+ *                                  0x06        | btnController1B   
+ *                                  0x07        | joystick1UP       
+ *                                  0x08        | joystick1DOWN     
+ *                                  0x09        | joystick1LEFT    
+ *                                  0x0A        | joystick1RIGHT   
+ *                                  0x0B        | btnController2A  
+ *                                  0x0C        | btnController2B  
+ *                                  0x0D        | joystick2UP      
+ *                                  0x0E        | joystick2DOWN  
+ *                                  0x0F        | joystick2LEFT  
+ *                                  0x10        | joystick2RIGHT
+ *                                  0x11        | rpg1CW        
+ *                                  0x12        | rpg1CCW       
+ *                                  0x13        | rpg2CW        
+ *                                  0x14        | rpg2CCW       
+ * 
+ * For this iteration, we used strings to speed development. Faster implementation can be achieved using bytes
  */
 void processCommand() {
     int commandHex = 0xFF;
