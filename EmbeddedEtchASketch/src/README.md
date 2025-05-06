@@ -3,6 +3,17 @@ This project showcases our learning from the Embedded Systems course in which we
 1. Esp32 - required to address all ~4000 addresses of the LED Matrix (64^2)
 2. Arduino Uno R3 - handle user interaction with the system
 
+## Build System
+We used Platformio to aid in the building process of our project. This made juggling the libraries and using two microcontrollers that have different frameworks very simple. To flash our project, you must first create a Platformio project (ensure that the platformio.ini file is inside - this is what builds the library dependencies).
+To run:
+```
+$ pio run -v 
+```
+
+It is easier to use VSCode's GUI arrow to build - which by default runs the above command. 
+
+## Project Goal
+
 Our project goal was to build something that wont be thrown away - or stripped down to preserve parts - after the class ends. The LED Matrix (and game system) sufficed; it allows for various programs, unique displays, and extendability beyond this course. Because of the ESP32, this system can be iterated on to support user I/O via a web application. However, that would be more of an IoT project than Embedded Systems... just our thinking. As we are roomates, this system is currently being held in our living room. The Hawkeye themed system compliments the room nicely haha.
 
 Currently programmed is an extended 'EtchASketch' program and a pixel art image viewer. The 'EtchASketch' program is controlled by two dials attached to the front of the system. This works identically to the original game and extends it further with the RGB capability of the LED Matrix. To navigate colors, the user can press buttons on the side of the system (similar to a tv) to select wanted color.
