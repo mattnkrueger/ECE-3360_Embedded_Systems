@@ -11,9 +11,6 @@
  * The functionality of the Arduino is simply a dummy terminal - converting actions made by the user (button click, rpg turn, joystick flick, etc) 
  * into a command that can be mapped to a function. This is sent over the UART channel to the ESP32 for processing.
  * 
- * This file is very long, however, it is necessary that the ISR & UART communication (the main functionality of the Arduino device) be on the main.cpp 
- * to avoid any issues.
- * 
  * No internal libraries were included and no external libraries were used. All functionality extended from Arduino AVR C built-in libraries
  * 
  */
