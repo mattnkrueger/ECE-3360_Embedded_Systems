@@ -1,36 +1,42 @@
-# Final Project - Embedded Systems
-Code is split into two subprojects:
-1. ATMega328P: source code for Arduino
-2. ESP32: source code for ESP32
+# Final project
+* [ATMega328P](./ATMega328P/README.md)
+* [ESP32](./ESP32/README.md)
 
-## Build System
-We used Platformio to aid in the building process of our project. This made juggling the libraries and using two microcontrollers that have different frameworks very simple. To flash our project, you must first create a Platformio project (ensure that the platformio.ini file is inside - this is what builds the library dependencies).
-To run:
-```
-$ pio run -v 
-```
+## Documentation
 
-It is easier to use VSCode's GUI arrow to build - which by default runs the above command. 
+To view the [Doxygen](https://doxygen.nl/) generated documentation:
 
-## Documentaion
-This project uses Doxygen to generate a local html file that can be viewed. Inside of this file is all documentation for the project. To view the file (macos/linux):
-```
-$ cd path_to_this_src_dir/doxygenDocs/
-$ open html/index.html
-```
+### Windows
+1. Navigate to the `doxygenDocs/html` folder
+2. Double-click `index.html` to open in your default web browser
 
-## Libraries:
-These are the ESP32 libraries that made our specific LED matrix work
+### Mac
+1. Navigate to the `doxygenDocs/html` folder
+2. Double-click `index.html` to open in your default web browser
+   ```bash
+   open doxygenDocs/html/index.html
+   ```
 
-### Adafruit BusIO
-- [GitHub Repository](https://github.com/adafruit/Adafruit_BusIO)
+## Authors  
 
-### Adafruit GFX Library
-- [GitHub Repository](https://github.com/adafruit/Adafruit-GFX-Library)
+<div style="display: flex; justify-content: center; gap: 60px;">
+  <div align="center">
+    <img src="../img/smarks.jpeg" alt="Sage Marks" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      Sage Marks
+    </div>
+    <div>
+      <a href="mailto:sage-marks@uiowa.edu">Email</a> | <a href="https://www.linkedin.com/in/sage-marks-71a044293/">LinkedIn</a>
+    </div>
+  </div>
 
-### ESP32 HUB75 MatrixPanel DMA
-- [GitHub Repository](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA/tree/master)
-
-### FastLED
-- [GitHub Repository](https://github.com/FastLED/FastLED)
-
+  <div align="center">
+    <img src="../img/mkrueger.png" alt="Matt Krueger" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      Matt Krueger
+    </div>
+    <div>
+      <a href="mailto:matthew-krueger@uiowa.edu">Email</a> | <a href="https://www.linkedin.com/in/mattnkrueger/">LinkedIn</a>
+    </div>
+  </div>
+</div>              

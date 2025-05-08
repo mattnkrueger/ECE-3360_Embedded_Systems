@@ -1,5 +1,7 @@
 # Final Project - Embedded Systems
-![It looks better in person i swear](img/product.png)
+<p align="center">
+  <img src="img/product.png" alt="It looks better in person i swear">
+</p>
 It looks better in person 
 
 This project showcases our learning from the Embedded Systems course in which we decided to build a game system. The system includes two microcontrollers communicating using UART:
@@ -18,14 +20,24 @@ To power off the system, the power button is held for 5 seconds. After which a s
 Overall, our project was - and is - predicated on simplicity and ease of use. As any good hardware and software, the design is built to last. The design is fun and accessible to all, which is a success in our books.
 
 ## Final Product
-![Device Outside](img/Device_outside.png)
-![Device Inside](img/Device_inside.png)
-![Program Part 1](img/Program_pt1.png)
-![Program Part 2](img/Program_pt2.png)
+<p align="center">
+  <img src="img/Device_outside.png" alt="Device Outside">
+</p>
+<p align="center">
+  <img src="img/Device_inside.png" alt="Device Inside">
+</p>
+<p align="center">
+  <img src="img/Program_pt1.png" alt="Program Part 1">
+</p>
+<p align="center">
+  <img src="img/Program_pt2.png" alt="Program Part 2">
+</p>
 
 
 ## Schematic
-![KiCad Schematic](img/Final_Schematic.png)
+<p align="center">
+  <img src="img/Final_Schematic.png" alt="KiCad Schematic">
+</p>
 
 ## Demo Video
 [Download Project Demo Video](project_report/project_video.MOV)
@@ -50,7 +62,9 @@ Total sums to around ~$50+
 All parts were designed inside of Fusion360 and printed using a BambuLab P1S 3D-printer
 [3D Models & Cost Breakdown](./3d_models/README.md)
 
-![3D Printed Parts](img/printed_parts.png)
+<p align="center">
+  <img src="img/printed_parts.png" alt="3D Printed Parts">
+</p>
 
 ## Source Code
 * [ATMega328P Source Code](./src/ATMega328P/README.md)
