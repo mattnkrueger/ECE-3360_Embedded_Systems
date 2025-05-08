@@ -1,4 +1,7 @@
 # Final Project - Embedded Systems
+![It looks better in person i swear](img/product.png)
+It looks better in person 
+
 This project showcases our learning from the Embedded Systems course in which we decided to build a game system. The system includes two microcontrollers communicating using UART:
 1. Esp32 - required to address all ~4000 addresses of the LED Matrix (64^2)
 2. Arduino Uno R3 - handle user interaction with the system
@@ -14,32 +17,18 @@ To power off the system, the power button is held for 5 seconds. After which a s
 
 Overall, our project was - and is - predicated on simplicity and ease of use. As any good hardware and software, the design is built to last. The design is fun and accessible to all, which is a success in our books.
 
-## TODO IMAGE
-ADD IMAGE OF FINAL PROJECT
-
-## TODO KiCad
-ADD KICAD DESIGN
-
-## Demo
-ADD LINK TO DEMO VIDEO 
-
-## Source Code
-TODO ADD README FOR CODE
+## Final Product
+![Device Outside](img/Device_outside.png)
+![Device Inside](img/Device_inside.png)
+![Program Part 1](img/Program_pt1.png)
+![Program Part 2](img/Program_pt2.png)
 
 
-#### Libraries Utilized:
+## Schematic
+![KiCad Schematic](img/Final_Schematic.png)
 
-### Adafruit BusIO
-- [GitHub Repository](https://github.com/adafruit/Adafruit_BusIO)
-
-### Adafruit GFX Library
-- [GitHub Repository](https://github.com/adafruit/Adafruit-GFX-Library)
-
-### ESP32 HUB75 MatrixPanel DMA
-- [GitHub Repository](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA/tree/master)
-
-### FastLED
-- [GitHub Repository](https://github.com/FastLED/FastLED)
+## Demo Video
+[Download Project Demo Video](project_report/project_video.MOV)
 
 ## Parts List
 THIS IS NOT AN EXHAUSTIVE LIST OF PARTS REQUIRED
@@ -52,11 +41,17 @@ Here are the most relevant parts and their purpose, quantity, and cost
 | ESP32 DevKitV1| Microcontroller to interface LED Matrix | 1 | $5 (off-brand)|
 | 64x64 RGB LED Matrix Panel | LED Matrix for display| 1 | $29.99 (off-brand)|
 | Arduino Uno | Microcontroller to handle user input | 1 | $0 (provided)
-| 3D printed parts | Iowa themed, 3d enclosures | many | $20
-| magnets | easy access to inside of enclosures | many | $5
+| 3D printed parts | Iowa themed, 3d enclosures | many | ~$12
+| magnets | easy access to inside of enclosures | many | ~$5
 
-total cost: **~$60** 
+Total sums to around ~$50+
 
-Additionally, the final product was built using 3D printed parts. All parts were 'hand' made, and the STL files included in this repository.
-
+## 3D Models
+All parts were designed inside of Fusion360 and printed using a BambuLab P1S 3D-printer
 [3D Models & Cost Breakdown](./3d_models/README.md)
+
+![3D Printed Parts](img/printed_parts.png)
+
+## Source Code
+* [ATMega328P Source Code](./src/ATMega328P/README.md)
+* [ESP32 Source Code](./src/ESP32/README.md)
