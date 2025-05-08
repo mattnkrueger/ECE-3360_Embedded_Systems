@@ -50,7 +50,7 @@ monitor_speed = 115200
 4. Upload to your ATMega328P with `platformio run --target upload`
 5. Monitor serial output with `platformio device monitor`
 
-Alternatively, you can use the simple Platformio interface to flash ("PlatformIO: Build")
+Alternatively, you can use the PlatformIO interface within VS Code to flash ("PlatformIO: Upload")
 
 <p align="center">
   <img src="../../img/PlatformIO_bar.png" alt="PlatformIO Interface">
