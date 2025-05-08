@@ -91,7 +91,7 @@ monitor_filters = esp32_exception_decoder
 4. Upload to your ESP32 with `platformio run --target upload`
 5. Monitor serial output with `platformio device monitor`
 
-Alternatively, you can use the PlatformIO interface within VS Code:
+Alternatively, you can use the PlatformIO interface within VS Code to flash ("PlatformIO: Build")
 
 <p align="center">
   <img src="../../img/PlatformIO_bar.png" alt="PlatformIO Interface">
